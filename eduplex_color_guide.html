@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>에듀플렉스 브랜드 컬러 가이드</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" rel="stylesheet"/>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Pretendard', sans-serif;
+  background: #f5f7ff;
+  color: #02057A;
+  padding: 48px 5vw;
+  min-height: 100vh;
+}
+h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #00012D;
+  margin-bottom: 6px;
+}
+.subtitle {
+  font-size: 14px;
+  color: rgba(2,5,122,.55);
+  margin-bottom: 48px;
+}
+.section { margin-bottom: 40px; }
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #0047C7;
+  margin-bottom: 14px;
+}
+.swatch-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.swatch {
+  border-radius: 12px;
+  overflow: hidden;
+  min-width: 150px;
+  flex: 1;
+  border: 1px solid rgba(0,18,122,.1);
+  background: #fff;
+}
+.sw-color {
+  height: 72px;
+  display: flex;
+  align-items: flex-end;
+  padding: 10px 12px;
+}
+.sw-role {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  opacity: .8;
+}
+.sw-info { padding: 10px 12px 12px; }
+.sw-hex {
+  font-size: 14px;
+  font-weight: 700;
+  font-family: monospace;
+  display: block;
+  margin-bottom: 3px;
+}
+.sw-name {
+  font-size: 11px;
+  color: rgba(2,5,122,.55);
+  display: block;
+  line-height: 1.5;
+}
+.divider {
+  height: 1px;
+  background: rgba(0,18,122,.08);
+  margin: 40px 0;
+}
+.rule-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.rule-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 18px 20px;
+  border: 1px solid rgba(0,18,122,.08);
+}
+.rule-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #02057A;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(0,18,122,.08);
+}
+.rule-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 7px 0;
+}
+.dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.rule-text { font-size: 12px; color: rgba(2,5,122,.7); }
+.css-section { margin-bottom: 40px; }
+.css-box {
+  background: #0d1117;
+  border-radius: 10px;
+  padding: 20px 22px;
+  font-size: 13px;
+  line-height: 2;
+  font-family: monospace;
+  color: #c9d1d9;
+  overflow-x: auto;
+}
+.css-com { color: #8b949e; }
+.css-prop { color: #79c0ff; }
+.css-val { color: #FFE000; }
+.font-box {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px 28px;
+  border: 1px solid rgba(0,18,122,.08);
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+.font-preview {
+  font-size: 36px;
+  font-weight: 700;
+  color: #00012D;
+  line-height: 1;
+  white-space: nowrap;
+}
+.font-info { }
+.font-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #02057A;
+  margin-bottom: 4px;
+}
+.font-desc { font-size: 12px; color: rgba(2,5,122,.55); line-height: 1.6; }
+.font-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #0047C7;
+  text-decoration: none;
+  font-weight: 600;
+}
+.font-link:hover { text-decoration: underline; }
+.weights {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.weight-item {
+  background: #f0f4ff;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: #02057A;
+}
+footer {
+  margin-top: 56px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0,18,122,.08);
+  font-size: 12px;
+  color: rgba(2,5,122,.4);
+}
+@media (max-width: 600px) {
+  .rule-grid { grid-template-columns: 1fr; }
+  .font-box { flex-direction: column; gap: 16px; }
+}
+</style>
+</head>
+<body>
+
+<h1>에듀플렉스 브랜드 컬러 가이드</h1>
+<p class="subtitle">별내 에듀플렉스 웹사이트 전용 컬러 시스템 · 모든 시트 및 페이지에 동일 적용</p>
+
+<!-- 어두운 배경 -->
+<div class="section">
+  <div class="section-label">어두운 배경 — Dark Sections (Hero · Programs · Contact)</div>
+  <div class="swatch-row">
+    <div class="swatch">
+      <div class="sw-color" style="background:#00012D;">
+        <span class="sw-role" style="color:#fff;">메인 배경</span>
+      </div>
+      <div class="sw-info">
+        <span class="sw-hex" style="color:#00012D;">#00012D</span>
+        <span class="sw-name">Deep Navy<br>메인 섹션 배경색</span>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="sw-color" style="background:#000118;">
+        <span class="sw-role" style="color:#fff;">서브 배경</span>
+      </div>
+      <div class="sw-info">
+        <span class="sw-hex" style="color:#000118;">#000118</span>
+        <span class="sw-name">Darker Navy<br>서브 배경 / 카드 배경</span>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="sw-color" style="background:#00000A;">
+        <span class="sw-role" style="color:#fff;">푸터</span>
+      </div>
+      <div class="sw-info">
+        <span class="sw-hex" style="color:#00000A;">#00000A</span>
+        <span class="sw-name">Almost Black<br>푸터 배경색</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 밝은 배경 -->
+<div class="section">
+  <div class="section-label">밝은 배경 — Light Sections (About · News)</div>
+  <div class="swatch-row">
+    <div class="swatch">
+      <div class="sw-color" style="background:#FFFFFF; border-bottom: 1px solid #eee;">
+        <span class="sw-role" style="color:#02057A;">섹션 배경</span>
+      </div>
+      <div class="sw-info">
+        <span class="sw-hex" style="color:#00012D;">#FFFFFF</span>
+        <span class="sw-name">White<br>about / news 섹션 배경</span>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="sw-color" style="background:#EEF2FF;">
+        <span class="sw-role" style="color:#02057A;">카드 배경</span>
+      </div>
+      <div class="sw-info">
+        <span class="sw-hex" style="color:#00012D;">#EEF2FF</span>
+        <span class="sw-name">Light Blue<br>흰배경 섹션 카드 배경</span>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="sw-color" style="background:#F0F4FF;">
+        <span class="sw-role" style="color:#02057A;">뉴스 카드</span>
+      </div>
+      <div class="sw-info">
+        <span class="sw-hex" style="color:#00012D;">#F0F4FF</span>
+        <span class="sw-name">Pale Blue<br>뉴스 카드 배경</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 브랜드 컬러 -->
+<div class="section">
+  <div class="section-label">브랜드 컬러 — Brand Colors</div>
+  <div class="swatch-row">
+    <div class="swatch">
+      <div class="sw-color" style="background:#FFE000;">
+        <span class="sw-role" style="color:#00012D;">강조색</span>
+      </div>
+      <div class="sw-info">
+        <span class="sw-hex" style="color:#00012D;">#FFE000</span>
+        <span class="sw-name">Brand Yellow<br>버튼 · 강조 · 아이콘</span>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="sw-color" style="background:#0047C7;">
+        <span class="sw-role" style="color:#fff;">포인트 블루</span>
+      </div>
+      <div class="sw-info">
+        <span class="sw-hex" style="color:#00012D;">#0047C7</span>
+        <span class="sw-name">Royal Blue<br>링크 · 아이콘 · 포인트</span>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="sw-color" style="background:#02057A;">
+        <span class="sw-role" style="color:#fff;">딥 블루</span>
+      </div>
+      <div class="sw-info">
+        <span class="sw-hex" style="color:#00012D;">#02057A</span>
+        <span class="sw-name">Deep Blue<br>흰배경 섹션 제목 텍스트</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 텍스트 컬러 -->
+<div class="section">
+  <div class="section-label">텍스트 컬러 — Text Colors</div>
+  <div class="swatch-row">
+    <div class="swatch">
+      <div class="sw-color" style="background:#FFFFFF; border-bottom: 1px solid #eee;">
+        <span class="sw-role" style="color:#aaa;">기본 텍스트</span>
+      </div>
+      <div class="sw-info">
+        <span class="sw-hex" style="color:#00012D;">#FFFFFF</span>
+        <span class="sw-name">White<br>어두운 배경 본문 텍스트</span>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="sw-color" style="background:rgba(255,255,255,0.65); border-bottom: 1px solid #eee;">
+        <span class="sw-role" style="color:#aaa;">보조 텍스트</span>
+      </div>
+      <div class="sw-info">
+        <span class="sw-hex" style="color:#00012D;">rgba(255,255,255,.65)</span>
+        <span class="sw-name">White 65%<br>어두운 배경 설명·보조 텍스트</span>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="sw-color" style="background:#02057A;">
+        <span class="sw-role" style="color:#fff;">흰배경 텍스트</span>
+      </div>
+      <div class="sw-info">
+        <span class="sw-hex" style="color:#00012D;">#02057A</span>
+        <span class="sw-name">Deep Blue<br>흰배경 섹션 텍스트</span>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="sw-color" style="background:rgba(2,5,122,0.65); border-bottom: 1px solid #eee;">
+        <span class="sw-role" style="color:#fff;">흰배경 보조</span>
+      </div>
+      <div class="sw-info">
+        <span class="sw-hex" style="color:#00012D;">rgba(2,5,122,.65)</span>
+        <span class="sw-name">Deep Blue 65%<br>흰배경 섹션 설명·보조 텍스트</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- 섹션별 사용 규칙 -->
+<div class="section">
+  <div class="section-label">섹션별 배색 규칙</div>
+  <div class="rule-grid">
+    <div class="rule-box">
+      <div class="rule-title">어두운 섹션 (Hero · Programs · Contact)</div>
+      <div class="rule-row"><div class="dot" style="background:#00012D;border:1px solid #444;"></div><span class="rule-text">배경 <strong>#00012D</strong></span></div>
+      <div class="rule-row"><div class="dot" style="background:#000118;border:1px solid #444;"></div><span class="rule-text">카드/서브 배경 <strong>#000118</strong></span></div>
+      <div class="rule-row"><div class="dot" style="background:#FFFFFF;border:1px solid #ddd;"></div><span class="rule-text">본문 텍스트 <strong>#FFFFFF</strong></span></div>
+      <div class="rule-row"><div class="dot" style="background:rgba(255,255,255,.65);border:1px solid #ddd;"></div><span class="rule-text">보조 텍스트 <strong>rgba(255,255,255,.65)</strong></span></div>
+      <div class="rule-row"><div class="dot" style="background:#FFE000;"></div><span class="rule-text">강조·버튼·아이콘 <strong>#FFE000</strong></span></div>
+      <div class="rule-row"><div class="dot" style="background:#0047C7;"></div><span class="rule-text">링크·포인트 <strong>#0047C7</strong></span></div>
+    </div>
+    <div class="rule-box">
+      <div class="rule-title">밝은 섹션 (About · News)</div>
+      <div class="rule-row"><div class="dot" style="background:#FFFFFF;border:1px solid #ddd;"></div><span class="rule-text">배경 <strong>#FFFFFF</strong></span></div>
+      <div class="rule-row"><div class="dot" style="background:#EEF2FF;border:1px solid #ddd;"></div><span class="rule-text">카드 배경 <strong>#EEF2FF</strong></span></div>
+      <div class="rule-row"><div class="dot" style="background:#02057A;"></div><span class="rule-text">제목·본문 텍스트 <strong>#02057A</strong></span></div>
+      <div class="rule-row"><div class="dot" style="background:rgba(2,5,122,.65);"></div><span class="rule-text">보조 텍스트 <strong>rgba(2,5,122,.65)</strong></span></div>
+      <div class="rule-row"><div class="dot" style="background:#0047C7;"></div><span class="rule-text">링크·아이콘·강조 <strong>#0047C7</strong></span></div>
+    </div>
+  </div>
+</div>
+
+<!-- 폰트 -->
+<div class="section">
+  <div class="section-label">브랜드 폰트</div>
+  <div class="font-box">
+    <div class="font-preview">에듀플렉스<br>Eduplex</div>
+    <div class="font-info">
+      <div class="font-name">Pretendard</div>
+      <div class="font-desc">
+        한글·영문 통합 산세리프 폰트<br>
+        모든 제목, 본문, UI 텍스트에 통일 적용
+      </div>
+      <a class="font-link" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" target="_blank">CDN 링크 →</a>
+      <div class="weights">
+        <span class="weight-item" style="font-weight:300;">300 Light</span>
+        <span class="weight-item" style="font-weight:400;">400 Regular</span>
+        <span class="weight-item" style="font-weight:500;">500 Medium</span>
+        <span class="weight-item" style="font-weight:600;">600 SemiBold</span>
+        <span class="weight-item" style="font-weight:700;">700 Bold</span>
+        <span class="weight-item" style="font-weight:900;">900 Black</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- CSS 변수 -->
+<div class="css-section">
+  <div class="section-label">CSS 변수 — 새 페이지 만들 때 복사해서 붙여넣기</div>
+  <div class="css-box">
+<span class="css-com">/* 에듀플렉스 브랜드 컬러 시스템 */</span>
+:root {
+  <span class="css-com">/* 배경색 */</span>
+  <span class="css-prop">--ep-navy</span>:        <span class="css-val">#00012D</span>;  <span class="css-com">/* 메인 배경 */</span>
+  <span class="css-prop">--ep-navy2</span>:       <span class="css-val">#000118</span>;  <span class="css-com">/* 서브/카드 배경 */</span>
+  <span class="css-prop">--ep-footer</span>:      <span class="css-val">#00000A</span>;  <span class="css-com">/* 푸터 배경 */</span>
+  <span class="css-prop">--ep-white</span>:       <span class="css-val">#FFFFFF</span>;  <span class="css-com">/* 밝은 섹션 배경 */</span>
+  <span class="css-prop">--ep-card-light</span>:  <span class="css-val">#EEF2FF</span>;  <span class="css-com">/* 밝은 섹션 카드 */</span>
+  <span class="css-prop">--ep-card-news</span>:   <span class="css-val">#F0F4FF</span>;  <span class="css-com">/* 뉴스 카드 */</span>
+
+  <span class="css-com">/* 브랜드 컬러 */</span>
+  <span class="css-prop">--ep-yellow</span>:      <span class="css-val">#FFE000</span>;  <span class="css-com">/* 강조·버튼·아이콘 */</span>
+  <span class="css-prop">--ep-blue</span>:        <span class="css-val">#0047C7</span>;  <span class="css-com">/* 링크·포인트 */</span>
+  <span class="css-prop">--ep-blue-deep</span>:   <span class="css-val">#02057A</span>;  <span class="css-com">/* 흰배경 텍스트 */</span>
+
+  <span class="css-com">/* 폰트 */</span>
+  <span class="css-prop">--ep-font</span>: <span class="css-val">'Pretendard'</span>, sans-serif;
+}</div>
+</div>
+
+<footer>
+  에듀플렉스 브랜드 컬러 가이드 · 별내 에듀플렉스 · 2026
+</footer>
+
+</body>
+</html>
