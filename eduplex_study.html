@@ -105,11 +105,22 @@
     /* 인터뷰 */
     .iv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
     @media(max-width:700px){.iv-grid{grid-template-columns:1fr;}}
-    .iv-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:22px;display:block;text-decoration:none;color:var(--text);transition:all .2s;box-shadow:var(--shadow);position:relative;}
+    .iv-card{border:1px solid var(--border);border-radius:12px;padding:22px;display:block;text-decoration:none;color:var(--text);transition:all .2s;box-shadow:var(--shadow);position:relative;}
     .iv-card:hover{border-color:var(--navy);transform:translateY(-3px);box-shadow:var(--shadow-hover);}
     .iv-icon{font-size:26px;margin-bottom:10px;}
     .iv-card h4{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:6px;}
     .iv-card p{font-size:12px;color:var(--text-sub);}
+    /* 카드 순서별 배경색 — 연한 파스텔 */
+    .iv-card:nth-child(1){background:#e8f0fe;}
+    .iv-card:nth-child(2){background:#e8f5e9;}
+    .iv-card:nth-child(3){background:#fff3e0;}
+    .iv-card:nth-child(4){background:#fce4ec;}
+    .iv-card:nth-child(5){background:#f3e5f5;}
+    .iv-card:nth-child(6){background:#e0f7fa;}
+    .iv-card:nth-child(7){background:#f9fbe7;}
+    .iv-card:nth-child(8){background:#fbe9e7;}
+    .iv-card:nth-child(9){background:#e8eaf6;}
+    .iv-card:nth-child(10){background:#e0f2f1;}
     .iv-del-btn{position:absolute;top:10px;right:10px;background:none;border:1px solid var(--border);color:var(--text-light);border-radius:5px;padding:3px 8px;font-size:11px;cursor:pointer;opacity:0;transition:opacity .15s;}
     .iv-card:hover .iv-del-btn{opacity:1;}
     .iv-del-btn:hover{background:#fee2e2;border-color:#dc2626;color:#dc2626;}
