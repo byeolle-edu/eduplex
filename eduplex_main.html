@@ -220,8 +220,10 @@ body{font-family:'Pretendard',sans-serif;background:var(--navy);color:#fff;overf
   display:none;align-items:center;justify-content:center;
   opacity:0;transition:all .15s;z-index:5;
 }
-body.can-edit .sp-card:hover .sp-edit-toggle{display:flex;opacity:1;}
-body.can-edit .sp-card.sp-editing .sp-edit-toggle{display:flex;opacity:1;background:var(--gold);color:var(--navy);}
+body.can-edit .sp-card:hover .sp-edit-toggle,
+body.admin-mode .sp-card:hover .sp-edit-toggle{display:flex;opacity:1;}
+body.can-edit .sp-card.sp-editing .sp-edit-toggle,
+body.admin-mode .sp-card.sp-editing .sp-edit-toggle{display:flex;opacity:1;background:var(--gold);color:var(--navy);}
 .sp-edit-bar{
   display:none;gap:5px;padding:6px 10px 10px;border-top:1px solid rgba(255,255,255,.08);
 }
@@ -239,7 +241,7 @@ body.can-edit .sp-card.sp-editing .sp-edit-toggle{display:flex;opacity:1;backgro
 }
 
 /* 편집모드 아닐 때 텍스트 수정 불가 */
-body:not(.can-edit) .sp-card [contenteditable]{pointer-events:none;cursor:default;}
+body:not(.can-edit):not(.admin-mode) .sp-card [contenteditable]{pointer-events:none;cursor:default;}
 .sp-card:not(.sp-editing) [contenteditable]{pointer-events:none;cursor:default;}
 
 .add-card{border:2px dashed rgba(255,255,255,.2);border-radius:var(--r);background:transparent;display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:40px 20px;cursor:pointer;transition:all .2s;width:100%;font-family:inherit;}
@@ -919,7 +921,16 @@ function loadSiteData(){
     applyLinks(val.links||{});
     applyProgramImages(val.programImages||{});
     renderDayflow(val.dayflow||DEFAULTS.dayflow);
-    renderSpecialPrograms(val.specialPrograms||DEFAULTS.specialPrograms);
+    let spData = (val.specialPrograms && val.specialPrograms.length >= 4)
+      ? val.specialPrograms
+      : DEFAULTS.specialPrograms;
+    // 구버전(2개) → 자동으로 4개 기본값으로 Firebase 업데이트
+    if(!val.specialPrograms || val.specialPrograms.length < 4){
+      db.ref('site/specialPrograms').set(DEFAULTS.specialPrograms);
+      spData = DEFAULTS.specialPrograms;
+    }
+    siteData.specialPrograms = spData;
+    renderSpecialPrograms(spData);
     renderNews(val.newsItems||DEFAULTS.newsItems);
   });
 }
@@ -979,7 +990,7 @@ function renderSpecialPrograms(items){
 
 /* 특별 프로그램 편집 토글 */
 function toggleSpEdit(i){
-  if(!document.body.classList.contains('can-edit')){
+  if(!document.body.classList.contains('can-edit')&&!isAdmin){
     requestNewsEditAuth(); return;
   }
   const card=document.getElementById('spCard-'+i);
@@ -994,7 +1005,7 @@ function toggleSpEdit(i){
 
 /* 특별 프로그램 카드 저장 */
 async function saveSpCard(i){
-  if(!document.body.classList.contains('can-edit')){showToast('⚠ 편집 권한이 없습니다.');return;}
+  if(!document.body.classList.contains('can-edit')&&!isAdmin){showToast('⚠ 편집 권한이 없습니다.');return;}
   const cur=(siteData.specialPrograms||DEFAULTS.specialPrograms.slice());
   while(cur.length<=i)cur.push({title:'새 프로그램',sub:'',emoji:'📌',link:'https://blog.naver.com/dpeblee'});
   cur[i].title=(document.getElementById('spt-'+i)?.innerText||'').trim()||cur[i].title;
