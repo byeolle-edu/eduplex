@@ -325,7 +325,7 @@ function loadStaffData(){
         const tile=document.createElement('div');
         tile.className='study-tile tile-custom'; tile.id=item.id;
         tile.setAttribute('onclick',`openTileLink('${item.id}')`);
-        tile.innerHTML=`<button class="tile-edit-btn" onclick="event.stopPropagation();editTile('${item.id}')">✏️ 링크 수정</button><div class="t-icon">${item.emoji}</div><h3>${item.name}</h3><p id="${item.id}-desc">${item.desc}</p><span class="t-link" id="${item.id}-lbl">${item.url?'열기 →':'링크 없음'}</span>`;
+        setTileHTML(tile, item.id, item.emoji, item.name, item.desc, item.url);
         tileLinks[item.id]=item.url||'';
         grid.insertBefore(tile,addTile);
       });
@@ -339,6 +339,15 @@ function loadStaffData(){
 }
 
 /* ── 스터디 타일 ── */
+function setTileHTML(tile, id, emoji, name, desc, url){
+  var lbl = url ? '열기 →' : '링크 없음';
+  tile.innerHTML = '<button class="tile-edit-btn" onclick="event.stopPropagation();editTile(\'' + id + '\')">'
+    + '✏️ 링크 수정</button>'
+    + '<div class="t-icon">' + emoji + '</div>'
+    + '<h3>' + name + '</h3>'
+    + '<p id="' + id + '-desc">' + desc + '</p>'
+    + '<span class="t-link" id="' + id + '-lbl">' + lbl + '</span>';
+}
 const tileLinks={};
 function openTileLink(id){ const u=tileLinks[id]; if(u)window.open(u,'_blank'); else alert('아직 링크가 없습니다.
 ✏️ 링크 수정 버튼을 눌러 등록해주세요.'); }
@@ -378,7 +387,7 @@ async function saveAdd(){
   const tile=document.createElement('div');
   tile.className='study-tile tile-custom'; tile.id=id;
   tile.setAttribute('onclick',`openTileLink('${id}')`);
-  tile.innerHTML=`<button class="tile-edit-btn" onclick="event.stopPropagation();editTile('${id}')">✏️ 링크 수정</button><div class="t-icon">${emoji}</div><h3>${name}</h3><p id="${id}-desc">${desc}</p><span class="t-link" id="${id}-lbl">${url?'열기 →':'링크 없음'}</span>`;
+  setTileHTML(tile, id, emoji, name, desc, url);
   tileLinks[id]=url;
   grid.insertBefore(tile,addTile);
   closeAddModal();
