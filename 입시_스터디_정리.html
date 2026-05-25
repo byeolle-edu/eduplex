@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>입시 완전정복 가이드 | 별내 에듀플렉스</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif+KR:wght@400;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0B1F3A;
+  --navy-mid: #142C52;
+  --blue: #1E5EB6;
+  --blue-light: #3A80E0;
+  --sky: #6EB5FF;
+  --accent: #FF6B35;
+  --accent2: #FFB347;
+  --gold: #F0C040;
+  --white: #FFFFFF;
+  --off-white: #F4F7FC;
+  --gray-100: #EEF2F8;
+  --gray-200: #D4DCEC;
+  --gray-400: #8A9BBF;
+  --gray-600: #4A5A7A;
+  --text: #0F1C30;
+  --text-muted: #5A6E8A;
+  --green: #22A76E;
+  --red: #E03E3E;
+  --yellow: #E8A900;
+  --purple: #7B5FD4;
+  --teal: #18A89A;
+  --border: rgba(30,94,182,0.15);
+  --shadow: 0 4px 24px rgba(11,31,58,0.12);
+  --shadow-lg: 0 12px 48px rgba(11,31,58,0.18);
+  --r: 12px;
+  --r-sm: 8px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--navy);
+  color: var(--white);
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+/* ─── HERO ─── */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 80px 24px 60px;
+  overflow: hidden;
+  background: linear-gradient(160deg, #071628 0%, #0B1F3A 50%, #112040 100%);
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 30%, rgba(30,94,182,0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 70%, rgba(255,107,53,0.10) 0%, transparent 60%);
+  pointer-events: none;
+}
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+}
+.hero-badge {
+  display: inline-block;
+  background: rgba(255,107,53,0.15);
+  border: 1px solid rgba(255,107,53,0.4);
+  color: var(--accent2);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  padding: 6px 18px;
+  border-radius: 100px;
+  margin-bottom: 24px;
+  animation: fadeUp 0.6s ease forwards;
+}
+.hero h1 {
+  font-family: 'Noto Serif KR', serif;
+  font-size: clamp(32px, 6vw, 64px);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+  animation: fadeUp 0.7s 0.1s ease both;
+}
+.hero h1 span { color: var(--sky); }
+.hero-sub {
+  font-size: clamp(15px, 2vw, 19px);
+  color: var(--gray-400);
+  margin-bottom: 40px;
+  animation: fadeUp 0.7s 0.2s ease both;
+}
+.hero-sub b { color: var(--sky); font-weight: 500; }
+.hero-toc {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  max-width: 900px;
+  width: 100%;
+  animation: fadeUp 0.7s 0.3s ease both;
+}
+.toc-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--r-sm);
+  padding: 12px 16px;
+  color: var(--white);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.toc-btn:hover {
+  background: rgba(30,94,182,0.3);
+  border-color: var(--blue-light);
+  transform: translateY(-2px);
+}
+.toc-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--sky);
+  min-width: 20px;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── NAV ─── */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(11,31,58,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+}
+.nav-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 0;
+  height: 52px;
+}
+.nav-inner::-webkit-scrollbar { display: none; }
+.nav-link {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--gray-400);
+  text-decoration: none;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.nav-link:hover { background: rgba(255,255,255,0.07); color: var(--white); }
+.nav-link.active { background: rgba(30,94,182,0.2); color: var(--white); }
+
+/* ─── LAYOUT ─── */
+.container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+section { padding: 80px 0; }
+
+/* ─── SECTION HEADER ─── */
+.section-header { margin-bottom: 48px; }
+.section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: var(--sky);
+  letter-spacing: 0.1em;
+  margin-bottom: 12px;
+}
+.section-label::before {
+  content: '';
+  display: inline-block;
+  width: 24px;
+  height: 1px;
+  background: var(--sky);
+}
+.section-title {
+  font-family: 'Noto Serif KR', serif;
+  font-size: clamp(24px, 4vw, 36px);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--white);
+}
+.section-title .accent { color: var(--sky); }
+.section-desc {
+  font-size: 15px;
+  color: var(--gray-400);
+  margin-top: 12px;
+  max-width: 640px;
+  line-height: 1.7;
+}
+.chapter-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 80px;
+  font-weight: 500;
+  color: rgba(110,181,255,0.08);
+  line-height: 1;
+  margin-bottom: -20px;
+  letter-spacing: -0.04em;
+}
+
+/* ─── BG ─── */
+.bg-dark { background: var(--navy); }
+.bg-mid { background: var(--navy-mid); }
+.bg-accent { background: linear-gradient(135deg, #071628 0%, #0d2040 100%); }
+
+/* ─── DIVIDER ─── */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--blue) 30%, var(--blue-light) 50%, var(--blue) 70%, transparent);
+  opacity: 0.3;
+}
+
+/* ─── CARD ─── */
+.card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 24px 28px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.card:hover { border-color: rgba(110,181,255,0.3); transform: translateY(-2px); }
+.card-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--white); }
+.card-body { font-size: 14px; color: var(--gray-400); line-height: 1.7; }
+
+/* ─── BADGE ─── */
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 100px;
+  white-space: nowrap;
+}
+.badge-red { background: rgba(224,62,62,0.15); color: #FF8080; border: 1px solid rgba(224,62,62,0.3); }
+.badge-blue { background: rgba(30,94,182,0.2); color: var(--sky); border: 1px solid rgba(110,181,255,0.3); }
+.badge-green { background: rgba(34,167,110,0.15); color: #5FE0A8; border: 1px solid rgba(34,167,110,0.3); }
+.badge-yellow { background: rgba(232,169,0,0.15); color: var(--gold); border: 1px solid rgba(232,169,0,0.3); }
+.badge-purple { background: rgba(123,95,212,0.15); color: #B09EFF; border: 1px solid rgba(123,95,212,0.3); }
+.badge-orange { background: rgba(255,107,53,0.15); color: var(--accent2); border: 1px solid rgba(255,107,53,0.3); }
+
+/* ─── TABLE ─── */
+.table-wrap { overflow-x: auto; border-radius: var(--r); border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+thead th {
+  background: rgba(30,94,182,0.2);
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 500;
+  color: var(--sky);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+tbody td {
+  padding: 11px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  color: var(--gray-200);
+  vertical-align: top;
+  line-height: 1.6;
+}
+tbody tr:hover td { background: rgba(255,255,255,0.03); }
+tbody tr:last-child td { border-bottom: none; }
+.td-strong { color: var(--white); font-weight: 600; }
+.highlight-row { background: rgba(110,181,255,0.06) !important; }
+.highlight-row td { color: var(--white) !important; }
+
+/* ─── GRID ─── */
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+
+/* ─── INFO / WARN BOX ─── */
+.info-box {
+  background: rgba(110,181,255,0.08);
+  border: 1px solid rgba(110,181,255,0.2);
+  border-radius: var(--r);
+  padding: 20px 24px;
+  margin-top: 24px;
+}
+.info-box-title { font-weight: 700; color: var(--sky); margin-bottom: 8px; font-size: 14px; }
+.info-box-body { font-size: 13.5px; color: var(--gray-200); line-height: 1.7; }
+.warn-box {
+  background: rgba(255,107,53,0.08);
+  border: 1px solid rgba(255,107,53,0.2);
+  border-radius: var(--r);
+  padding: 16px 20px;
+  font-size: 13px;
+  color: var(--gray-200);
+  line-height: 1.6;
+}
+.tip-box {
+  background: rgba(34,167,110,0.08);
+  border: 1px solid rgba(34,167,110,0.2);
+  border-radius: var(--r);
+  padding: 16px 20px;
+  font-size: 13.5px;
+  color: var(--gray-200);
+  line-height: 1.6;
+}
+
+/* ─── NOTE ─── */
+.note {
+  font-size: 12.5px;
+  background: rgba(110,181,255,0.06);
+  border-left: 2px solid var(--sky);
+  padding: 8px 14px;
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  color: var(--gray-400);
+  margin-top: 12px;
+  line-height: 1.6;
+}
+
+/* ─── STEP CARD ─── */
+.step-item {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 20px 24px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  transition: all 0.2s;
+}
+.step-item:hover { border-color: rgba(110,181,255,0.3); }
+.step-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  color: var(--sky);
+  background: rgba(110,181,255,0.12);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-weight: 500;
+}
+.step-body { flex: 1; }
+.step-title { font-weight: 700; font-size: 15px; color: var(--white); margin-bottom: 6px; }
+.step-desc { font-size: 13.5px; color: var(--gray-400); line-height: 1.65; }
+
+/* ─── YEAR CARD ─── */
+.year-card {
+  border-radius: var(--r);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.year-header {
+  padding: 16px 22px;
+  font-weight: 700;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.year-body { padding: 20px 22px; background: rgba(255,255,255,0.03); }
+.year-body ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.year-body li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--gray-200);
+  line-height: 1.6;
+}
+.year-body li::before { content: '›'; color: var(--sky); flex-shrink: 0; margin-top: 1px; }
+
+/* ─── KEYWORD BOX ─── */
+.kw-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.kw-card {
+  border-radius: var(--r);
+  padding: 24px;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+.kw-label { font-size: 12px; color: var(--gray-400); margin-bottom: 8px; }
+.kw-word {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.kw-desc { font-size: 13px; color: var(--gray-300); line-height: 1.6; }
+
+/* ─── COMPARE TABLE (학군) ─── */
+.cmp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.cmp-table th {
+  background: rgba(30,94,182,0.2);
+  padding: 12px 16px;
+  color: var(--sky);
+  font-weight: 600;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+.cmp-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  color: var(--gray-200);
+  vertical-align: top;
+  line-height: 1.6;
+}
+.cmp-table td:first-child { color: var(--white); font-weight: 600; background: rgba(255,255,255,0.02); }
+.cmp-table tr:last-child td { border-bottom: none; }
+
+/* ─── SCORE TABLE ─── */
+.score-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-size: 13.5px;
+}
+.score-row:last-child { border-bottom: none; }
+.score-grade {
+  font-family: 'DM Mono', monospace;
+  font-size: 15px;
+  font-weight: 500;
+  width: 32px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.score-bar-wrap { flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; }
+.score-bar { height: 100%; border-radius: 3px; transition: width 0.4s; }
+.score-pct { font-size: 12px; color: var(--gray-400); width: 80px; text-align: right; flex-shrink: 0; }
+
+/* ─── CHAR COUNTER ─── */
+.char-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.char-row:last-child { border-bottom: none; }
+.char-label { font-size: 14px; color: var(--white); font-weight: 500; min-width: 100px; }
+.char-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--sky);
+  min-width: 60px;
+}
+.char-bar-wrap { flex: 1; height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; }
+.char-bar { height: 100%; border-radius: 3px; }
+.char-note { font-size: 12px; color: var(--gray-400); }
+
+/* ─── FOOTER ─── */
+footer {
+  background: #050F1E;
+  padding: 40px 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--gray-600);
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+@media (max-width: 640px) {
+  .kw-row { grid-template-columns: 1fr; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .hero-toc { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── HERO ─── -->
+<div class="hero">
+  <div class="hero-grid"></div>
+  <div style="position:relative;z-index:1;width:100%;max-width:900px">
+    <div class="hero-badge">⭐ 별내 에듀플렉스 입시 스터디</div>
+    <h1>입시 완전정복<br><span>종합 가이드</span></h1>
+    <p class="hero-sub">생기부 · 고교 선택 · 모의고사 전략 · 수시 마스터 플랜<br><b>2026년 5월 기준</b> 최신 입시 정보 종합 정리</p>
+    <div class="hero-toc">
+      <a class="toc-btn" href="#ch1"><span class="toc-num">01</span> 고교학점제 & 고교 선택</a>
+      <a class="toc-btn" href="#ch2"><span class="toc-num">02</span> 생기부 완전 정복</a>
+      <a class="toc-btn" href="#ch3"><span class="toc-num">03</span> 문·이과 생기부 전략</a>
+      <a class="toc-btn" href="#ch4"><span class="toc-num">04</span> 모의고사 전략</a>
+      <a class="toc-btn" href="#ch5"><span class="toc-num">05</span> 학군지 vs 비학군지</a>
+      <a class="toc-btn" href="#ch6"><span class="toc-num">06</span> 입결 분석 & 수시 플랜</a>
+    </div>
+  </div>
+</div>
+
+<!-- ─── NAV ─── -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="nav-link" href="#ch1">① 고교학점제</a>
+    <a class="nav-link" href="#ch2">② 생기부</a>
+    <a class="nav-link" href="#ch3">③ 문·이과 전략</a>
+    <a class="nav-link" href="#ch4">④ 모의고사</a>
+    <a class="nav-link" href="#ch5">⑤ 학군지 전략</a>
+    <a class="nav-link" href="#ch6">⑥ 수시 마스터플랜</a>
+  </div>
+</nav>
+
+
+<!-- ══════════════════════════════════════ -->
+<!-- CH1: 고교학점제 & 고교 유형 선택 -->
+<!-- ══════════════════════════════════════ -->
+<section class="bg-dark" id="ch1">
+  <div class="container">
+    <div class="chapter-num">01</div>
+    <div class="section-header">
+      <div class="section-label">CHAPTER 01</div>
+      <h2 class="section-title">고교학점제 시대<br><span class="accent">이걸 알면 입시가 보인다</span></h2>
+      <p class="section-desc">9등급제에서 5등급제로의 전환, 고교 유형별 전략, 자유전공학부의 현실까지 정리합니다.</p>
+    </div>
+
+    <!-- 5등급제 전환 -->
+    <div style="margin-bottom:40px">
+      <div style="font-size:14px;font-weight:600;color:var(--sky);margin-bottom:16px">📊 9등급제 → 5등급제 전환의 현실</div>
+      <div class="grid-2" style="gap:16px;margin-bottom:20px">
+        <div class="card" style="border-color:rgba(255,107,53,0.25)">
+          <div class="card-title" style="color:var(--accent2)">교과전형 기준선</div>
+          <div class="card-body">
+            상위권 대학 교과전형은 <strong style="color:var(--white)">최소 1.3 등급 이내</strong>가 필요합니다. 인기 학과는 더 높은 등급이 요구되며, <strong style="color:var(--white)">수능 최저 병행</strong>이 필수입니다.
+          </div>
+        </div>
+        <div class="card" style="border-color:rgba(110,181,255,0.25)">
+          <div class="card-title" style="color:var(--sky)">학종 기준선</div>
+          <div class="card-body">
+            학생부종합전형으로 상위권 대학 진학은 <strong style="color:var(--white)">내신 1.4 이내</strong>가 기본. 단, 생기부 질과 수능 최저 충족 여부가 함께 작용합니다.
+          </div>
+        </div>
+      </div>
+      <div class="info-box">
+        <div class="info-box-title">📌 57개 고교 1만 5,566명 조사 결과</div>
+        <div class="info-box-body">전체 중 <strong>1.74%(271명)</strong>, 학교당 평균 <strong>4.76명</strong>만 내신 1.0등급을 받습니다. 최종 전형 선택과 전략은 <strong>2학년 2학기 겨울방학 이후(최소 4학기 내신 확보 후)</strong> 결정하고, 그 전까지는 모든 전형을 열어두고 공부하세요.</div>
+      </div>
+    </div>
+
+    <div class="divider" style="margin-bottom:40px"></div>
+
+    <!-- 인문 vs 자연 -->
+    <div style="margin-bottom:40px">
+      <div style="font-size:14px;font-weight:600;color:var(--sky);margin-bottom:16px">🎯 인문 vs 자연 과목 선택 전략</div>
+      <div class="grid-2">
+        <div class="card" style="border-color:rgba(110,181,255,0.2)">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <span class="badge badge-blue">자연계</span>
+            <span style="font-weight:700;font-size:15px">계열 방향성 기반 선택과목 설계</span>
+          </div>
+          <div class="card-body">계열의 방향성을 먼저 설정하고 그에 맞는 선택과목을 구성합니다. 대학별 권장과목을 반드시 확인하고 이수하세요. 권장과목 이수 시 가산점이 있는 대학도 있습니다.</div>
+          <div class="note">📌 경희대·고려대·중앙대 등의 권장과목 목록 우선 참고</div>
+        </div>
+        <div class="card" style="border-color:rgba(240,192,64,0.2)">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <span class="badge badge-yellow">인문계</span>
+            <span style="font-weight:700;font-size:15px">수강인원 많고 등급 안정적인 과목 우선</span>
+          </div>
+          <div class="card-body">특정 과목 베이스를 고집하기보다 수강 인원이 많아 내신 등급을 안정적으로 확보할 수 있는 과목을 선택합니다. 다양한 과목에서도 충분히 전공과 연계 가능합니다.</div>
+          <div class="note">📌 2028년 경희대가 학과별 권장과목 가장 자세히 안내 예정</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider" style="margin-bottom:40px"></div>
+
+    <!-- 고교 유형 -->
+    <div style="margin-bottom:40px">
+      <div style="font-size:14px;font-weight:600;color:var(--sky);margin-bottom:16px">🏫 고교 유형별 특징 (특목·자사고 vs 일반고)</div>
+      <div class="grid-2" style="margin-bottom:20px">
+        <div class="year-card">
+          <div class="year-header" style="background:rgba(110,181,255,0.1)">
+            <span style="font-size:20px">🏆</span>
+            <div>
+              <div style="color:var(--sky)">특목고 · 자사고</div>
+              <div style="font-size:12px;color:var(--gray-400);font-weight:400">외고 / 국제고 / 과고 / 전국단위 자사고</div>
+            </div>
+          </div>
+          <div class="year-body">
+            <ul>
+              <li><strong>강점:</strong> 대학 수준의 심화과목 개설 역량 우수. 5등급제 완화로 내신 부담 감소, 학업 역량 우수 학생에게 가장 유리한 선택지</li>
+              <li><strong>약점:</strong> 전교생이 우수한 집단이므로 1~2등급 선점을 위한 내부 경쟁이 여전히 치열</li>
+              <li><strong>추천 유형:</strong> 우수한 친구들 속에서 자극받는 학생, 강한 멘탈의 소유자, 스스로 탐구 주제를 찾는 주도적인 학생</li>
+            </ul>
+          </div>
+        </div>
+        <div class="year-card">
+          <div class="year-header" style="background:rgba(34,167,110,0.1)">
+            <span style="font-size:20px">🏫</span>
+            <div>
+              <div style="color:#5FE0A8">일반고</div>
+              <div style="font-size:12px;color:var(--gray-400);font-weight:400">학군지 vs 비학군지</div>
+            </div>
+          </div>
+          <div class="year-body">
+            <ul>
+              <li><strong>학군지 우수 일반고:</strong> 면학 분위기 좋고 정시 준비 유리, 단 내신 경쟁 치열. 수시 체제가 잘 갖춰진지 확인 필요</li>
+              <li><strong>비학군지 일반고:</strong> 내신 1등급 확보 상대적으로 수월. 교과전형·지역균형 전형에 유리. 다만 선택과목 개설 및 생기부 기록 수준 확인 필요</li>
+              <li><strong>추천 유형:</strong> 주변 분위기에 영향받는 학생, 등급 하락에 크게 좌절하는 학생, 성실하게 정해진 가이드 따르는 학생</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 맞는 학교 찾는 3가지 공식 -->
+    <div style="font-size:14px;font-weight:600;color:var(--sky);margin-bottom:16px">✅ 맞는 학교 찾는 3가지 필승 공식</div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:32px">
+      <div class="step-item">
+        <div class="step-num">①</div>
+        <div class="step-body">
+          <div class="step-title">아이의 성향 파악 (멘탈과 주도성)</div>
+          <div class="step-desc">우수한 환경에서 자극받고 강한 멘탈을 가진 주도적인 학생 → 특목·자사고 / 주변 분위기에 영향받고 등급 하락에 예민하며 성실하게 따르는 학생 → 일반고</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">②</div>
+        <div class="step-body">
+          <div class="step-title">학교 알리미 데이터 분석</div>
+          <div class="step-desc">목표 전공 관련 심화·선택 과목이 실제로 개설되는지 교육과정 편성표 확인. 졸업생 진로 현황을 통해 면학 분위기와 수시/정시형 마인드 파악</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">③</div>
+        <div class="step-body">
+          <div class="step-title">내신 확보 가능성 & 대입 전형 매칭</div>
+          <div class="step-desc">5등급제 기준 상위 10%(1등급) 또는 최소 상위 34%(2등급) 이내를 안정적으로 확보할 수 있는 학교 선택. 아무리 좋은 학교도 내신이 뒤처지면 수시 전형을 쓰기 어렵습니다.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 자유전공학부 -->
+    <div style="font-size:14px;font-weight:600;color:var(--sky);margin-bottom:16px">🎓 자유전공학부 현실 가이드</div>
+    <div class="grid-2">
+      <div class="card" style="border-color:rgba(123,95,212,0.25)">
+        <div class="card-title">자유전공학부가 유리한 학생</div>
+        <div class="card-body">
+          하고 싶은 것이 명확하지 않아 탐색 기간이 필요한 학생. 단, 대부분의 자유전공학부 학생들은 <strong style="color:var(--white)">특정 학과를 목표로 진학</strong>하는 경우가 많습니다.
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(224,62,62,0.25)">
+        <div class="card-title">⚠️ 자유전공학부 주의사항</div>
+        <div class="card-body">
+          학교마다 전형이 다르고, 과마다 제한인원을 두는 곳도 있습니다. 특정 학과 쏠림 현상 발생 시 <strong style="color:var(--white)">성적순으로 선택권이 부여</strong>됩니다(예: 단국대 사회계열 자유전공 → 경영학과 쏠림). 성적이 낮으면 선택지가 매우 좁아집니다.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- CH2: 생기부 완전 정복 -->
+<!-- ══════════════════════════════════════ -->
+<section class="bg-mid" id="ch2">
+  <div class="container">
+    <div class="chapter-num">02</div>
+    <div class="section-header">
+      <div class="section-label">CHAPTER 02</div>
+      <h2 class="section-title">생기부 완전 정복하기<br><span class="accent">주제 찾기부터 입학사정관 시각까지</span></h2>
+      <p class="section-desc">학년별 전략, 나열식 생기부 탈출법, 입학사정관이 실제로 보는 평가 요소를 담았습니다.</p>
+    </div>
+
+    <!-- 학년별 주안점 -->
+    <div style="font-size:14px;font-weight:600;color:var(--sky);margin-bottom:16px">📅 학년별 생기부 주안점</div>
+    <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:40px">
+      <div class="year-card">
+        <div class="year-header" style="background:rgba(34,167,110,0.12)">
+          <span style="font-size:20px">🌱</span>
+          <div>
+            <div style="color:#5FE0A8;font-weight:700">1학년 — 전략적 활동 1~2개로 연습하는 시기</div>
+            <div style="font-size:12px;color:var(--gray-400);font-weight:400">1순위: 무조건 내신!</div>
+          </div>
+        </div>
+        <div class="year-body">
+          <ul>
+            <li>학교에서 주어진 수행평가·프로그램을 성실히 이수하는 것만으로 충분</li>
+            <li>그 중 1~2개는 <strong style="color:var(--white)">전략적으로</strong> 활동 → 생기부 작성 방식 직접 시도해보기</li>
+            <li>고민할 것: 어떤 방식으로 호기심 표현할까? / 탐구 과정은? / 보고서 구조는? / 선생님과 어떻게 커뮤니케이션할까?</li>
+          </ul>
+        </div>
+      </div>
+      <div class="year-card">
+        <div class="year-header" style="background:rgba(110,181,255,0.12)">
+          <span style="font-size:20px">📚</span>
+          <div>
+            <div style="color:var(--sky);font-weight:700">2학년 — 진로 연계보다 교과 심화 중심</div>
+            <div style="font-size:12px;color:var(--gray-400);font-weight:400">2학기 무렵부터 계열 방향성 잡기 시작</div>
+          </div>
+        </div>
+        <div class="year-body">
+          <ul>
+            <li>전공 적합성·진로 연계보다 <strong style="color:var(--white)">교과 심화</strong>가 훨씬 더 중요한 시기</li>
+            <li>대학은 전공 관련 심화 활동보다 <strong style="color:var(--white)">탐구하는 방식과 역량</strong>을 보고 싶어함(전공 적합성 → 학업역량 중심으로 평가 변화)</li>
+            <li>2학기 무렵부터 진로 연계 포인트 잡기 가능. 단 '전공' 개념이 아닌 <strong style="color:var(--white)">계열의 방향성</strong>으로 정리</li>
+            <li>⚠️ 1~2학년 내내 특정 전공만 집중하고 교과 심화가 부족하면 3학년 때 방향 전환이 어려워짐</li>
+          </ul>
+        </div>
+      </div>
+      <div class="year-card">
+        <div class="year-header" style="background:rgba(255,107,53,0.12)">
+          <span style="font-size:20px">🚀</span>
+          <div>
+            <div style="color:var(--accent2);font-weight:700">3학년 — 탐구 주제 확장 & 심화</div>
+            <div style="font-size:12px;color:var(--gray-400);font-weight:400">같은 주제 반복 X → 확장 + 연계 O</div>
+          </div>
+        </div>
+        <div class="year-body">
+          <ul>
+            <li>2학년 때 다룬 주제를 그대로 반복하지 말고 <strong style="color:var(--white)">확장 + 연계</strong>로 발전시키기</li>
+            <li>BEST: "내가 탐구한 것과 관련해 대학에서 배우는 이론·내용이 무엇인지" 깊이 이어가기</li>
+            <li>새로운 주제를 계속 추가하는 것X → 이미 다룬 주제에서 <strong style="color:var(--white)">관련 이론을 파고드는 탐구</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider" style="margin-bottom:40px"></div>
+
+    <!-- 나열식 생기부 탈출 -->
+    <div style="font-size:14px;font-weight:600;color:var(--sky);margin-bottom:16px">⚡ 나열식 생기부 탈출! 구체적 탐구 과정 만들기</div>
+    <div class="warn-box" style="margin-bottom:20px">
+      <strong>나열식 생기부란?</strong> "토론 수업 참여, 보고서 제출, 동아리 활동 수행"처럼 단순히 활동만 기재된 생기부. 활동이 많아도 학생의 적극성과 주도성을 볼 수 없으면 좋은 생기부가 아닙니다.
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px">
+      <div class="step-item">
+        <div class="step-num">①</div>
+        <div class="step-body">
+          <div class="step-title">주제 선정: 수업·수행평가에서 출발하기</div>
+          <div class="step-desc">교과목과 무관한 임의 주제 선정 X. 수업에서 배운 내용, 주어진 진로 프로그램, 수행평가와 관련한 주제를 선정하는 것이 훨씬 유리합니다. 근거 자료가 명확할수록 좋은 평가를 받습니다.</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">②</div>
+        <div class="step-body">
+          <div class="step-title">5줄 이내 요약문으로 선생님께 어필하기</div>
+          <div class="step-desc">생기부는 학생이 직접 작성하는 것이 아닌 선생님의 권한입니다. 탐구 후 보고서 제출 시 앞면에 5줄 이내의 요약문을 첨부하면 50~60%는 생기부에 반영해주시는 경우가 있습니다. "어디에 포인트를 두고 탐구했는지" 명확히 표현하세요.</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">③</div>
+        <div class="step-body">
+          <div class="step-title">협업 활동에서도 나만의 관점 드러내기</div>
+          <div class="step-desc">같은 실험을 협업해도 생기부 내용이 비슷해질까 걱정할 필요 없습니다. "내가 이 활동에서 어떤 역할을 했는가", "실험 후 어떤 호기심을 가졌는가"가 핵심이기 때문입니다.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider" style="margin-bottom:40px"></div>
+
+    <!-- 입학사정관 평가 기준 -->
+    <div style="font-size:14px;font-weight:600;color:var(--sky);margin-bottom:16px">👁️ 입학사정관이 보는 경쟁력 있는 생기부 — 3가지 역량</div>
+    <div class="grid-3" style="gap:16px;margin-bottom:24px">
+      <div class="card" style="border-color:rgba(110,181,255,0.25)">
+        <div style="font-size:24px;margin-bottom:12px">📖</div>
+        <div class="card-title">학업 역량</div>
+        <div class="card-body">
+          대학 교육 이수에 필요한 수학 능력.<br><br>
+          <strong style="color:var(--white)">3가지 평가 요소:</strong><br>
+          • <strong>학업 성취도</strong>: 원점수·평균·표준편차·이수자 수·성취도별 분포비율을 종합 평가. 주요 과목만 집중하고 기타 과목 점수가 크게 떨어지면 감점 요인<br>
+          • <strong>학업 태도</strong>: 점수를 잘 받는 학생보다 호기심 기반 능동적 탐구 학생이 더 높은 평가<br>
+          • <strong>탐구력</strong>: 다양한 방법으로 답을 찾아가는 과정
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(34,167,110,0.25)">
+        <div style="font-size:24px;margin-bottom:12px">🧭</div>
+        <div class="card-title">진로 역량</div>
+        <div class="card-body">
+          학과가 아닌 <strong style="color:var(--white)">진로·전공에 대한 탐색 노력과 준비 정도</strong> 평가.<br><br>
+          • 전공 관련 교과목 이수 여부가 핵심 (동일 성적이라도 이수 여부에 따라 결과 달라짐)<br>
+          • 관련 과목 미개설 시: 공동 교육과정·온라인 수업·소인수과목 등 이수 노력 필요<br>
+          • 진로 탐색 과정에서 적극적으로 호기심을 해결해가는 과정도 진로 역량 점수에 반영
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(123,95,212,0.25)">
+        <div style="font-size:24px;margin-bottom:12px">🤝</div>
+        <div class="card-title">공동체 역량</div>
+        <div class="card-body">
+          인성 평가가 아닌 <strong style="color:var(--white)">공동체 구성원으로서 바람직한 사고와 행동</strong> 평가.<br><br>
+          • 협업·소통 능력, 리더십, 나눔과 배려, 성실성과 규칙 준수<br>
+          • 맡은 역할에 얼마나 충실했는지, 어떤 대안을 제시했는지, 갈등을 어떻게 해결했는지<br>
+          • ⚠️ 미인정 결석·지각이 많으면 감점 요인
+        </div>
+      </div>
+    </div>
+
+    <!-- 세특 중요성 -->
+    <div style="font-size:14px;font-weight:600;color:var(--sky);margin-bottom:16px">📝 세부능력 및 특기사항이 제일 중요한 이유</div>
+    <div class="card" style="border-color:rgba(240,192,64,0.25);margin-bottom:20px">
+      <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:center">
+        <div>
+          <div style="font-size:12px;color:var(--gray-400);margin-bottom:4px">세특 글자 수 (학년당)</div>
+          <div style="font-family:'DM Mono',monospace;font-size:36px;font-weight:500;color:var(--gold)">3,500자</div>
+          <div style="font-size:12px;color:var(--gray-400)">7과목 × 각 500자 + 개세특 500자</div>
+        </div>
+        <div style="flex:1;min-width:200px">
+          <div style="margin-bottom:12px">
+            <div class="char-row">
+              <div class="char-label">세특</div>
+              <div class="char-val">3,500자</div>
+              <div class="char-bar-wrap"><div class="char-bar" style="width:100%;background:var(--gold)"></div></div>
+            </div>
+            <div class="char-row">
+              <div class="char-label">창체활동</div>
+              <div class="char-val">2,100자</div>
+              <div class="char-bar-wrap"><div class="char-bar" style="width:60%;background:var(--sky)"></div></div>
+            </div>
+          </div>
+          <div class="card-body">창체는 학교 환경에 따라 좌우되지만, 세특은 <strong style="color:var(--white)">호기심과 노력으로 극복 가능</strong>하기 때문에 자기주도적 탐구역량 어필에 가장 좋은 항목입니다.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 창체활동 글자수 -->
+    <div style="font-size:14px;font-weight:600;color:var(--sky);margin-bottom:16px">📋 창체활동 최대 글자수 안내</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>항목</th><th>최대 글자수</th><th>핵심 포인트</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="td-strong">자율 활동</td>
+            <td>500자</td>
+            <td style="color:var(--gray-400)">학교 환경에 따라 결정됨. 자율동아리는 2024년 이후 평가 대상 제외</td>
+          </tr>
+          <tr>
+            <td class="td-strong">동아리 활동</td>
+            <td>500자</td>
+            <td style="color:var(--gray-400)">창체 동아리만 유효. 나의 역할의 구체성 확보가 핵심! 협업 활동 多</td>
+          </tr>
+          <tr class="highlight-row">
+            <td class="td-strong">진로 활동</td>
+            <td style="color:var(--gold);font-weight:700">700자 ★최대</td>
+            <td>진로와 관련된 모든 활동 기재. 진로 어필에 가장 좋은 항목</td>
+          </tr>
+          <tr>
+            <td class="td-strong">창체 합계</td>
+            <td style="color:var(--sky);font-weight:600">2,100자</td>
+            <td style="color:var(--gray-400)">세특보다 적은 글자수</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- CH3: 문·이과 생기부 전략 -->
+<!-- ══════════════════════════════════════ -->
+<section class="bg-accent" id="ch3">
+  <div class="container">
+    <div class="chapter-num">03</div>
+    <div class="section-header">
+      <div class="section-label">CHAPTER 03</div>
+      <h2 class="section-title">문·이과 생기부 전략<br><span class="accent">& 자주 묻는 질문</span></h2>
+      <p class="section-desc">계열에 따른 생기부 핵심 키워드와 창체·세특 관련 실전 Q&A를 정리합니다.</p>
+    </div>
+
+    <!-- 문이과 키워드 -->
+    <div class="kw-row" style="margin-bottom:36px">
+      <div class="kw-card" style="background:rgba(110,181,255,0.08);border-color:rgba(110,181,255,0.25)">
+        <div class="kw-label">이과 핵심 키워드</div>
+        <div class="kw-word" style="color:var(--sky)">깊이</div>
+        <div class="kw-desc">개념·이론을 한 단계라도 더 파고드는 심화 키워드가 드러날 수 있도록 집중합니다. 하나의 주제를 깊게 탐구하는 것이 핵심입니다.</div>
+      </div>
+      <div class="kw-card" style="background:rgba(255,107,53,0.08);border-color:rgba(255,107,53,0.25)">
+        <div class="kw-label">문과 핵심 키워드</div>
+        <div class="kw-word" style="color:var(--accent2)">넓이</div>
+        <div class="kw-desc">하나의 사회 현상을 여러 관점에서 분석하는 능력이 중요합니다. 다양한 시각과 연계성을 보여주는 탐구가 효과적입니다.</div>
+      </div>
+    </div>
+
+    <div class="divider" style="margin-bottom:36px"></div>
+
+    <!-- Q&A -->
+    <div style="font-size:14px;font-weight:600;color:var(--sky);margin-bottom:20px">❓ 자주 묻는 질문 (FAQ)</div>
+    <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:36px">
+      <div class="card" style="border-color:rgba(110,181,255,0.2)">
+        <div style="display:flex;gap:14px">
+          <div style="font-size:20px;flex-shrink:0">Q</div>
+          <div>
+            <div class="card-title">자율 활동에 들어간 활동이 행특에 중복되어도 되나요?</div>
+            <div class="card-body" style="margin-top:6px">
+              <strong style="color:var(--white)">A.</strong> 자율·진로·세특 일부 활동에 들어갔더라도 역량을 표현하는 활동이라면 행특에 중복해서 기재되어도 무방합니다.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(34,167,110,0.2)">
+        <div style="display:flex;gap:14px">
+          <div style="font-size:20px;flex-shrink:0">Q</div>
+          <div>
+            <div class="card-title">1·2학년 생기부가 충분한데 3학년 1학기에 더 심화해야 하나요?</div>
+            <div class="card-body" style="margin-top:6px">
+              <strong style="color:var(--white)">A.</strong> 1·2학년 탐구가 충분히 이루어졌다면 어느 정도 안정적으로 봐도 됩니다. 단, <strong style="color:var(--white)">비판적 사고력을 중시하는 대학</strong>을 목표로 한다면 꼬리에 꼬리를 무는 호기심의 탐구 과정을 보여주는 것이 더 유리합니다.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(123,95,212,0.2)">
+        <div style="display:flex;gap:14px">
+          <div style="font-size:20px;flex-shrink:0">Q</div>
+          <div>
+            <div class="card-title">자율동아리와 창체동아리, 어떻게 다르게 접근해야 하나요?</div>
+            <div class="card-body" style="margin-top:6px">
+              <strong style="color:var(--white)">A.</strong> 2024년 이후 생기부에서 자율동아리는 평가 대상에서 제외됩니다. <strong style="color:var(--white)">창체 동아리만 유효</strong>합니다. 동아리 활동은 자율·진로 활동보다 협업 활동이 많으므로 나의 역할의 구체성 확보가 핵심입니다.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 과학 개정 교육과정 -->
+    <div class="divider" style="margin-bottom:36px"></div>
+    <div style="font-size:14px;font-weight:600;color:var(--sky);margin-bottom:20px">🔬 [이과] 2022 개정 교육과정 과학 과목 가이드</div>
+    <div class="grid-2" style="margin-bottom:20px">
+      <div class="year-card">
+        <div class="year-header" style="background:rgba(110,181,255,0.1)">
+          <span style="font-size:18px">📌</span>
+          <div style="color:var(--sky)">핵심 변경사항</div>
+        </div>
+        <div class="year-body">
+          <ul>
+            <li><strong style="color:var(--white)">고1 통합과학이 수능 출제 과목에 포함</strong> → 기존 8과목 중 2과목 선택 방식에서 통합과학으로 변경</li>
+            <li>통합과학은 물리·화학·생명과학·지구과학 내용 포함 (기존과 유사)</li>
+            <li>추가 단원: 과학의 기초(단위), 과학과 미래사회(감염병·AI·과학윤리) — 중학교 수준의 내용</li>
+            <li>기존 물리I·화학I·생명과학I·지구과학I 수준 문제가 통합되어 출제 예상</li>
+          </ul>
+        </div>
+      </div>
+      <div class="year-card">
+        <div class="year-header" style="background:rgba(255,107,53,0.1)">
+          <span style="font-size:18px">📋</span>
+          <div style="color:var(--accent2)">2022 개정 과목명 변화 포인트</div>
+        </div>
+        <div class="year-body">
+          <ul>
+            <li>중등: 과목명 및 내용 변화 거의 없음</li>
+            <li><strong style="color:var(--white)">기후변화와 환경생태</strong> → 생활과 과학과 전혀 다른 내용의 신규 과목</li>
+            <li><strong style="color:var(--white)">융합과학 탐구</strong> → 기존 융합과학과 이름 유사하나 내용 다름 (신규)</li>
+            <li><strong style="color:var(--white)">과학의 역사와 문화</strong> → 기존 과학사와 접점 있음 (연속성 O)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="tip-box">
+      <strong>💡 이과 2학기 탐구 공부 방법 핵심:</strong> 개념이나 이론을 한 단계라도 더 파고들어 심화 키워드를 드러내는 데 중점을 두세요. 2022 개정 교육과정 변화에 맞춰 선택과목 전략을 목표 대학 권장과목과 함께 설계하는 것이 중요합니다.
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- CH4: 모의고사 전략 -->
+<!-- ══════════════════════════════════════ -->
+<section class="bg-dark" id="ch4">
+  <div class="container">
+    <div class="chapter-num">04</div>
+    <div class="section-header">
+      <div class="section-label">CHAPTER 04</div>
+      <h2 class="section-title">모의고사는 점수가 아니라<br><span class="accent">전략이다</span></h2>
+      <p class="section-desc">표준점수 해석, 정답률 분석, 백분위 괴리 해석, 정시 가능성 예측까지 완전 정리합니다.</p>
+    </div>
+
+    <!-- 표준점수 -->
+    <div style="font-size:14px;font-weight:600;color:var(--sky);margin-bottom:16px">📊 표준점수 해석</div>
+    <div class="grid-2" style="margin-bottom:28px">
+      <div class="card" style="border-color:rgba(110,181,255,0.2)">
+        <div class="card-title">국어·수학 (0~200점)</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+          <div style="display:flex;gap:10px;align-items:center;font-size:13.5px">
+            <span class="badge badge-red">150점 이상</span>
+            <span style="color:var(--gray-200)">난이도 과도하게 높음</span>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;font-size:13.5px">
+            <span class="badge badge-green">145점 전후</span>
+            <span style="color:var(--gray-200)">가장 이상적인 변별력</span>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;font-size:13.5px">
+            <span class="badge badge-yellow">130~140점 초반</span>
+            <span style="color:var(--gray-200)">비교적 쉬운 시험</span>
+          </div>
+        </div>
+        <div class="note">난이도 어려울수록 평균·편차 커져 표준점수 ↑ / 쉬울수록 ↓</div>
+      </div>
+      <div class="card" style="border-color:rgba(34,167,110,0.2)">
+        <div class="card-title">탐구 (0~100점)</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+          <div style="display:flex;gap:10px;align-items:center;font-size:13.5px">
+            <span class="badge badge-red">70점 이상</span>
+            <span style="color:var(--gray-200)">난이도 과도하게 높음</span>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;font-size:13.5px">
+            <span class="badge badge-green">68점 전후</span>
+            <span style="color:var(--gray-200)">가장 적정 난이도</span>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;font-size:13.5px">
+            <span class="badge badge-yellow">65점 미만</span>
+            <span style="color:var(--gray-200)">난이도 매우 쉬움</span>
+          </div>
+        </div>
+        <div class="note">고인물 과목(물리·화학·경제·동아시아사·세계사·세계지리 등)은 집단 수준이 높아 난이도 상승에도 표준점수가 크게 오르지 않을 수 있음</div>
+      </div>
+    </div>
+
+    <div class="info-box" style="margin-bottom:36px">
+      <div class="info-box-title">🏫 정시 표준점수 vs 백분위 적용 기준</div>
+      <div class="info-box-body">
+        <strong>건동홍 이상 서울권 대학:</strong> 표준점수 기준으로 합격선 결정<br>
+        <strong>국숭세단 or 지방권 대학:</strong> 표준점수 반영하기도 하지만 백분위 함께 반영하는 경우 있음
+      </div>
+    </div>
+
+    <div class="divider" style="margin-bottom:36px"></div>
+
+    <!-- 정답률 분석 -->
+    <div style="font-size:14px;font-weight:600;color:var(--sky);margin-bottom:16px">🎯 정답률(A~E) 분석과 학습 방향</div>
+    <div class="table-wrap" style="margin-bottom:20px">
+      <table>
+        <thead>
+          <tr><th>등급</th><th>정답률</th><th>의미</th><th>학습 전략</th></tr>
+        </thead>
+        <tbody>
+          <tr class="highlight-row">
+            <td class="td-strong">A</td><td>80% 이상</td>
+            <td>대부분의 학생이 맞추는 문제</td>
+            <td><strong>반드시</strong> 맞춰야 함. 틀리면 공부 부족 신호</td>
+          </tr>
+          <tr class="highlight-row">
+            <td class="td-strong">B</td><td>60% 이상</td>
+            <td>기본기 있는 학생이 맞추는 문제</td>
+            <td>안정적으로 맞출 수 있도록 실력 확보 필요</td>
+          </tr>
+          <tr>
+            <td class="td-strong">C</td><td>40~60%</td>
+            <td>중간 난이도</td>
+            <td>ABC를 먼저 완성하고 C까지 안정화</td>
+          </tr>
+          <tr>
+            <td class="td-strong">D</td><td>20~40%</td>
+            <td>상위권 학생이 맞추는 문제</td>
+            <td rowspan="2">ABC 탄탄히 한 후 도전. DE 맞췄다고 좋은 게 아님</td>
+          </tr>
+          <tr>
+            <td class="td-strong">E</td><td>20% 미만</td>
+            <td>최상위권 문제</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="warn-box" style="margin-bottom:32px">
+      ⚠️ <strong>흔한 착각:</strong> "A·B 틀린 건 실수니 극복 가능하고, E 맞추면 잘한 것"이라는 생각은 위험합니다. 원점수가 같더라도 AB 틀리고 DE 맞추면 <strong>불확실성이 커져 정시 예측도가 떨어집니다.</strong> ABC를 안정적으로 맞추는 것이 우선입니다.
+    </div>
+
+    <div class="divider" style="margin-bottom:36px"></div>
+
+    <!-- 백분위 괴리 -->
+    <div style="font-size:14px;font-weight:600;color:var(--sky);margin-bottom:16px">📉 전국 백분위 vs 학교 석차 괴리 해석</div>
+    <div class="grid-2" style="margin-bottom:24px">
+      <div class="card" style="border-color:rgba(224,62,62,0.2)">
+        <div class="card-title" style="color:#FF8080">내신 ↑ 모의고사 ↓ 인 경우</div>
+        <div class="card-body">
+          ① 학교의 수준이 낮거나<br>
+          ② 학교 구조 자체가 정시 대비 비중이 크지 않은 경우.<br><br>
+          → 수능 최저를 맞추기 위해 <strong style="color:var(--white)">수능형 공부 별도 진행 필요</strong><br>
+          → 최소 <strong style="color:var(--white)">고2 2학기 무렵</strong>에는 이 판단이 이루어져야 함
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(34,167,110,0.2)">
+        <div class="card-title" style="color:#5FE0A8">모의고사 활용 원칙</div>
+        <div class="card-body">
+          • 고1부터 모의고사 대비 시작 X<br>
+          • 2학년 1학기까지는 정시가 주전형이더라도 내신 먼저<br>
+          • 모의고사를 통해 학교의 주전형(수시형 vs 정시형)을 파악하는 용도로 활용
+        </div>
+      </div>
+    </div>
+
+    <!-- 정시 예측 분석 -->
+    <div style="font-size:14px;font-weight:600;color:var(--sky);margin-bottom:16px">📈 고3 모의고사 바탕으로 정시 가능성 예측하기</div>
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-body">
+        고2 모의고사 포함 <strong style="color:var(--white)">최소 3번 이상</strong> 성적을 나란히 두고 분석. 표준점수는 난이도에 따라 달라지므로 <strong style="color:var(--white)">백분위 기준</strong>으로 상대적 위치 파악.
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>맥스 - 미니멈 편차</th><th>해석</th><th>전략 방향</th></tr>
+        </thead>
+        <tbody>
+          <tr class="highlight-row">
+            <td class="td-strong">4 이내</td>
+            <td style="color:#5FE0A8">가장 안정적</td>
+            <td>정시 예측도 높음, 목표 대학 설정 신뢰도 ↑</td>
+          </tr>
+          <tr>
+            <td class="td-strong">6 이내</td>
+            <td style="color:var(--sky)">안정적으로 봄</td>
+            <td>정시 지원 가능. 최선의 수능 준비</td>
+          </tr>
+          <tr>
+            <td class="td-strong">8 이상</td>
+            <td style="color:var(--accent2)">주의 필요</td>
+            <td>최고 성적을 수능 날 받기 어렵다고 판단</td>
+          </tr>
+          <tr>
+            <td class="td-strong">12 이상</td>
+            <td style="color:#FF8080">편차 과도</td>
+            <td>정시보다 <strong style="color:var(--white)">수능 최저 없는 하향</strong> 전략 고려</td>
+          </tr>
+          <tr>
+            <td class="td-strong">20 이상</td>
+            <td style="color:#FF8080">예측 불가</td>
+            <td>정시 성적 예측 어려움, 수시 중심 전략 재검토</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- CH5: 학군지 vs 비학군지 -->
+<!-- ══════════════════════════════════════ -->
+<section class="bg-mid" id="ch5">
+  <div class="container">
+    <div class="chapter-num">05</div>
+    <div class="section-header">
+      <div class="section-label">CHAPTER 05</div>
+      <h2 class="section-title">학군지 vs 비학군지<br><span class="accent">상위권 입시 전략</span></h2>
+      <p class="section-desc">환경에 따라 전략이 달라집니다. 나의 위치에 맞는 투트랙 전략을 확인하세요.</p>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:36px">
+      <!-- 학군지 -->
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <span class="badge badge-blue">학군지 (대치·목동·분당 등)</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="card" style="border-color:rgba(110,181,255,0.2)">
+            <div class="card-title">현실 진단</div>
+            <div class="card-body">5등급제로 완화되어도 원점수 90점대 후반도 동점자가 많아 등급 선점에 리스크. 대신 심화 과목 개설이 많고 생기부를 풍성하게 적어줄 가능성 ↑</div>
+          </div>
+          <div class="card" style="border-color:rgba(110,181,255,0.2)">
+            <div class="card-title">💡 핵심 전략 1 — 학종 올인</div>
+            <div class="card-body">대학은 학군지의 높은 원점수 평균과 어려운 시험 난이도를 압니다. 완벽하지 않은 내신이라도 심화 선택과목 이수 + 세특 탐구역량 증명으로 학종에서 유리합니다.</div>
+          </div>
+          <div class="card" style="border-color:rgba(110,181,255,0.2)">
+            <div class="card-title">💡 핵심 전략 2 — 수능 최저 & 정시 연계</div>
+            <div class="card-body">학군지의 최대 무기는 수능 경쟁력. 의치한약수 및 주요 상위권 대학의 높은 수능 최저를 공략하고, 수시 실패 시 정시로 역전하는 방어선 구축.</div>
+          </div>
+        </div>
+      </div>
+      <!-- 비학군지 -->
+      <div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <span class="badge badge-green">비학군지 (지방·중소도시 일반고 등)</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="card" style="border-color:rgba(34,167,110,0.2)">
+            <div class="card-title">현실 진단</div>
+            <div class="card-body">내신 1등급 확보는 수월해졌지만, 심화 과목 미개설이나 생기부 기록이 평이할 수 있어 순수 학종으로는 불리할 수 있음.</div>
+          </div>
+          <div class="card" style="border-color:rgba(34,167,110,0.2)">
+            <div class="card-title">💡 핵심 전략 1 — 교과전형 & 지역균형 선점</div>
+            <div class="card-body">압도적인 내신 1등급 확보가 최우선. 내신 환산 점수에서 우위를 점하는 것이 핵심입니다.</div>
+          </div>
+          <div class="card" style="border-color:rgba(34,167,110,0.2)">
+            <div class="card-title">💡 핵심 전략 2 — 수능 최저 '치트키'</div>
+            <div class="card-body">가장 큰 패착은 내신만 믿고 수능 공부를 소홀히 하는 것. 수능 최저만 맞출 수 있다면 경쟁자들을 제치고 합격할 확률이 크게 높아집니다.</div>
+          </div>
+          <div class="card" style="border-color:rgba(34,167,110,0.2)">
+            <div class="card-title">💡 핵심 전략 3 — 셀프 생기부 보완</div>
+            <div class="card-body">공동교육과정·온라인 학교를 통해 전공 연계 과목 이수, 수행평가 시 학문적 깊이 있는 보고서 제출로 세특을 스스로 풍성하게 만들기.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 비교 표 -->
+    <div style="font-size:14px;font-weight:600;color:var(--sky);margin-bottom:16px">📋 학군지 vs 비학군지 한눈에 비교</div>
+    <div class="table-wrap">
+      <table class="cmp-table">
+        <thead>
+          <tr><th>구분</th><th>학군지 상위권</th><th>비학군지 상위권</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>목표 내신</td>
+            <td>1등급(10%) 선점, 어려울 시 2등급 초반 방어</td>
+            <td>압도적인 1등급 초반 확보</td>
+          </tr>
+          <tr>
+            <td>주력 전형</td>
+            <td>학생부종합전형(학종) + 정시</td>
+            <td>학생부교과전형 + 지역균형 전형</td>
+          </tr>
+          <tr>
+            <td>핵심 무기</td>
+            <td>심화 과목 이수 이력, 탁월한 생기부 세특</td>
+            <td>압도적인 내신 정량 점수</td>
+          </tr>
+          <tr>
+            <td>아킬레스건</td>
+            <td>내신 동점자 속 등급 경쟁 치열</td>
+            <td>학교의 생기부 기록 역량 부족 가능성</td>
+          </tr>
+          <tr class="highlight-row">
+            <td><strong>공통 과제</strong></td>
+            <td>수시 실패 대비 정시(수능) 공부</td>
+            <td>수시 합격을 확정 짓기 위한 수능 최저 확보</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="info-box" style="margin-top:24px">
+      <div class="info-box-title">📌 일반고 합격 비율 기준 대학 라인 가이드</div>
+      <div class="info-box-body">
+        <strong>서연고·서성한 라인 (일반고 합격 60% 이하):</strong> 50% 컷은 일반고 기준 하위 78% 수준으로 보정 필요<br>
+        <strong>이중경외시·건동홍숙 라인 (일반고 70%):</strong> 50% 컷이 일반고 적정 내신<br>
+        <strong>이화·홍건동 라인 (일반고 80% 이상):</strong> 50%컷~70%컷 사이가 일반고 적정 내신 구간<br>
+        <strong>국숭세단 이후 (일반고 95%):</strong> 70% 컷까지도 안정적
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- CH6: 입결 분석 & 수시 마스터플랜 -->
+<!-- ══════════════════════════════════════ -->
+<section class="bg-accent" id="ch6">
+  <div class="container">
+    <div class="chapter-num">06</div>
+    <div class="section-header">
+      <div class="section-label">CHAPTER 06</div>
+      <h2 class="section-title">입결 분석 &<br><span class="accent">수시 마스터 플랜</span></h2>
+      <p class="section-desc">어느 대학이 아닌 무엇을 근거로 판단하느냐가 핵심입니다. 입결 완벽 분석 기본기와 최종 수시 전략을 정리합니다.</p>
+    </div>
+
+    <!-- 체크포인트 -->
+    <div style="font-size:14px;font-weight:600;color:var(--sky);margin-bottom:16px">✅ 핵심 판단 근거 CHECK POINT</div>
+    <div class="grid-2" style="margin-bottom:32px">
+      <div class="card" style="border-color:rgba(110,181,255,0.2)">
+        <div class="card-title">1. 모의고사 성적 분석</div>
+        <div class="card-body">정시 파이터 외 수능 최저 필요하거나 수시·정시 병행 시 필수. 최소 3회 이상 백분위 분석으로 정시 가능 라인 확인.</div>
+      </div>
+      <div class="card" style="border-color:rgba(255,107,53,0.2)">
+        <div class="card-title">2. 입결 상승·모집 인원 변화 전형 분석</div>
+        <div class="card-body">입결이 상승 중인 전형과 모집 인원 변화를 통해 유불리를 사전에 파악합니다.</div>
+      </div>
+      <div class="card" style="border-color:rgba(34,167,110,0.2)">
+        <div class="card-title">3. 대학어디가 사이트 활용</div>
+        <div class="card-body">작년도 전형 결과 확인. 포인트: 점수/등급컷(50/70%), 모집 인원, 경쟁률, 지원자 수, 예비·충원률</div>
+      </div>
+    </div>
+
+    <div class="divider" style="margin-bottom:32px"></div>
+
+    <!-- 입결 분석 3스텝 -->
+    <div style="font-size:14px;font-weight:600;color:var(--sky);margin-bottom:16px">🔍 입결 완벽 분석 3단계</div>
+    <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:32px">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Step 1 — 요강과 입결 함께 해석하기</div>
+          <div class="step-desc">정량 평가에 들어가는 과목 수·비율을 확인하고, 수능 최저 기준 변화를 반드시 체크하세요.</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Step 2 — 50%컷 vs 70%컷 간격 확인 (이탈 양상·안정성 파악)</div>
+          <div class="step-desc">상위권일수록 두 컷의 차이가 거의 없습니다. 차이가 크면 이탈자(강펑크)가 많다는 신호입니다.</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Step 3 — 최소 3개년도 입결 비교</div>
+          <div class="step-desc">
+            ① 대학·계열 평균 등급 범위 파악 (평균 경쟁률 / 50%컷 / 70%컷 평균 구하기)<br>
+            ② 학과별 3개년 50%·70%컷 정리하고 학과별 위계 구조 파악<br>
+            ③ 컷 기준 1등부터 최하위까지 정렬 → 유지 학과 vs 변동성 큰 학과 확인
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider" style="margin-bottom:32px"></div>
+
+    <!-- 나에게 맞는 대학 -->
+    <div style="font-size:14px;font-weight:600;color:var(--sky);margin-bottom:16px">🎯 나에게 맞는 대학 찾는 방법</div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:32px">
+      <div class="step-item">
+        <div class="step-num">①</div>
+        <div class="step-body">
+          <div class="step-title">모의고사 성적 3회 이상 평균·표준편차 확인</div>
+          <div class="step-desc">정시 가능 여부와 정시 라인을 확인합니다.</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">②</div>
+        <div class="step-body">
+          <div class="step-title">내신 기준 교과·학종 전형 각각 지원 가능 라인 확인</div>
+          <div class="step-desc">교과전형: 3개년도 50%·70%컷 확인 / 학종전형: 50%·70%컷 + 학교 특성 + 보정 수치 + 생기부 상태 점검</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">③</div>
+        <div class="step-body">
+          <div class="step-title">올해 전형별 입시 요강 & 변수 확인</div>
+          <div class="step-desc">변화된 부분 확인 후 입결 상승·하강 요인을 판단합니다.</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">④</div>
+        <div class="step-body">
+          <div class="step-title">면접 일정 중복 여부 확인</div>
+          <div class="step-desc">원서 조합 시 고3 7월 중·하순부터 면접 일정 미리 확인하세요.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 생기부 퀄리티 기준 -->
+    <div style="font-size:14px;font-weight:600;color:var(--sky);margin-bottom:16px">📋 생기부 퀄리티 & 대학 라인 매칭</div>
+    <div class="table-wrap" style="margin-bottom:24px">
+      <table>
+        <thead>
+          <tr><th>생기부 수준</th><th>내신 등급대</th><th>주요 타깃 대학</th></tr>
+        </thead>
+        <tbody>
+          <tr class="highlight-row">
+            <td class="td-strong">우수 생기부</td>
+            <td>1~2등급</td>
+            <td>서연고 / 중경외시 합격권</td>
+          </tr>
+          <tr>
+            <td class="td-strong">나열식 생기부</td>
+            <td>2등급 중후반~3등급</td>
+            <td>활동 적극적 참여가 드러나면 OK</td>
+          </tr>
+          <tr>
+            <td>홍익대 / 국숭세단</td>
+            <td colspan="2" style="color:var(--gray-200)">심화도보다 활동의 적극성이 더 중요. 모든 대학이 같은 기준을 갖지 않습니다.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 최종 수시 마스터플랜 -->
+    <div class="card" style="border-color:rgba(110,181,255,0.3);background:rgba(110,181,255,0.05)">
+      <div style="display:flex;gap:16px;align-items:flex-start">
+        <div style="font-size:32px;flex-shrink:0">🏆</div>
+        <div>
+          <div class="card-title" style="font-size:18px">최종 수시 마스터 플랜</div>
+          <div class="card-body">
+            아이의 프로파일, 3개년도 입결, 작년 대비 올해 전형 분석, 비슷한 등급대 선배들의 원서 조합과 합격 사례 등을 <strong style="color:var(--white)">한눈에 볼 수 있도록 정리</strong>하여 활용하면 수시 지원 판단이 명확해집니다.<br><br>
+            <strong style="color:var(--white)">핵심 원칙:</strong> '어느 대학'이 아닌 <strong style="color:var(--white)">'무엇을 근거로 판단하는가'</strong>가 수시 마스터플랜의 본질입니다.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="warn-box" style="margin-top:24px">
+      📌 본 자료는 2026년 5월 기준으로 정리된 참고 자료입니다. 각 대학의 공식 수시·정시 모집요강을 반드시 확인하시기 바랍니다.
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div style="margin-bottom:8px">
+    <strong>별내 에듀플렉스</strong> 입시 스터디 자료
+  </div>
+  <div>입시 완전정복 종합 가이드 · 2026년 5월 기준</div>
+  <div style="margin-top:8px;font-size:12px">본 자료는 참고용이며 각 대학 공식 시행계획을 반드시 확인하시기 바랍니다.</div>
+</footer>
+
+<script>
+// 스크롤 네비게이션 활성화
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-link');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      navLinks.forEach(link => {
+        const isActive = link.getAttribute('href') === '#' + id;
+        link.classList.toggle('active', isActive);
+      });
+    }
+  });
+}, { rootMargin: '-40% 0px -40% 0px' });
+
+sections.forEach(s => observer.observe(s));
+
+// 카드 등장 애니메이션
+const fadeEls = document.querySelectorAll('.card, .year-card, .step-item, .kw-card');
+const io = new IntersectionObserver((entries) => {
+  entries.forEach((entry, i) => {
+    if (entry.isIntersecting) {
+      setTimeout(() => {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }, i * 40);
+      io.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.05 });
+
+fadeEls.forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(16px)';
+  el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+  io.observe(el);
+});
+</script>
+
+</body>
+</html>
