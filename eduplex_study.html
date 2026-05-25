@@ -67,6 +67,17 @@
     .write-btn{margin-top:18px;display:inline-flex;align-items:center;gap:6px;background:var(--navy);color:#fff;padding:10px 20px;border-radius:8px;font-size:13.5px;font-weight:600;border:none;cursor:pointer;transition:background .2s;}
     .write-btn:hover{background:var(--navy-mid);}
 
+    /* ── 편집 권한 제어 ── */
+    .write-btn,.post-edit-btn,.post-del-btn,.post-img-del,.hof-del-btn,.iv-del-btn,.add-btn{display:none!important;}
+    body.can-edit .write-btn,body.can-edit .post-edit-btn,body.can-edit .post-del-btn{display:inline-flex!important;}
+    body.can-edit .post-img-del{display:block!important;}
+    body.can-edit .hof-del-btn{display:block!important;opacity:0;transition:opacity .15s;}
+    body.can-edit .hof-item:hover .hof-del-btn{opacity:1!important;}
+    body.can-edit .iv-del-btn{display:block!important;opacity:0;transition:opacity .15s;}
+    body.can-edit .iv-card:hover .iv-del-btn{opacity:1!important;}
+    body.can-edit .add-btn{display:inline-flex!important;}
+    body:not(.can-edit) .btn-edit-post{display:none!important;}
+
     /* 상세보기 이미지 */
     .post-img-gallery{display:flex;flex-direction:column;gap:14px;margin-bottom:16px;}
     .post-img-wrap{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--border);}
@@ -364,6 +375,29 @@ function loadAllData(){
 let hofData = [];
 let ivData = [];
 
+/* ── 편집 권한 인증 ── */
+const STUDY_PW = 'ssbn2026$$';
+
+function checkEditAuth(){
+  const p = new URLSearchParams(location.search);
+  if(p.get('admin') === STUDY_PW){
+    document.body.classList.add('can-edit');
+  }
+}
+
+function requestAuth(){
+  if(document.body.classList.contains('can-edit')) return true;
+  const pw = prompt('편집 비밀번호를 입력하세요:');
+  if(pw === STUDY_PW){
+    document.body.classList.add('can-edit');
+    showToast('✓ 편집 모드가 활성화되었습니다.');
+    return true;
+  } else if(pw !== null){
+    showToast('⚠ 비밀번호가 올바르지 않습니다.');
+  }
+  return false;
+}
+
 /* ── 탭 ── */
 const urlTab = new URLSearchParams(location.search).get('tab');
 if(urlTab){ const b = document.querySelector(`.tab-btn[onclick*="'${urlTab}'"]`); if(b) switchTab(b,urlTab); }
@@ -405,6 +439,7 @@ function renderPosts(){
 }
 
 function deletePost(i){
+  if(!document.body.classList.contains('can-edit')){showToast('⚠ 편집 권한이 없습니다.');return;}
   if(!confirm('게시글을 삭제할까요?')) return;
   EP[CE].splice(i,1);
   renderPosts();
@@ -415,6 +450,7 @@ function deletePost(i){
 let editingIdx = null; // null = 새 작성, 숫자 = 수정
 
 function openWriteModal(){
+  if(!requestAuth()) return;
   editingIdx = null;
   document.getElementById('writeModalTitle').textContent = '✏️ 게시글 작성';
   document.getElementById('writeModalSaveBtn').textContent = '💾 저장';
@@ -426,6 +462,7 @@ function openWriteModal(){
 }
 
 function openEditModal(i){
+  if(!requestAuth()) return;
   // 목록에서 수정 버튼 클릭 OR 상세보기에서 수정 버튼 클릭
   const idx = (i !== undefined) ? i : currentDetailIdx;
   if(idx === null || idx === undefined) return;
@@ -518,6 +555,7 @@ function renderDetailImgs(i){
 }
 
 function deleteDetailImg(postIdx, imgIdx){
+  if(!document.body.classList.contains('can-edit')){showToast('⚠ 편집 권한이 없습니다.');return;}
   if(!confirm('이미지를 삭제할까요?')) return;
   EP[CE][postIdx].imgs.splice(imgIdx,1);
   renderDetailImgs(postIdx);
@@ -569,7 +607,7 @@ document.addEventListener('keydown', e => {
 });
 
 /* ── 명예의 전당 ── */
-function openHofModal(){ document.getElementById('hofModal').classList.add('open'); }
+function openHofModal(){ if(!requestAuth()) return; document.getElementById('hofModal').classList.add('open'); }
 function closeHofModal(){ document.getElementById('hofModal').classList.remove('open'); }
 function saveHof(){
   const img = document.getElementById('hofImg').value.trim();
@@ -605,6 +643,7 @@ function renderHof(){
 }
 
 function deleteHofItem(btn, idx){
+  if(!document.body.classList.contains('can-edit')){showToast('⚠ 편집 권한이 없습니다.');return;}
   if(!confirm('이미지를 삭제할까요?')) return;
   hofData.splice(idx, 1);
   renderHof();
@@ -612,7 +651,7 @@ function deleteHofItem(btn, idx){
 }
 
 /* ── 인터뷰 ── */
-function openIvModal(){ document.getElementById('ivModal').classList.add('open'); }
+function openIvModal(){ if(!requestAuth()) return; document.getElementById('ivModal').classList.add('open'); }
 function closeIvModal(){ document.getElementById('ivModal').classList.remove('open'); }
 function saveIv(){
   const title = document.getElementById('ivTitle').value.trim();
@@ -649,6 +688,7 @@ function renderIv(){
 }
 
 function deleteIvCard(btn, idx){
+  if(!document.body.classList.contains('can-edit')){showToast('⚠ 편집 권한이 없습니다.');return;}
   if(!confirm('인터뷰 카드를 삭제할까요?')) return;
   ivData.splice(idx, 1);
   renderIv();
@@ -672,6 +712,7 @@ function showToast(msg){
 }
 
 /* ── 초기 로드 ── */
+checkEditAuth();
 loadAllData();
 </script>
 </body>
