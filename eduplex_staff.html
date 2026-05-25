@@ -6,6 +6,8 @@
   <title>교직원 전용 — 별내 에듀플렉스</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   <style>
     :root {
       --navy:#1a2a5e; --navy-mid:#2c3e7a; --gold:#b8960c; --gold-btn:#c9a227;
@@ -261,17 +263,25 @@
 </div>
 
 <script>
-function openGradeManager(){
-  window.open('https://managementhighschool.vercel.app/#/dashboard','_blank');
+/* ── Firebase 초기화 ── */
+const DB_URL='https://silverstar04301-default-rtdb.firebaseio.com/';
+const fbApp=firebase.initializeApp({databaseURL:DB_URL});
+const db=firebase.database(fbApp);
+
+function showToast(msg){
+  let t=document.getElementById('staffToast');
+  if(!t){t=document.createElement('div');t.id='staffToast';t.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#1a2a5e;color:#fff;font-size:13px;font-weight:600;padding:10px 20px;border-radius:20px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9999;white-space:nowrap;';document.body.appendChild(t);}
+  t.textContent=msg;t.style.opacity='1';clearTimeout(t._t);t._t=setTimeout(()=>t.style.opacity='0',2500);
 }
-function openSangdam(){
-  window.open('https://epx015eunbyulpark-del.github.io/sangdam_final_v2.html','_blank');
-}
+function openGradeManager(){ window.open('https://managementhighschool.vercel.app/#/dashboard','_blank'); }
+function openSangdam(){ window.open('https://epx015eunbyulpark-del.github.io/sangdam_final_v2.html','_blank'); }
+
 const PW='ssbn2026$$';
 function doLogin(){
   if(document.getElementById('pwInput').value===PW){
     document.getElementById('loginWrap').style.display='none';
     document.getElementById('mainApp').classList.add('show');
+    loadStaffData();
   } else { document.getElementById('loginError').style.display='block'; }
 }
 function doLogout(){
@@ -282,6 +292,7 @@ function doLogout(){
 if(new URLSearchParams(location.search).get('admin')===PW){
   document.getElementById('loginWrap').style.display='none';
   document.getElementById('mainApp').classList.add('show');
+  loadStaffData();
 }
 function showPanel(btn,id){
   document.querySelectorAll('.s-btn').forEach(b=>b.classList.remove('active'));
@@ -289,8 +300,48 @@ function showPanel(btn,id){
   btn.classList.add('active');
   document.getElementById('panel-'+id).classList.add('active');
 }
+
+/* ── Firebase 로드 ── */
+function loadStaffData(){
+  db.ref('staff').on('value', snap => {
+    const val = snap.val() || {};
+    // 타일 링크 복원
+    if(val.tileLinks){
+      Object.keys(val.tileLinks).forEach(id => {
+        tileLinks[id] = val.tileLinks[id].url || '';
+        const d=document.getElementById(id+'-desc');
+        const l=document.getElementById(id+'-lbl');
+        if(d && val.tileLinks[id].desc) d.textContent=val.tileLinks[id].desc;
+        if(l) l.textContent=val.tileLinks[id].url?'열기 →':'링크 없음';
+      });
+    }
+    // 커스텀 타일 복원
+    if(val.customTiles && val.customTiles.length){
+      customTileData = val.customTiles;
+      const grid=document.getElementById('studyGrid');
+      const addTile=grid.querySelector('.add-tile');
+      grid.querySelectorAll('.tile-custom').forEach(t=>t.remove());
+      val.customTiles.forEach(item=>{
+        const tile=document.createElement('div');
+        tile.className='study-tile tile-custom'; tile.id=item.id;
+        tile.setAttribute('onclick',`openTileLink('${item.id}')`);
+        tile.innerHTML=`<button class="tile-edit-btn" onclick="event.stopPropagation();editTile('${item.id}')">✏️ 링크 수정</button><div class="t-icon">${item.emoji}</div><h3>${item.name}</h3><p id="${item.id}-desc">${item.desc}</p><span class="t-link" id="${item.id}-lbl">${item.url?'열기 →':'링크 없음'}</span>`;
+        tileLinks[item.id]=item.url||'';
+        grid.insertBefore(tile,addTile);
+      });
+    }
+    // 정보 복원
+    if(val.infoItems && val.infoItems.length){
+      infoData=val.infoItems;
+      renderInfo();
+    }
+  });
+}
+
+/* ── 스터디 타일 ── */
 const tileLinks={};
-function openTileLink(id){ const u=tileLinks[id]; if(u)window.open(u,'_blank'); else alert('아직 링크가 없습니다.\n✏️ 링크 수정 버튼을 눌러 등록해주세요.'); }
+function openTileLink(id){ const u=tileLinks[id]; if(u)window.open(u,'_blank'); else alert('아직 링크가 없습니다.
+✏️ 링크 수정 버튼을 눌러 등록해주세요.'); }
 function editTile(id){
   document.getElementById('tileEditId').value=id;
   document.getElementById('tileEditUrl').value=tileLinks[id]||'';
@@ -300,7 +351,7 @@ function editTile(id){
   document.getElementById('tileEditModal').classList.add('open');
 }
 function closeTileEditModal(){ document.getElementById('tileEditModal').classList.remove('open'); }
-function saveTileEdit(){
+async function saveTileEdit(){
   const id=document.getElementById('tileEditId').value;
   const url=document.getElementById('tileEditUrl').value.trim();
   const desc=document.getElementById('tileEditDesc').value.trim();
@@ -308,10 +359,14 @@ function saveTileEdit(){
   const d=document.getElementById(id+'-desc'); if(d&&desc)d.textContent=desc;
   const l=document.getElementById(id+'-lbl'); if(l)l.textContent=url?'열기 →':'링크 없음';
   closeTileEditModal();
+  try{ await db.ref('staff/tileLinks/'+id).set({url,desc}); showToast('✓ 링크 저장 완료!'); }
+  catch(e){ showToast('⚠ 저장 실패: '+e.message); }
 }
+
+let customTileData=[];
 function openAddModal(){ document.getElementById('addModal').classList.add('open'); }
 function closeAddModal(){ document.getElementById('addModal').classList.remove('open'); }
-function saveAdd(){
+async function saveAdd(){
   const name=document.getElementById('addName').value.trim();
   const emoji=document.getElementById('addEmoji').value.trim()||'📚';
   const url=document.getElementById('addUrl').value.trim();
@@ -321,29 +376,54 @@ function saveAdd(){
   const grid=document.getElementById('studyGrid');
   const addTile=grid.querySelector('.add-tile');
   const tile=document.createElement('div');
-  tile.className='study-tile'; tile.id=id;
+  tile.className='study-tile tile-custom'; tile.id=id;
   tile.setAttribute('onclick',`openTileLink('${id}')`);
   tile.innerHTML=`<button class="tile-edit-btn" onclick="event.stopPropagation();editTile('${id}')">✏️ 링크 수정</button><div class="t-icon">${emoji}</div><h3>${name}</h3><p id="${id}-desc">${desc}</p><span class="t-link" id="${id}-lbl">${url?'열기 →':'링크 없음'}</span>`;
   tileLinks[id]=url;
   grid.insertBefore(tile,addTile);
   closeAddModal();
   ['addName','addEmoji','addUrl','addDesc'].forEach(i=>document.getElementById(i).value='');
+  customTileData.push({id,name,emoji,url,desc});
+  try{
+    await db.ref('staff/customTiles').set(customTileData);
+    await db.ref('staff/tileLinks/'+id).set({url,desc});
+    showToast('✓ 저장 완료!');
+  }catch(e){ showToast('⚠ 저장 실패: '+e.message); }
+}
+
+/* ── 정보 ── */
+let infoData=[];
+function renderInfo(){
+  const list=document.getElementById('infoList');
+  list.innerHTML='';
+  if(!infoData.length){list.innerHTML='<div class="info-empty">아직 게시글이 없습니다. 위 버튼으로 추가해보세요.</div>';return;}
+  infoData.forEach((item,i)=>{
+    const el=document.createElement('div'); el.className='info-item';
+    el.innerHTML=`<div class="info-item-hdr"><h4>${item.title}</h4><span class="info-author">${item.author}</span><button class="del-btn" onclick="deleteInfo(${i})">✕</button></div><p>${item.body}</p><div class="info-date">${item.date}</div>`;
+    list.appendChild(el);
+  });
 }
 function openInfoModal(){ document.getElementById('infoModal').classList.add('open'); }
 function closeInfoModal(){ document.getElementById('infoModal').classList.remove('open'); }
-function saveInfo(){
+async function saveInfo(){
   const author=document.getElementById('infoAuthor').value.trim()||'익명';
   const title=document.getElementById('infoTitle').value.trim();
   const body=document.getElementById('infoBody').value.trim();
   if(!title){alert('제목을 입력하세요.');return;}
-  const list=document.getElementById('infoList');
-  const empty=list.querySelector('.info-empty'); if(empty)empty.remove();
   const today=new Date().toLocaleDateString('ko-KR');
-  const item=document.createElement('div'); item.className='info-item';
-  item.innerHTML=`<div class="info-item-hdr"><h4>${title}</h4><span class="info-author">${author}</span><button class="del-btn" onclick="this.closest('.info-item').remove()">✕</button></div><p>${body}</p><div class="info-date">${today}</div>`;
-  list.appendChild(item);
+  infoData.push({author,title,body,date:today});
+  renderInfo();
   closeInfoModal();
   ['infoAuthor','infoTitle','infoBody'].forEach(i=>document.getElementById(i).value='');
+  try{ await db.ref('staff/infoItems').set(infoData); showToast('✓ 저장 완료!'); }
+  catch(e){ showToast('⚠ 저장 실패: '+e.message); }
+}
+async function deleteInfo(idx){
+  if(!confirm('삭제할까요?')) return;
+  infoData.splice(idx,1);
+  renderInfo();
+  try{ await db.ref('staff/infoItems').set(infoData); showToast('✓ 삭제 완료!'); }
+  catch(e){ showToast('⚠ 저장 실패: '+e.message); }
 }
 </script>
 </body>
