@@ -535,21 +535,12 @@ input[type=file].hidden{display:none;}
       </div>
     </div>
     <!-- 수정3: 특별 프로그램 소메뉴 -->
-    <div class="ni"><a href="#programs" onclick="switchTab('special')">특별 프로그램 <span class="ni-arr">▾</span></a>
-      <div class="dropdown">
-        <a href="#programs" onclick="switchTab('special')">내신대비</a>
-        <a href="#programs" onclick="switchTab('special')">방학대비</a>
-      </div>
-    </div>
+
     <div class="ni"><a href="#news">별내점 소식</a></div>
     <!-- 수정2,7: 학습 관리로 변경, 소메뉴 변경, 수정14: 시험지분석 없음 -->
-    <div class="ni"><a href="eduplex_study.html">학습 관리 <span class="ni-arr">▾</span></a>
-      <div class="dropdown">
-        <a href="eduplex_study.html?tab=exam">시험지 분석</a>
-        <a href="eduplex_study.html?tab=hof">명예의 전당</a>
-        <a href="eduplex_study.html?tab=interview">인터뷰</a>
-      </div>
-    </div>
+    <div class="ni"><a href="eduplex_study.html?tab=exam">시험지 분석</a></div>
+    <div class="ni"><a href="eduplex_study.html?tab=hof">명예의 전당</a></div>
+    <div class="ni"><a href="eduplex_study.html?tab=interview">인터뷰</a></div>
     <div class="ni"><a href="eduplex_staff.html">교직원 전용 🔐</a></div>
   </div>
 
@@ -566,7 +557,7 @@ input[type=file].hidden{display:none;}
   <a href="#about" class="mob-lnk" onclick="toggleMob()">센터 소개</a>
   <div class="mob-grp-title" style="margin-top:8px;">프로그램</div>
   <a href="#programs" class="mob-lnk" onclick="toggleMob();switchTab('basic')">기본 프로그램</a>
-  <a href="#programs" class="mob-lnk" onclick="toggleMob();switchTab('special')">특별 프로그램</a>
+
   <div class="mob-grp-title" style="margin-top:8px;">소식 & 문의</div>
   <a href="#news" class="mob-lnk" onclick="toggleMob()">별내점 소식</a>
   <a href="#contact" class="mob-lnk" onclick="toggleMob()">상담 & 문의</a>
@@ -652,7 +643,7 @@ input[type=file].hidden{display:none;}
     </div>
     <div class="prog-tabs">
       <button class="ptab on" onclick="switchTab('basic')">📚 기본 프로그램</button>
-      <button class="ptab" onclick="switchTab('special')">💡 특별 프로그램</button>
+
     </div>
 
     <!-- 기본 프로그램 -->
@@ -711,11 +702,7 @@ input[type=file].hidden{display:none;}
       </div>
     </div>
 
-    <!-- 특별 프로그램 -->
-    <div class="ppanel" id="tab-special">
-      <p style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:18px;">시기별 특별 프로그램입니다. 항목을 클릭하면 상세 내용을 확인하세요.</p>
-      <div class="sp-grid" id="spGrid"></div>
-    </div>
+
   </div>
 </section>
 
