@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<title>에듀플렉스 · VLT 4G 학습유형 보고서</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body {
+  font-family: 'Malgun Gothic', '맑은 고딕', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif;
+  background: #f5f6f8;
+  color: #1a1d23;
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ══════════════════════════════
+   LAYOUT
+══════════════════════════════ */
+.shell { display: flex; min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 240px; min-height: 100vh;
+  background: #1e2d5a;
+  border-right: 1px solid #2a3f7a;
+  display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  flex-shrink: 0;
+}
+.sidebar::-webkit-scrollbar { width: 3px; }
+.sidebar::-webkit-scrollbar-thumb { background: #2a3f7a; border-radius: 2px; }
+
+.sidebar-logo {
+  padding: 22px 18px 16px;
+  border-bottom: 1px solid #2a3f7a;
+}
+.brand { display: flex; align-items: center; gap: 9px; margin-bottom: 5px; }
+.brand-mark {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: #F5C518;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.brand-mark svg { width: 13px; height: 13px; fill: #1e2d5a; }
+.brand-name { font-size: 14px; font-weight: 700; color: #fff; }
+.brand-sub { font-size: 11px; color: #7a9cc8; padding-left: 37px; }
+
+.sidebar-sec-title {
+  font-size: 10px; font-weight: 700; color: #7a9cc8;
+  letter-spacing: 0.08em; padding: 14px 18px 6px; display: block;
+}
+.type-list { padding: 0 10px 12px; }
+.type-btn {
+  width: 100%; display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px; border: none; background: none; cursor: pointer;
+  border-radius: 8px; text-align: left; margin-bottom: 2px;
+  border: 1px solid transparent;
+  transition: all 0.14s; font-family: inherit;
+}
+.type-btn:hover { background: #243472; }
+.type-btn.active { background: #2a3f7a; border-color: #F5C518; }
+.btn-num {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: #243472;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #7a9cc8;
+  flex-shrink: 0; transition: all 0.14s;
+}
+.type-btn.active .btn-num { background: #F5C518; color: #1e2d5a; }
+.type-btn.has-data:hover .btn-num { background: #e6b800; color: #1e2d5a; }
+.btn-info { flex: 1; min-width: 0; }
+.btn-name { font-size: 13px; font-weight: 500; color: #b0c8e8; line-height: 1.3; }
+.btn-tag { font-size: 11px; color: #5a7aaa; margin-top: 1px; }
+.type-btn.active .btn-name { color: #F5C518; font-weight: 700; }
+.type-btn.active .btn-tag { color: #c8a200; }
+.data-dot { width: 6px; height: 6px; border-radius: 50%; background: #F5C518; flex-shrink: 0; }
+.no-dot { width: 6px; }
+
+.sidebar-foot { margin-top: auto; padding: 14px 16px; border-top: 1px solid #2a3f7a; }
+.live-badge {
+  display: flex; align-items: center; gap: 7px;
+  background: #243472; border: 1px solid #3a54a0; border-radius: 20px; padding: 7px 12px;
+}
+.live-dot { width: 6px; height: 6px; border-radius: 50%; background: #F5C518; animation: blink 2s infinite; }
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+.live-txt { font-size: 11px; color: #F5C518; font-weight: 600; }
+
+/* ── MAIN ── */
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; background: #f5f6f8; }
+
+/* ── TOPBAR ── */
+.topbar {
+  background: #1e2d5a; border-bottom: 1px solid #2a3f7a;
+  padding: 14px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+  position: sticky; top: 0; z-index: 10;
+}
+.topbar-eyebrow { font-size: 11px; color: #7a9cc8; }
+.topbar-title { font-size: 17px; font-weight: 700; color: #fff; margin-top: 2px; }
+.top-actions { display: flex; gap: 8px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 14px; border-radius: 8px;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  font-family: inherit; transition: all 0.14s; white-space: nowrap;
+}
+.btn-line { background: #243472; color: #b0c8e8; border: 1px solid #3a54a0; }
+.btn-line:hover { background: #2a3f7a; }
+.btn-print { background: #F5C518; color: #1e2d5a; border: 1px solid #F5C518; }
+.btn-print:hover { background: #e6b800; }
+
+/* ── CONTENT ── */
+.content { padding: 28px 28px 48px; flex: 1; }
+
+/* ── EMPTY ── */
+.empty {
+  text-align: center; padding: 80px 20px;
+  display: flex; flex-direction: column; align-items: center;
+}
+.empty-icon-wrap {
+  width: 54px; height: 54px; border-radius: 14px;
+  background: #fff; border: 1px solid #e0e4ef;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px;
+}
+.empty-icon-wrap svg { width: 22px; height: 22px; stroke: #b0b8d0; fill: none; stroke-width: 1.5; }
+.empty-t { font-size: 15px; font-weight: 700; color: #4a5a7a; margin-bottom: 6px; }
+.empty-s { font-size: 13px; color: #8a9ab8; line-height: 1.7; }
+
+/* ── REPORT ── */
+.report { animation: fadeUp .22s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(5px);} to{opacity:1;transform:none;} }
+
+/* hero */
+.report-hero {
+  border-radius: 12px 12px 0 0;
+  padding: 28px 28px 22px;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  position: relative; overflow: hidden;
+}
+.hero-content { position: relative; z-index: 1; }
+.hero-label { font-size: 11px; letter-spacing: 0.1em; color: rgba(255,255,255,0.65); margin-bottom: 8px; font-weight: 500; }
+.hero-name { font-size: 30px; font-weight: 700; color: #fff; line-height: 1.2; margin-bottom: 6px; }
+.hero-sub { font-size: 13px; color: rgba(255,255,255,0.85); line-height: 1.6; }
+.hero-bignum {
+  font-size: 72px; font-weight: 700; color: rgba(255,255,255,0.12);
+  line-height: 1; flex-shrink: 0; position: relative; z-index: 1;
+  font-feature-settings: 'tnum'; letter-spacing: -2px;
+}
+
+/* tag bar */
+.tag-bar {
+  padding: 10px 28px; display: flex; flex-wrap: wrap; gap: 6px;
+}
+.htag {
+  font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 20px;
+  background: #F5C518; color: #1e2d5a;
+  border: none;
+}
+
+/* report body */
+.report-body {
+  background: #fff; border: 1px solid #dde2ef; border-top: none;
+  border-radius: 0 0 12px 12px;
+  padding: 28px 28px;
+  display: flex; flex-direction: column; gap: 24px;
+}
+
+/* ── PART LABEL (대목차: A/B) ── */
+.part-label-wrap { margin-bottom: 4px; }
+.part-label {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 17px; font-weight: 700; letter-spacing: 0.02em;
+  color: #1a2d6e;
+  padding: 8px 18px 8px 14px;
+  background: #eef2fb;
+  border-left: 4px solid #1a2d6e;
+  border-radius: 0 8px 8px 0;
+}
+
+/* ── SEC TITLE (소목차) ── */
+.sec-title {
+  font-size: 14px; font-weight: 700; letter-spacing: 0.03em;
+  color: #1a2d6e;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #1a2d6e;
+  margin-bottom: 14px;
+}
+
+/* card */
+.card {
+  background: #f8f9fc; border: 1px solid #e2e6f0;
+  border-radius: 10px; padding: 16px 18px; margin-bottom: 10px;
+}
+.card:last-child { margin-bottom: 0; }
+.card-label {
+  font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; gap: 7px;
+  margin-bottom: 14px; color: #1a1d23;
+}
+.cdot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+/* ilist (key-value) */
+.ilist { display: flex; flex-direction: column; }
+.irow {
+  display: flex; gap: 16px; align-items: flex-start;
+  padding: 11px 0; border-bottom: 1px solid #e8ecf5;
+}
+.irow:first-child { padding-top: 0; }
+.irow:last-child { border-bottom: none; padding-bottom: 0; }
+.ikey {
+  font-size: 12px; font-weight: 700; min-width: 120px;
+  color: #1a1d23; flex-shrink: 0; line-height: 1.5; padding-top: 2px;
+  background: #e8ecf5; border-radius: 5px; padding: 3px 10px;
+  height: fit-content; white-space: nowrap;
+}
+.ival { font-size: 13px; color: #1a1d23; line-height: 1.8; }
+
+/* nlist (numbered) */
+.nlist { display: flex; flex-direction: column; gap: 12px; }
+.nrow { display: flex; gap: 12px; align-items: flex-start; }
+.ncirc {
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+}
+.ntxt { font-size: 13px; color: #1a1d23; line-height: 1.8; }
+.ntxt strong { font-weight: 700; color: #1a1d23; }
+
+/* wlist (numbered rows) */
+.wlist { display: flex; flex-direction: column; }
+.wrow { padding: 12px 0; border-bottom: 1px solid rgba(0,0,0,0.1); }
+.wrow:first-child { padding-top: 0; }
+.wrow:last-child { border-bottom: none; padding-bottom: 0; }
+.wtrig {
+  font-size: 13px; font-weight: 700; color: #1a1d23;
+  display: flex; align-items: flex-start; gap: 8px;
+  margin-bottom: 6px; line-height: 1.5;
+}
+.wtrig-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: #1e2d5a; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 1px;
+}
+.warrow { font-size: 13px; color: #8a9aaa; padding-left: 2px; margin-bottom: 4px; }
+.wact { font-size: 13px; color: #1a1d23; line-height: 1.8; padding-left: 4px; }
+.wext {
+  font-size: 12px; color: #2a2000; line-height: 1.75;
+  padding: 9px 12px; margin-top: 8px;
+  background: rgba(0,0,0,0.07); border-radius: 7px;
+  border-left: 3px solid rgba(0,0,0,0.25);
+}
+
+/* yellow card (개별지도) */
+.card-yellow {
+  background: #FFF8DC; border: 1px solid #F0D060;
+  border-radius: 10px; padding: 16px 18px; margin-bottom: 10px;
+}
+.card-yellow:last-child { margin-bottom: 0; }
+.card-yellow .card-label { color: #1a1d23; }
+.card-yellow .wtrig { color: #1a1d23; }
+.card-yellow .wtrig-num { background: #d4a800; color: #fff; }
+.card-yellow .wrow { border-bottom-color: #F0D060; }
+.card-yellow .wact { color: #1a1d23; }
+.card-yellow .warrow { color: #b0a060; }
+.card-yellow .wext {
+  background: rgba(240,208,96,0.25); border-left-color: #d4a800; color: #3a2e00;
+}
+
+/* footer */
+.report-footer {
+  border-top: 1px solid #e2e6f0; padding-top: 16px;
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 10px;
+}
+.ft-label { font-size: 12px; color: #8a9ab8; }
+
+/* ══════════════════════════════
+   MOBILE
+══════════════════════════════ */
+@media (max-width: 720px) {
+  .sidebar { display: none; }
+  .shell { flex-direction: column; }
+  .main { min-height: 100vh; }
+  .topbar { padding: 11px 14px; }
+  .topbar-title { font-size: 14px; }
+  .topbar-eyebrow { font-size: 10px; }
+  .btn { padding: 7px 11px; font-size: 11px; }
+  .content { padding: 12px 12px 40px; }
+  .report-hero { padding: 20px 18px 16px; }
+  .hero-name { font-size: 22px; }
+  .hero-bignum { font-size: 52px; }
+  .tag-bar { padding: 8px 14px; }
+  .report-body { padding: 16px 14px; gap: 18px; }
+  .card { padding: 13px 14px; }
+  .ikey { min-width: 86px; font-size: 11px; }
+  .ival { font-size: 12px; }
+  .ntxt { font-size: 12px; }
+  .wact { font-size: 12px; }
+
+  .mobile-type-bar {
+    display: block;
+    background: #1e2d5a; border-bottom: 1px solid #2a3f7a;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    padding: 8px 12px; white-space: nowrap;
+  }
+  .mobile-type-bar::-webkit-scrollbar { display: none; }
+  .m-type-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 20px;
+    border: 1px solid #3a54a0; font-size: 12px; font-weight: 700;
+    cursor: pointer; background: #1e2d5a; color: #7a9cc8;
+    font-family: inherit; margin-right: 5px;
+    transition: all 0.14s;
+  }
+  .m-type-btn.active { background: #F5C518; color: #1e2d5a; border-color: #F5C518; }
+  .m-type-btn.no-data { opacity: 0.4; }
+}
+@media (min-width: 721px) { .mobile-type-bar { display: none; } }
+
+/* PRINT */
+@media print {
+  .sidebar, .topbar, .mobile-type-bar { display: none !important; }
+  .main { background: #fff; }
+  .content { padding: 0; max-width: 100%; }
+  .report-hero, .tag-bar { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .card { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .report-footer .btn-print { display: none; }
+  @page { margin: 1.5cm; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg viewBox="0 0 14 14"><path d="M2 2h4v4H2zM8 2h4v4H8zM2 8h4v4H2zM8 8h4v4H8z"/></svg>
+        </div>
+        <span class="brand-name">에듀플렉스</span>
+      </div>
+      <div class="brand-sub">VLT 4G 학습유형 보고서</div>
+    </div>
+    <span class="sidebar-sec-title">16타입 목록</span>
+    <div class="type-list" id="sideTypeList"></div>
+    <div class="sidebar-foot">
+      <div class="live-badge">
+        <div class="live-dot"></div>
+        <div class="live-txt">VLT 4G 분석 시스템</div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="mobile-type-bar" id="mobileTypeBar"></div>
+
+    <div class="topbar">
+      <div>
+        <div class="topbar-eyebrow" id="topEye">타입을 선택하면 보고서가 열립니다</div>
+        <div class="topbar-title" id="topTitle">VLT 4G 학습유형 보고서</div>
+      </div>
+      <div class="top-actions">
+        <button class="btn btn-print" onclick="window.print()">🖨 PDF 저장</button>
+      </div>
+    </div>
+
+    <div class="content" id="mainContent">
+      <div class="empty">
+        <div class="empty-icon-wrap">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="7" y1="9" x2="17" y2="9"/><line x1="7" y1="13" x2="13" y2="13"/></svg>
+        </div>
+        <div class="empty-t">타입을 선택하세요</div>
+        <div class="empty-s">좌측 목록에서 타입을 선택하면<br>학습유형 보고서가 열립니다.</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const TYPES = [
+  {num:1,name:"(준비중)",tag:"데이터 입력 전",hasData:false},
+  {num:2,name:"(준비중)",tag:"데이터 입력 전",hasData:false},
+  {num:3,name:"(준비중)",tag:"데이터 입력 전",hasData:false},
+  {num:4,name:"(준비중)",tag:"데이터 입력 전",hasData:false},
+  {num:5,name:"(준비중)",tag:"데이터 입력 전",hasData:false},
+  {num:6,name:"(준비중)",tag:"데이터 입력 전",hasData:false},
+  {num:7,name:"(준비중)",tag:"데이터 입력 전",hasData:false},
+  {
+    num:8, name:"고집쟁이", tag:"자존심·고집 강함", hasData:true,
+    color:"#1e2d5a", colorDark:"#152248",
+    keyword:"자존심 강함 · 자기 고집 · 주변 시선 의식",
+    tags:["자존심 강함","자기 고집","과도한 자기 긍정","주변 시선 의식","겉핥기 학습","감춰진 열등감","자기 합리화"],
+
+    psych:[
+      {k:"자존심 강함", v:"부족한 모습을 완전히 인정하지는 않으나 어느 정도 인정하는 경우도 있고, 마지못해 인정하는 모습을 보이는 경우도 있음."},
+      {k:"자기 고집", v:"본인의 판단과 의견을 중요하게 생각하는 경향이 있음. 매니저의 의견 중 본인이 납득한 경우에 한해 수용하며, 고집이 매우 강한 경우 매니저의 제안을 수용하지 않는 사례도 있음."},
+      {k:"과도한 자기 긍정", v:"본인의 현재 학습 수준이나 상황을 충분히 고려하지 않고, 수준에 맞지 않는 무리한 학습을 시도하는 경향이 있음."},
+      {k:"주변 시선 의식", v:"주변 시선을 많이 인식하는 편이며, 매니저에게 평가받는 상황에 민감하게 반응하거나 보여주기식 공부로 이어지는 모습이 나타나기도 함."}
+    ],
+    behavior:[
+      {k:"과도한 학습 계획", v:"초반에는 과도한 학습 계획을 세우려는 모습을 보이나, 실천하지 못하는 경험이 쌓이면서 점차 현실적인 계획으로 조정하려 하기도 함. 관심 있는 과목에 대해서는 과도하게 계획을 세우는 경향이 있음."},
+      {k:"엉뚱한 공부", v:"본인의 현재 수준에 맞지 않는 학습을 시도하거나, 학습 방향 설정이 적절하지 않은 경우가 있음. 학원 의존도 및 학습 효율 측면에서도 점검이 필요함."},
+      {k:"겉핥기 학습", v:"학습 시간을 일정 수준 확보하고 있으나, 깊이 있는 이해보다 전체를 빠르게 훑는 방식으로 학습하는 경우가 있음. 선호 과목에서도 겉핥기식 학습이 나타나며, 비선호 과목에서는 이러한 성향이 더욱 강하게 나타남."},
+      {k:"부족한 실천 결과", v:"학습 시간 대비 결과가 기대에 미치지 못하는 경우가 있음. 선호 과목에 더 많은 시간을 투자하더라도 성적 향상으로 이어지지 않는 경우도 있음."},
+      {k:"감춰진 열등감", v:"다른 사람들에게 뒤처지는 상황을 싫어하는 편이며, 초반의 과도한 계획 수립도 이 열등감에서 비롯되는 경향이 있음."},
+      {k:"자기 합리화", v:"학습 결과가 기대에 미치지 못할 경우 상황이나 환경의 탓으로 돌리는 모습을 보임. 본인의 실력 부족을 인정하더라도 개선 의지로 이어지지 않는 경우가 있음."}
+    ],
+    mgmtDir:[
+      {t:"공부 방식 관리 중심", v:"공부량보다 퀄리티 중심으로 접근. 학습 시간보다 학습의 깊이와 이해도를 기준으로 점검."},
+      {t:"성공 경험 만들기", v:"달성 가능한 목표를 통해 작은 성공 경험을 축적. 자기 효능감을 높여 동기부여로 연결."},
+      {t:"잔소리형 관리 지양", v:"반복적인 지적보다 학생 스스로 인식하도록 유도. 지적이 공격으로 받아들여질 수 있음."},
+      {t:"가시적 자료·지표로 설득", v:"말로만 하는 설득보다 데이터·수치·자료를 제시하여 납득하도록 접근."},
+      {t:"SC 진행 시 고민 체크", v:"쓸데없는 고민을 하는 경향이 있으므로, StartCheck에서 요즘 드는 생각·고민이 있는지 반드시 확인."},
+      {t:"라포 형성이 최우선", v:"모든 전략의 전제 조건. 신뢰 관계 없이는 어떤 전략도 효과를 내기 어려움."}
+    ],
+    counsel:[
+      {t:"구체적인 자료·지표 활용", v:"입시 정보, 학습 데이터 등 객관적 근거를 보여주며 상담 진행. 감정적 설득보다 논리적·수치적 접근이 효과적."},
+      {t:"우선순위 설정", v:"학생의 의견을 충분히 수용하되, 매니저가 명확한 우선순위를 제시. 학생이 스스로 선택했다는 느낌을 주면서 방향을 잡아줌."},
+      {t:"주기적 학습 점검 상담", v:"학습 진행 상황을 주기적으로 점검하는 상담을 통해 방향 이탈을 조기에 파악하고 조정."}
+    ],
+
+    tutor:[
+      {trig:"이해하지 못했음에도 이해했다고 넘어가는 경향", act:"튜터 설명 후 반드시 개념 역질문 진행. 학생이 스스로 설명할 수 있는지 확인 필수.", ext:""},
+      {trig:"본인 수준보다 과한 숙제량·난이도 요구", act:"오답이 많을 경우 유형별로 1문항씩 튜터와 함께 해결하고, 나머지는 순회 시간에 미션으로 제시.", ext:"오답 문제별로 필요 공식·접근 방식·풀이 과정 모두 꼼꼼히 점검. 주 2회 수업 기준으로 오답 + 질의응답 중심으로 운영."}
+    ],
+    manager:[
+      {trig:"지적을 공격으로 받아들여 강하게 반발할 수 있음", act:"말과 행동에서 학생을 존중하고 있음을 먼저 보여주기. 논리에 맞지 않는 이야기도 일단 듣고 공감 반응 후 의견 제시.", ext:"면담을 통해 라포를 형성하고 역린을 파악. 학습 고민·개인 스트레스 등을 자연스럽게 체크. 교재 점검 면담으로 학생을 지속적으로 신경 쓰고 있음을 어필."},
+      {trig:"역린을 건드리지 않은 상태에서 조금씩 변화 유도", act:"교재 점검 면담 시 문제점을 역질문으로 학생이 인식하도록 유도. 공격으로 받아들이지 않는 범위에서 1~2문항씩 재풀이 진행.", ext:"가이드에서 벗어나는 경우, 본인의 방식이 주 가이드에서 벗어남을 반드시 인지시키고 가이드 안으로 들어올 수 있도록 반복적으로 설득. 명확한 자료·증거를 남겨 남탓 상황에 대비."},
+      {trig:"주변인의 말에 흔들려 학습 방향이 바뀌는 경우", act:"몇몇 주변인의 말에 영향을 받는 편이므로, 매니저가 지속적으로 근거 있는 방향을 제시하며 중심을 잡아줌.", ext:""}
+    ],
+    curri:[
+      {trig:"교실장이 단독으로 커리큘럼을 작성할 경우 반발 가능성 높음", act:"반드시 학생과 함께 논의하며 커리큘럼 작성. 학생이 스스로 납득하고 따를 수 있는 방향으로 합의. 커리 논의 내용은 반드시 증거 자료로 남겨두기.", ext:""},
+      {trig:"갑작스러운 수업 방식·교재 변경이 잦음", act:"자주 터치하여 현재 진행 방식을 체크하고, 원래 가이드를 지속적으로 안내. 틀에서 크게 벗어났을 때는 면담을 통해 조정.", ext:""}
+    ]
+  },
+  {
+    num:9, name:"유리구슬", tag:"멘탈 관리 최우선", hasData:true,
+    color:"#2e5a8a", colorDark:"#1e3d66",
+    keyword:"너무 많은 생각 · 부정적 사고 · 자신감 저하",
+    tags:["너무 많은 생각","부정적 사고","주변 시선 예민","자잘한 걱정","집중력 저하","낮은 실천력","자신감 저하","낮은 효능감"],
+
+    psych:[
+      {k:"너무 많은 생각", v:"학습 중 멍 때리거나 엎드려 자는 경우가 잦음. 생각이 많아 스트레스에 취약하며, 심한 경우 신체 증상(속쓰림, 복통 등)으로 이어지기도 함."},
+      {k:"부정적 사고", v:"성적에 대한 자신감이 매우 낮음. 공부 외에 자신감을 받쳐주는 영역(운동, 게임, 취미 등)이 있으면 자존감 유지가 가능하나, 그렇지 않을 경우 부정적 사고를 막을 대책이 없어 스트레스가 신체까지 영향을 미칠 수 있음."},
+      {k:"주변 시선에 예민", v:"순회 중이 아닐 때는 주변 시선을 상당히 신경 씀. 공부할 때 주변 사람의 영향을 많이 받으며, 방해 요소가 있을 경우 자리 이동을 요청하는 경우도 있음. 학교 생활에서도 주변인으로 인한 스트레스를 받는 편."},
+      {k:"자잘한 걱정", v:"공부 관련 걱정뿐만 아니라 다양한 요인으로 인한 걱정이 끊이지 않음. 컨디션 점수가 9점 이상인 경우가 거의 없으며, 평균 컨디션이 매우 낮은 경우도 있음."},
+      {k:"자신감 저하·낮은 효능감", v:"과정에서도 뒤처지고 결과도 나빠 부정적 내적 귀인(자기 탓)에 빠지는 경우가 많음. 이야기할 때는 웃으며 상황 탓을 하면서도 본인의 책임도 느껴 스트레스를 받는 편."}
+    ],
+    behavior:[
+      {k:"집중력 저하", v:"집중력이 낮아 수업 중 멍 때리거나 잠드는 경우가 잦음. 컨디션에 따라 수업 집중도 차이가 매우 크며, 루틴 설정이 반드시 필요함."},
+      {k:"낮은 실천력", v:"집중력 저하로 인해 실천력이 낮게 나타남. 1시간당 진행할 수 있는 분량이 1~2장 수준이며, 숙제나 미션으로 전환해도 잘 이행되지 않는 경우가 많음."},
+      {k:"학습 성취 저조", v:"이해 속도가 느리고 성적이 낮은 편. 기반 개념이 쌓이지 않아 후행 학습이 필수적이며, 심화 문제는 아예 풀지 못하는 경향이 있음."},
+      {k:"기초 학력 부족", v:"중1 수준부터 누수가 있는 상태로, 현재 교재 개념을 어려워하는 경우가 있음. 후행 학습을 통해 기초부터 다시 쌓는 과정이 필요함."}
+    ],
+    mgmtDir:[
+      {t:"멘탈 체크 최우선", v:"고민 해결 및 방지 대책 마련 필수. 학습 시간·루틴 설정을 다른 학생보다 더 세밀하게 진행."},
+      {t:"시험 기간 스트레스 관리", v:"시험 기간 임박 시 스트레스 관리 및 상태 점검 필수. 누수 학습을 계속 짚는 것은 오히려 스트레스가 되므로 전략적으로 접근."},
+      {t:"즉시 피드백 지양", v:"바로바로 즉각 피드백보다 학생 상태를 먼저 확인한 후 피드백 제공. 할 일이 너무 많아지면 오히려 성과가 떨어짐."},
+      {t:"생각 배출 시간 확보", v:"상담 시 모든 시간을 주제로만 진행하기보다 일상 토크를 통해 생각을 배출하는 과정 필요."}
+    ],
+    counsel:[
+      {t:"컨디션 점수 확인", v:"좋으면 좋은 대로, 나쁘면 나쁜 대로 이유를 묻고 상황을 파악하며 이야기 진행."},
+      {t:"오프닝 질문 활용", v:"랜덤 질문을 던지고 특정 주제에 대해 이야기하며 생각을 해소. 머릿속 생각을 정리함으로써 공부에 집중할 수 있는 상태를 만들어 주는 것이 핵심."},
+      {t:"상담 흐름 유지", v:"컨디션 확인 & 오프닝 질문 → 메인 상담 주제 → 오늘의 미션 강조 & 셀프리더 점검 순으로 진행. 마무리 시 오늘 해야 할 부분을 언급하며 학습 의지를 갖고 학습실로 돌아갈 수 있도록 함."}
+    ],
+
+    tutor:[
+      {trig:"자존감이 낮고 스트레스에 매우 취약함", act:"밝고 친절한 F 성향 튜터 위주로 배정. 언행에 각별히 주의하고 긍정어를 적극 사용. 학생의 작은 성취나 행동에도 구체적으로 칭찬.", ext:"집중도가 낮아졌을 경우 약간의 휴식을 제공하면서 코칭 때 1문항·1개념이라도 학습하도록 유도. 중간중간 멍 때릴 경우 환기시키기."},
+      {trig:"기반 개념 부족으로 수업 중 누수 발생 가능성 높음", act:"수업 진행 중 보이는 누수 개념은 그때그때 바로 보충 설명. 개념 설명 후 반드시 역질문으로 이해도·암기도 체크.", ext:"결석이 잦아 직전 수업과 텀이 길어질 수 있으므로, 반드시 직전 수업 내용·숙제 역질문 진행. 학기 중 숙제는 최소한으로 내주고, 미이행 시 중요한 문제만 골라 수업 중 진행 후 재출제."},
+      {trig:"주변 시선을 의식하며 누군가 보고 있을 때 더 열심히 하는 경향", act:"옆에 앉혀서 공부시키는 방식이 효과적. 약간의 칭찬만으로도 성취도가 크게 올라가므로 세심하게 관찰하고 구체적으로 칭찬.", ext:""}
+    ],
+    manager:[
+      {trig:"자존감이 낮고 교재 수준에 대한 불안감을 가질 수 있음", act:"모든 학생이 같은 교재를 사용하지 않음을 다른 학생 사례로 설명. 본인에게 맞는 교재로 성장한 사례를 구체적으로 안내.", ext:"지속적으로 터치하며 진도를 체크하고, 실제 성취도를 바탕으로 구체적인 칭찬 제공. (예: '이 정도면 진도가 빠른 편이다', '처음 배우는 개념인데 이해를 잘 하고 있다' 등)"},
+      {trig:"생각이 많으나 라포가 형성되지 않으면 이야기하지 않음", act:"일상적인 이야기로 주기적 라포 형성. 평소 생활·취미·요즘 즐거운 것·걱정거리 등을 자연스럽게 나누며 학생이 애착을 가질 수 있도록 함.", ext:"어떤 튜터가 어떤 내용을 칭찬했는지, 학원에서 학생을 얼마나 아끼고 있는지를 구체적으로 전달. 컨디션을 당일 체크하여 튜터에게 전달하기."},
+      {trig:"계획·숙제 성취도가 낮은 날이 반복됨", act:"성취도가 너무 낮은 날에는 교실장 앞에서 조금이라도 학습하도록 지도. 원인을 체크하는 것이 중요.", ext:""}
+    ],
+    curri:[
+      {trig:"학습 계획이 과도하면 부담감으로 오히려 회피함", act:"'이 정도면 할 만한데?'라는 인식을 가질 수 있도록 계획을 정말 많이 내려놓기. 과도한 계획은 오히려 학습 의지를 꺾음.", ext:"결석·지각·컨디션 이슈로 수업 참여도가 낮은 날이 많으므로 주차별 계획을 여유롭게 설정하되, 너무 느려질 경우 수업 횟수를 늘리는 방향으로 조정."},
+      {trig:"기초 부족 & 자신감 저하로 후행 학습 필수", act:"방학 시즌에는 후행을 반드시 진행하여 스스로 할 수 있다는 경험 제공. 심화 문제는 제외하고 개념 암기 + 쉬운 문제 위주로 공략.", ext:"학기 중 숙제는 최소한으로. 교재 완료 목표 주차는 확실히 정해 학생에게 인지시키고 지킬 수 있도록 함. 컨디션 관리도 커리큘럼 계획 시 반드시 고려."}
+    ]
+  },
+  {num:10,name:"(준비중)",tag:"데이터 입력 전",hasData:false},
+  {
+    num:11, name:"성실이", tag:"노력형·학습법 보완 필요", hasData:true,
+    color:"#2a6a4a", colorDark:"#1a4a30",
+    keyword:"꾸준한 노력 · 학습법 미숙 · 자신감 저하",
+    tags:["사고력 부족","자기주관 약함","수용적 성격","수동적 학습","학습법 미숙","학습 센스 부족","꾸준한 노력","자신감 저하","불안감"],
+
+    psych:[
+      {k:"자기주관 약함", v:"학습 시 본인만의 방법이 없고 어떻게 해야 할지 몰라 걱정이 많음. 새로운 방법을 제안할 때 이유가 확실하고 설득이 되면 성실하게 따라오나, 사고력 부족으로 본인 방식대로 변형하거나 기계적으로 반복하는 경우가 있어 지속적인 디테일 체크가 필요함."},
+      {k:"수용적 성격", v:"새로운 것을 권유할 때 잘 거부하지 못하고 따라오는 편. 단, 거부를 못 하는 것과 싫은 것은 별개이므로 잘 따라온다고 괜찮다고 판단해서는 안 됨. 집에서 부모님께 힘든 점을 이야기하는 경우가 많으므로 학부모님 반응 체크 필수."},
+      {k:"자신감 저하", v:"공부에 있어 본인의 판단을 믿지 못하고 걱정과 불안이 높음. 열심히 해도 결과가 나오지 않아 지속적인 스트레스를 받고 있으며, 겉으로는 잘 드러나지 않고 웃으면서 열심히 하는 편이나 속으로는 힘들어함."},
+      {k:"학업 스트레스·불안감", v:"계속 불안해하는 편이나 표출이 적어 겉으로는 잘 드러나지 않음. 어머님 등 주변인 채널을 통해 추가 정보를 얻고, 어떤 요인으로 불안한지 미리 파악한 후 상담으로 해소·관리하는 접근이 필요함."}
+    ],
+    behavior:[
+      {k:"사고력 부족", v:"학습 시 인과관계·과정·흐름을 확인하기보다 단편적으로 접근하는 경우가 많음. 오답 시에도 사고 없이 기계적으로 처리하는 경향이 있음."},
+      {k:"수동적 학습", v:"시킨 것은 잘 하지만 시킨 것만 함. 기계적인 학습이 많고 깊게 고민하지 않는 편. 시킨 것조차도 디테일이 떨어지는 경우가 있음."},
+      {k:"학습 우선순위 모름", v:"매일 전략적으로 순서를 재배치하기보다 어제의 루틴을 기계적으로 반복하는 경우가 많음. 급한 과목·취약한 과목보다 순서대로 진행하며, 개념 이해가 덜 됐어도 꾸역꾸역 문제를 푸는 편."},
+      {k:"학습법 미숙·센스 부족", v:"학습법이 체계화되어 있지 않아 하나씩 만들어주고 다듬어줘야 함. 개념을 학습했다고 이해한 것이 아니고, 필기했다고 암기한 것이 아니며, 문제를 풀었다고 유형을 익힌 것이 아님. 모든 학습 순간에 제대로 된 학습이 이루어졌는지 점검 필요."},
+      {k:"꾸준한 노력", v:"일단 시키면 잘 하는 편이며 숙제도 상대적으로 잘 수행함. 단, 신경을 쓰지 않으면 누수가 생기므로 방치하면 안 됨."},
+      {k:"노력 대비 낮은 성과", v:"열심히 하지만 제대로 된 학습이 이루어지지 않아 성과가 낮게 나타나는 편. 노력과 성과 간의 간극을 인지시키고 올바른 학습 방향을 안내하는 것이 핵심."}
+    ],
+    mgmtDir:[
+      {t:"멘탈 체크 + 주변인 활용", v:"겉으로는 잘 하는 것처럼 보이지만 속으로 힘들어함. 주기적인 멘탈 체크와 함께 어머님 연락 등 주변인 채널을 적극 활용."},
+      {t:"노력과 성과 간 간극 설명", v:"열심히 하는데도 결과가 나오지 않는 이유를 구체적으로 설명하고, 올바른 방향으로 했을 때의 기대감을 조성."},
+      {t:"학습법 마이크로 티칭", v:"단순 반복이 아닌 제대로 된 학습이 이루어지도록 과목별 가이드를 정말 상세하게 짜주기. 조금씩 루틴을 형성하면 성실하게 따라오는 편."},
+      {t:"오답 정리 루틴 설정", v:"오답 정리 루틴을 설정하고 지속적인 점검과 피드백 제공. 학습 센스가 부족하므로 모든 학습 순간에 제대로 이루어지고 있는지 확인 필요."}
+    ],
+    counsel:[
+      {t:"구체적이고 작은 목표 설정", v:"목표를 정하고 미니 미션을 하나씩 늘려나가기. 주기적인 점검으로 성취감을 축적."},
+      {t:"적극적인 피드백 및 긍정 강화", v:"성실히 한 것에 대한 칭찬과 개선할 부분을 함께 제시. '함께하는 느낌' 형성이 중요. 튜터 DC 때 1과목을 직접 설명해보도록 유도."},
+      {t:"고민 들어주기", v:"때로는 진지하게 학생의 고민을 듣고 공감하는 것이 필요. 힘든 점을 스스로 이야기할 수 있는 분위기 형성."}
+    ],
+
+    tutor:[
+      {trig:"수동적이고 주관이 약해 튜터 리드에 과도하게 의존할 수 있음", act:"학생이 성실해 보여도 과도한 학습 요구는 누수로 이어질 수 있음. 학생을 자세히 관찰하고 할 수 있는 범위 안에서 미션 제시.", ext:"유형별로 튜터가 먼저 풀이 방법을 보여주고 학생이 재풀이하는 방식으로 지도. 재풀이 오답 시 반드시 역질문으로 단순 암기인지 진짜 이해인지 체크."},
+      {trig:"기반 개념 누수가 많고 문제풀이에 적용하지 못하는 경우가 있음", act:"상위 학년 개념을 진행하더라도 하위 학년 누수 개념이 보이면 그때그때 바로 보완. 개념·필기·문제풀이 각각 제대로 이루어졌는지 매 순간 점검.", ext:""},
+      {trig:"숙제·미션을 잘 수행해도 성과로 이어지지 않아 자신감이 낮음", act:"결과보다 노력에 초점을 두고 긍정적 언어를 지속적으로 사용. 모른다고 할 때 다른 학생들도 어려워하는 부분임을 안심시키고 질문하는 것도 학습임을 인지시키기.", ext:"학생을 무시하는 발언 절대 금지."}
+    ],
+    manager:[
+      {trig:"주관이 약해 교실장이 하자는 대로 따르지만 속으로 힘들 수 있음", act:"학습적으로 추가할 부분이 있을 경우 먼저 제안하기보다 현재 학습 상황을 먼저 들어주기. 학생이 스스로 필요성을 느꼈을 때 할 수 있는 범위에서 추가.", ext:"학습적으로 도움이 필요한 부분, 힘든 점, 잘 되고 있는 것과 안 되는 것 등을 학생이 먼저 생각해보도록 이야기 나누기."},
+      {trig:"자신감 저하, 불안감이 높으나 잘 드러나지 않음", act:"긍정어 사용. 현재 잘 하고 있음을 구체적인 지표나 교재에서 짚어주면서 칭찬. 어머님 채널을 통해 학생 상태를 추가로 파악.", ext:""}
+    ],
+    curri:[
+      {trig:"사고력·학습 센스 부족으로 누수가 반복됨", act:"지난 수업에서 진행한 개념·문제·숙제를 수업 초반에 반드시 점검. 교재는 다회독으로 계획하고 1회독 때 했던 개념도 전부 재점검.", ext:""},
+      {trig:"진도를 빠르게 나갈 수 없는 학생임", act:"커리큘럼을 다른 학생보다 여유롭게 설정. 주차별로 밀릴 경우 심화·단원 마무리 문제는 유연하게 제외. 후행 학습도 멈추지 않기.", ext:"중간중간 교재 점검을 통해 누수 개념 여부와 다시 해야 할 부분을 확인."}
+    ]
+  },
+  {num:12,name:"(준비중)",tag:"데이터 입력 전",hasData:false},
+  {num:13,name:"(준비중)",tag:"데이터 입력 전",hasData:false},
+  {num:14,name:"(준비중)",tag:"데이터 입력 전",hasData:false},
+  {num:15,name:"(준비중)",tag:"데이터 입력 전",hasData:false},
+  {
+    num:16, name:"무심이", tag:"의욕 관리·성취 경험 필요", hasData:true,
+    color:"#4a3a7a", colorDark:"#2e2254",
+    keyword:"학습의욕 없음 · 낮은 실천력 · 성취 경험 부족",
+    tags:["이해력 부족","사고력 부족","암기력 부족","학습의욕 없음","낮은 실천력","기초지식 부족","누적된 실패경험","학습 포기","부정적 세계관"],
+
+    psych:[
+      {k:"이해력 부족", v:"설명을 들으면 어느 정도 이해하는 편이나, 다시 설명하거나 내용이 복잡해지면 포기하거나 넘어가는 경향이 있음. 이해했다고 반응하지만 실제로는 이해하지 못한 경우가 있어 반드시 재확인 필요."},
+      {k:"사고력 부족", v:"단순 주제의 대화는 문제없으나 조금 더 생각이 필요한 질문이나 대화는 오래 생각하거나 회피하려는 경향이 있음."},
+      {k:"암기력 부족", v:"암기 자체의 능력 부족보다는 암기하기 싫어서 스스로 하지 않으려는 경향이 강함. 학습 의욕이 낮아 암기 학습을 거의 하지 않거나, 선호 과목만 암기하고 비선호 과목은 억지로 욱여넣는 편."},
+      {k:"누적된 실패경험·부정적 세계관", v:"낮은 학습 성과가 오래 유지되며 학습 의욕 없음·학습 포기로 이어지는 경우가 있음. 현재 매니저와 공부 중임에도 부정적인 모습을 보이거나 상담·DC 시간에 부정적인 생각을 표출하는 경우가 있음."}
+    ],
+    behavior:[
+      {k:"무기력", v:"학습적인 부분에서 무기력한 모습을 보일 때가 있음. 일상적인 행동에서는 해당하지 않는 편."},
+      {k:"학습의욕 없음", v:"잘 하고 싶은 마음은 있으나 실천이 잘 안 되는 경우가 있음. 좋아하는 과목은 열심히 하지만 과목 편식이 심한 편."},
+      {k:"낮은 실천력", v:"매니저나 주변 사람의 개입이 있으면 하는 편이나, 개입이 없으면 실천력이 급격히 낮아짐. 싫어하는 과목은 계속 미루거나 기계적으로 처리하는 경향이 있음."},
+      {k:"기초지식 부족", v:"일부 또는 전반적으로 기초 학습이 부족하여 문제 해결에 어려움을 보이는 경우가 많음. 비선호 과목에서 특히 기초 학습이 충분히 이루어지지 않은 경우가 있음."},
+      {k:"어휘력 부족", v:"학습 개념어를 정확히 이해하거나 활용하는 데 어려움이 있음. 내용이 조금만 복잡해지면 어휘 의미를 정확히 파악하지 못해 학습을 이어가기 어려워하는 경우가 있음."},
+      {k:"학습 포기", v:"개입이 없을 경우 학습을 지속하려는 의지가 약해 방치 시 학습이 중단될 수 있음. 선호하지 않는 과목은 반포기 상태에 가까운 경우도 있음."}
+    ],
+    mgmtDir:[
+      {t:"큰 목표보다 작은 목표 수시 점검", v:"매주 목표 학습량을 정하고 주기적으로 점검. 학생 의견을 최대한 반영하되 매니저 의견도 조금씩 제시. 보상도 함께 제시."},
+      {t:"매니저 개입 多", v:"개입이 없으면 실천력이 급격히 낮아지는 유형. 수시로 터치하고 구체적인 미션을 제시하는 것이 핵심."},
+      {t:"성취 경험 만들기", v:"작은 미션을 통해 지속적인 성취 경험을 쌓도록 유도. 성취했을 경우 반드시 크게 칭찬."},
+      {t:"칭찬 多", v:"칭찬 후 학습량을 조금씩 늘려가는 방식으로 접근. 구체적으로 어느 부분을 잘 하고 있는지 짚어주는 것이 효과적."},
+      {t:"프로그램 추천", v:"개별 주 10콤마 이상 필수 권장. 방학에는 상담 + 개별 병행이 효과적."}
+    ],
+    counsel:[
+      {t:"구체적이고 작은 목표 설정", v:"매주 목표 학습량을 정하고 주기적으로 점검. 학생 의견을 반영하되 매니저 의견도 조금씩 제시. 보상도 함께 제시하여 동기 부여."},
+      {t:"칭찬 많이 하기", v:"작은 성취에도 적극적으로 칭찬. 칭찬 이후 학습량을 조금씩 늘려가는 방식으로 접근."}
+    ],
+
+    tutor:[
+      {trig:"수업 중 멍 때리거나 다른 행동을 하는 경우가 잦음", act:"순회 전 정말 구체적인 미션을 제시(문제 개수, 풀어야 할 문제 지정 등). 다른 학생 순회 중에도 한 번씩 터치하여 환기.", ext:"미션을 완료하지 못했을 때의 불이익도 함께 제시(숙제량 증가, 등원 시간 앞당기기 등). 지각·결석이 잦은 경우 수업 전 반드시 한 번 더 확인."},
+      {trig:"이해했다고 하지만 실제로 이해하지 못한 경우가 있음", act:"고급 어휘 말고 풀어서 설명하기. 튜터 설명 후 반드시 학생이 재설명하도록 하기. 오답 시 풀이과정을 적으면서 설명하도록 유도.", ext:"영어의 경우 직접 소리 내서 읽게 하고 한 줄씩 스스로 해석해보게 하기. 모르는 어휘(한국어 포함)는 반드시 체크하고 설명. 수학 심화 문제는 튜터가 모두 설명하기보다 역질문으로 힌트까지만 제공."},
+      {trig:"실패 경험이 누적되어 수업 자체를 회피하거나 부정적 반응을 보임", act:"구체적인 칭찬 제공. '잘 하고 있어'가 아닌 어느 부분을 잘 하고 있는지 구체적으로 짚어주기. 밝은 성향의 튜터 배정으로 수업 자체에 애착을 갖도록 유도.", ext:""}
+    ],
+    manager:[
+      {trig:"교실장을 엄격한 사람으로 인식하거나 학습 요구 압박으로 느낄 수 있음", act:"일상적인 이야기를 먼저 나누기. 화 내지 않기. 학습 요구만 하지 않기. 편안한 관계 형성이 우선.", ext:"긍정어 사용. 면담 시 교재를 함께 점검하면서 교실장 앞에서 누수 부분 직접 풀게 하기."},
+      {trig:"본인 행동이 다른 사람과 자신에게 미치는 영향을 인식하지 못하는 경우", act:"본인의 행동(로비에서 떠들기, 숙제 미이행 등)이 어떤 영향을 주는지 알려주기. 스스로 깨달을 수 있도록 유도.", ext:"아직 부정적 세계관이 완전히 형성된 단계는 아니므로 지금부터 잡아가는 것이 중요. 작은 성취를 칭찬하고 지속적인 성취 경험을 쌓도록 작은 미션 제시."}
+    ],
+    curri:[
+      {trig:"학습 계획이 과도하면 겁을 먹고 회피하거나 의욕이 급격히 낮아짐", act:"전체 계획 안내 시 가볍게 안내하고, 자료도 한 번에 주지 않고 그때그때 할 수 있는 분량만 제공. 주차별 계획을 여유롭게 설정.", ext:"강·약점 과목을 파악하고 약점 과목에 수업을 더 많이 배정. 주차를 잘 지켜서 성취했을 경우 크게 칭찬. 수업 횟수나 당일 수업 내용 변동 가능성을 항상 열어두고 수업 전 확인."},
+      {trig:"반복 학습이 되지 않아 누수가 생겨도 늦게 알아차림", act:"지난 수업 학습 내용·숙제를 커리에 넣고 매 수업마다 반복 학습 진행. 학습 우선순위를 미리 정해두고 그 순서에 맞춰 진행.", ext:"지각·결석이 잦을 경우 중요한 부분을 놓치지 않도록 학습 우선순위를 명확히 설정해두기."}
+    ]
+  }
+];
+
+function pad(n){ return String(n).padStart(2,'0'); }
+
+function iList(items){
+  return '<div class="ilist">'+items.map(it=>
+    `<div class="irow"><div class="ikey">${it.k}</div><div class="ival">${it.v}</div></div>`
+  ).join('')+'</div>';
+}
+function nList(items, bg, clr){
+  return '<div class="nlist">'+items.map((it,i)=>
+    `<div class="nrow">
+      <div class="ncirc" style="background:${bg};color:${clr};">${i+1}</div>
+      <div class="ntxt"><strong>${it.t}</strong> — ${it.v}</div>
+    </div>`
+  ).join('')+'</div>';
+}
+function wList(items){
+  return '<div class="wlist">'+items.map((it,i)=>
+    `<div class="wrow">
+      <div class="wtrig"><span class="wtrig-num">${i+1}</span>${it.trig}</div>
+      <div class="warrow">↳</div>
+      <div class="wact">${it.act}</div>
+      ${it.ext?`<div class="wext">${it.ext}</div>`:''}
+    </div>`
+  ).join('')+'</div>';
+}
+
+let activeType = null;
+
+function renderReport(t){
+  document.getElementById('topEye').textContent = `TYPE ${pad(t.num)} · VLT 4G 학습유형 보고서`;
+  document.getElementById('topTitle').textContent =
+    t.hasData ? `${t.name} (TYPE ${pad(t.num)})` : `TYPE ${pad(t.num)} — 준비 중`;
+
+  const content = document.getElementById('mainContent');
+  if(!t.hasData){
+    content.innerHTML = `<div class="empty">
+      <div class="empty-icon-wrap">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="7" y1="9" x2="17" y2="9"/><line x1="7" y1="13" x2="13" y2="13"/></svg>
+      </div>
+      <div class="empty-t">TYPE ${t.num}번 — 준비 중</div>
+      <div class="empty-s">아직 데이터가 입력되지 않은 타입입니다.<br>데이터를 채팅으로 보내주시면 바로 반영해드릴게요!</div>
+    </div>`;
+    return;
+  }
+
+  content.innerHTML = `
+  <div class="report">
+    <div class="report-hero" style="background:linear-gradient(135deg, ${t.color} 0%, ${t.colorDark} 100%);">
+      <div class="hero-content">
+        <div class="hero-label">TYPE ${pad(t.num)} · VLT 4G 학습유형</div>
+        <div class="hero-name">${t.name}</div>
+        <div class="hero-sub">${t.keyword}</div>
+      </div>
+      <div class="hero-bignum">${pad(t.num)}</div>
+    </div>
+    <div class="tag-bar" style="background:${t.colorDark};">
+      ${t.tags.map(tg=>`<span class="htag">${tg}</span>`).join('')}
+    </div>
+    <div class="report-body">
+
+      <div class="part-label-wrap">
+        <span class="part-label">A. 상담 / 관리</span>
+      </div>
+
+      <div>
+        <div class="sec-title">심리 · 정서 특성</div>
+        <div class="card">${iList(t.psych)}</div>
+      </div>
+
+      <div>
+        <div class="sec-title">학습 행동 · 역량 특성</div>
+        <div class="card">${iList(t.behavior)}</div>
+      </div>
+
+      <div>
+        <div class="sec-title">매니지먼트 방향</div>
+        <div class="card">
+          <div class="card-label">
+            <div class="cdot" style="background:#1a2d6e;"></div>핵심 접근 전략
+          </div>
+          ${nList(t.mgmtDir,'#1a2d6e','#fff')}
+        </div>
+      </div>
+
+      <div>
+        <div class="sec-title">효과적인 상담 방법</div>
+        <div class="card">
+          <div class="card-label">
+            <div class="cdot" style="background:#2a5aaa;"></div>상담 접근 방식
+          </div>
+          ${nList(t.counsel,'#2a5aaa','#fff')}
+        </div>
+      </div>
+
+      <div class="part-label-wrap" style="margin-top:8px;">
+        <span class="part-label">B. 개별지도</span>
+      </div>
+
+      <div>
+        <div class="sec-title">개별지도 주의사항</div>
+        <div class="card-yellow">
+          <div class="card-label">
+            <div class="cdot" style="background:#1e2d5a;"></div>① 수업 중 튜터 주의사항
+          </div>
+          ${wList(t.tutor)}
+        </div>
+        <div class="card-yellow">
+          <div class="card-label">
+            <div class="cdot" style="background:#1e2d5a;"></div>② 교실장 면담 유의점
+          </div>
+          ${wList(t.manager)}
+        </div>
+        <div class="card-yellow">
+          <div class="card-label">
+            <div class="cdot" style="background:#1e2d5a;"></div>③ 학습 커리큘럼 작성 유의점
+          </div>
+          ${wList(t.curri)}
+        </div>
+      </div>
+
+      <div class="report-footer">
+        <span class="ft-label">에듀플렉스 · VLT 4G 학습유형 보고서 · TYPE ${pad(t.num)}</span>
+        <button class="btn btn-print" onclick="window.print()">🖨 PDF로 저장</button>
+      </div>
+
+    </div>
+  </div>`;
+}
+
+function selectType(t, sideBtns, mobileBtns){
+  sideBtns.forEach(b => b.classList.remove('active'));
+  mobileBtns.forEach(b => b.classList.remove('active'));
+  sideBtns[t.num-1].classList.add('active');
+  mobileBtns[t.num-1].classList.add('active');
+  activeType = t;
+  renderReport(t);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function buildNav(){
+  const sideList = document.getElementById('sideTypeList');
+  const mobileBar = document.getElementById('mobileTypeBar');
+  const sideBtns = [], mobileBtns = [];
+
+  TYPES.forEach(t => {
+    const sb = document.createElement('button');
+    sb.className = 'type-btn' + (t.hasData ? ' has-data' : '');
+    sb.innerHTML = `
+      <div class="btn-num">${pad(t.num)}</div>
+      <div class="btn-info">
+        <div class="btn-name">${t.name}</div>
+        <div class="btn-tag">${t.tag}</div>
+      </div>
+      ${t.hasData ? '<div class="data-dot"></div>' : '<div class="no-dot"></div>'}`;
+    sb.addEventListener('click', () => selectType(t, sideBtns, mobileBtns));
+    sideList.appendChild(sb);
+    sideBtns.push(sb);
+
+    const mb = document.createElement('button');
+    mb.className = 'm-type-btn' + (!t.hasData ? ' no-data' : '');
+    mb.textContent = t.hasData ? `${pad(t.num)} ${t.name}` : pad(t.num);
+    mb.addEventListener('click', () => selectType(t, sideBtns, mobileBtns));
+    mobileBar.appendChild(mb);
+    mobileBtns.push(mb);
+  });
+
+  const t8 = TYPES.find(t => t.num === 8);
+  if(t8) selectType(t8, sideBtns, mobileBtns);
+}
+
+buildNav();
+</script>
+</body>
+</html>
