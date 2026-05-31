@@ -848,9 +848,14 @@ input[type=file].hidden{display:none;}
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 <script>
 const DB_URL='https://silverstar04301-default-rtdb.firebaseio.com/';
-const app=firebase.initializeApp({databaseURL:DB_URL});
-const db=firebase.database(app);
-const storage=firebase.storage(app);
+let app, db, storage;
+document.addEventListener('DOMContentLoaded', function() {
+  app=firebase.initializeApp({databaseURL:DB_URL});
+  db=firebase.database(app);
+  storage=firebase.storage(app);
+  loadSiteData();
+  checkAdminMode();
+});
 
 let isAdmin=false;
 let siteData={};
@@ -1291,9 +1296,7 @@ function switchTab(t){
   document.getElementById('tab-'+t).classList.add('on');
 }
 
-loadSiteData();
-checkAdminMode();
-renderDayflow(DEFAULTS.dayflow);
+
 renderSpecialPrograms(DEFAULTS.specialPrograms);
 renderNews(DEFAULTS.newsItems);
 </script>
