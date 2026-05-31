@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>내일교육 주간지 라이브러리</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;background:#f0f2f7;height:100vh;display:flex;flex-direction:column}
+.app{display:flex;flex-direction:column;height:100vh;background:#fff}
+.topbar{display:flex;align-items:center;gap:10px;padding:10px 18px;background:#1e2a45;flex-shrink:0;z-index:10}
+.topbar-title{color:#fff;font-size:15px;font-weight:600;margin-right:auto;display:flex;align-items:center;gap:8px}
+.topbar-title i{font-size:20px;color:#c9b96e}
+.search-wrap{display:flex;align-items:center;gap:6px;background:#2d3f63;border-radius:8px;padding:7px 13px;flex:1;max-width:300px}
+.search-wrap i{color:#8899bb;font-size:15px}
+.search-wrap input{background:none;border:none;outline:none;color:#fff;font-size:13px;width:100%}
+.search-wrap input::placeholder{color:#8899bb}
+.sync-bar{display:flex;align-items:center;gap:6px;padding:5px 18px;background:#f0f3fa;border-bottom:1px solid #dde3f0;font-size:11px;color:#666;flex-shrink:0}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#2e7d5e;flex-shrink:0;transition:background 0.3s}
+.sync-dot.syncing{background:#c9b96e}
+.sync-dot.error{background:#e24b4a}
+.main{display:flex;flex:1;overflow:hidden}
+.sidebar{width:220px;border-right:1px solid #dde3f0;flex-shrink:0;background:#f7f8fb;display:flex;flex-direction:column;overflow-y:auto}
+.menu-list{flex:1;padding:8px 0}
+.menu-item{display:flex;align-items:center;gap:8px;padding:10px 15px;cursor:pointer;font-size:13.5px;color:#555;border-left:3px solid transparent;transition:all 0.12s;position:relative}
+.menu-item:hover{background:#eef0f8;color:#1e2a45}
+.menu-item.active{background:#eef2fc;color:#1e2a45;font-weight:600;border-left:3px solid #1e2a45}
+.menu-item.link-type{color:#1861a8}
+.menu-item.link-type:hover{background:#e8f0fb}
+.menu-item i.menu-icon{font-size:16px;flex-shrink:0}
+.menu-item span.menu-label{flex:1;line-height:1.3}
+.menu-del{display:none;padding:2px 5px;font-size:12px;color:#c0392b;background:none;border:none;cursor:pointer;border-radius:4px;line-height:1}
+.menu-item:hover .menu-del{display:inline-block}
+.sidebar-footer{padding:10px 10px 14px;border-top:1px solid #dde3f0;display:flex;flex-direction:column;gap:6px}
+.btn-add-menu{width:100%;display:flex;align-items:center;justify-content:center;gap:5px;background:none;color:#1e2a45;border:1px dashed #8899cc;border-radius:8px;padding:8px;font-size:13px;cursor:pointer;transition:background 0.12s}
+.btn-add-menu:hover{background:#eef2fc}
+.btn-add-issue-side{width:100%;display:flex;align-items:center;justify-content:center;gap:5px;background:#1e2a45;color:#fff;border:none;border-radius:8px;padding:8px;font-size:13px;cursor:pointer;transition:background 0.12s}
+.btn-add-issue-side:hover{background:#2d3f63}
+.content{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.content-toolbar{display:flex;align-items:center;justify-content:space-between;padding:12px 22px;border-bottom:1px solid #dde3f0;flex-shrink:0;background:#fff}
+.toolbar-title{font-size:14px;font-weight:600;color:#1e2a45;display:flex;align-items:center;gap:7px}
+.toolbar-title i{font-size:17px}
+.btn-add-entry{display:flex;align-items:center;gap:5px;background:#c9b96e;color:#1e2a45;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:background 0.12s}
+.btn-add-entry:hover{background:#b8a85e}
+.content-body{flex:1;overflow-y:auto;background:#f9fafb}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#aaa;gap:10px;min-height:300px}
+.empty-state i{font-size:40px;opacity:0.3}
+.empty-state span{font-size:14px}
+.issue-row{border-bottom:1px solid #e8ecf4;background:#fff}
+.issue-row-header{display:flex;align-items:center;gap:8px;padding:13px 22px;cursor:pointer;transition:background 0.1s}
+.issue-row-header:hover{background:#f5f7fc}
+.issue-badge{background:#1e2a45;color:#fff;font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;flex-shrink:0}
+.issue-date-label{font-size:12px;color:#888;white-space:nowrap}
+.issue-entry-title{font-size:13px;color:#222;flex:1;margin-left:4px}
+.status-done{font-size:11px;background:#eef8f2;color:#2e7d5e;padding:2px 9px;border-radius:12px;flex-shrink:0;font-weight:500}
+.status-todo{font-size:11px;background:#fdf5e8;color:#9a6c1a;padding:2px 9px;border-radius:12px;flex-shrink:0}
+.entry-actions{display:flex;gap:4px;margin-left:6px}
+.btn-sm{padding:3px 9px;font-size:12px;border-radius:6px;border:1px solid #dde3f0;background:#fff;cursor:pointer;color:#555;transition:background 0.1s}
+.btn-sm:hover{background:#f0f2f7}
+.btn-sm-danger{padding:3px 9px;font-size:12px;border-radius:6px;border:1px solid #f5c1c1;background:#fff;cursor:pointer;color:#c0392b;transition:background 0.1s}
+.btn-sm-danger:hover{background:#fdf0f0}
+.detail-view{padding:28px 32px}
+.breadcrumb{display:flex;align-items:center;gap:7px;margin-bottom:14px;flex-wrap:wrap}
+.badge-num{background:#1e2a45;color:#fff;font-size:12px;padding:3px 11px;border-radius:6px}
+.badge-cat{background:#eef0f8;color:#1e2a45;font-size:12px;padding:3px 11px;border-radius:6px}
+.art-title{font-size:22px;font-weight:700;color:#1a1a2e;margin-bottom:16px}
+.btn-row{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap}
+.btn-dark{display:flex;align-items:center;gap:5px;padding:8px 16px;font-size:13px;background:#1e2a45;color:#fff;border:none;border-radius:8px;cursor:pointer;transition:background 0.12s}
+.btn-dark:hover{background:#2d3f63}
+.btn-outline{display:flex;align-items:center;gap:5px;padding:8px 16px;font-size:13px;background:#fff;color:#333;border:1px solid #ccc;border-radius:8px;cursor:pointer;transition:background 0.12s}
+.btn-outline:hover{background:#f0f2f7}
+.btn-danger{display:flex;align-items:center;gap:5px;padding:8px 16px;font-size:13px;background:#fff;color:#c0392b;border:1px solid #f5c1c1;border-radius:8px;cursor:pointer}
+.btn-danger:hover{background:#fdf0f0}
+.article-body{background:#fff;border:1px solid #e0e5f0;border-radius:10px;padding:22px 26px;font-size:14px;line-height:1.9;color:#222;white-space:pre-wrap;min-height:160px}
+.article-meta{display:flex;align-items:center;gap:14px;margin-top:13px;font-size:12px;color:#888}
+.no-content-box{background:#f7f8fb;border:1px dashed #ccd3e8;border-radius:10px;padding:36px;text-align:center;color:#aaa}
+.no-content-box i{font-size:30px;margin-bottom:10px;display:block;opacity:0.4}
+.no-content-box p{font-size:14px;font-weight:500;margin-bottom:6px;color:#888}
+.no-content-box span{font-size:13px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:100}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:12px;border:1px solid #dde3f0;padding:26px;width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.12)}
+.modal h3{font-size:15px;font-weight:600;margin-bottom:18px;display:flex;align-items:center;gap:8px;color:#1e2a45}
+.modal label{font-size:12px;color:#666;display:block;margin-bottom:4px;margin-top:13px}
+.modal input,.modal textarea,.modal select{width:100%;font-size:13px;border-radius:8px;border:1px solid #ccd3e8;padding:9px 11px;background:#fff;color:#222;outline:none;font-family:inherit;transition:border 0.12s}
+.modal input:focus,.modal textarea:focus,.modal select:focus{border-color:#1e2a45}
+.modal textarea{resize:vertical;min-height:180px;line-height:1.7}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:22px}
+.icon-picker{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.icon-opt{padding:7px 11px;border:1px solid #dde3f0;border-radius:7px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:5px;transition:all 0.1s;color:#555}
+.icon-opt:hover,.icon-opt.sel{background:#eef2fc;border-color:#8899cc;color:#1e2a45}
+.loading-spinner{display:flex;align-items:center;justify-content:center;height:200px;color:#888;gap:10px;font-size:14px}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="topbar-title"><i class="ti ti-book-2"></i>내일교육 주간지 라이브러리</div>
+    <div class="search-wrap"><i class="ti ti-search"></i><input type="text" id="searchInput" placeholder="키워드 검색 (예: 수시, 논술, 경희대...)"></div>
+  </div>
+  <div class="sync-bar"><span class="sync-dot" id="syncDot"></span><span id="syncText">Firebase 연결 중...</span></div>
+  <div class="main">
+    <div class="sidebar">
+      <div class="menu-list" id="menuList"></div>
+      <div class="sidebar-footer">
+        <button class="btn-add-menu" onclick="openModal('addMenu')"><i class="ti ti-plus"></i>메뉴 추가</button>
+        <button class="btn-add-issue-side" onclick="openModal('addIssue')"><i class="ti ti-plus"></i>새 발행호 추가</button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="content-toolbar" id="contentToolbar" style="display:none">
+        <div class="toolbar-title" id="toolbarTitle"></div>
+        <button class="btn-add-entry" id="btnAddEntry"><i class="ti ti-plus"></i>내용 추가</button>
+      </div>
+      <div class="content-body" id="contentBody">
+        <div class="loading-spinner"><i class="ti ti-loader" style="font-size:24px"></i>데이터 불러오는 중...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay"><div class="modal" id="modalBox"></div></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, onValue, set, get, update, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC2_Lm0KwXzrqDX5H4bDrnssEYh42LkV3Q",
+  authDomain: "silverstar04301.firebaseapp.com",
+  databaseURL: "https://silverstar04301-default-rtdb.firebaseio.com",
+  projectId: "silverstar04301",
+  storageBucket: "silverstar04301.firebasestorage.app",
+  messagingSenderId: "760661807043",
+  appId: "1:760661807043:web:9fd79e682b4eac32df3776",
+  measurementId: "G-NQM2WD6J8D"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const ROOT = 'naeil_edu_v1';
+
+const ICON_OPTIONS = [
+  'ti-books','ti-bulb','ti-chart-bar','ti-bookmark','ti-star','ti-file-text',
+  'ti-pencil','ti-user','ti-calendar','ti-school','ti-clipboard-list','ti-award',
+  'ti-message','ti-heart','ti-flask','ti-calculator','ti-world','ti-target'
+];
+
+const DEFAULT_MENUS = [
+  {id:'toc',      label:'목차 확인',       icon:'ti-table',    isLink:true,  url:'https://docs.google.com/spreadsheets/d/120TrG4I0Ftjz598NvFVLhPJNEyYnHkIEmsngCkSksjo/edit?gid=2117359470#gid=2117359470'},
+  {id:'subject',  label:'교과 연계',        icon:'ti-books',    isLink:false},
+  {id:'schooltip',label:'학교생활 꿀팁',    icon:'ti-bulb',     isLink:false},
+  {id:'admission',label:'수시 분석',        icon:'ti-chart-bar',isLink:false},
+  {id:'booksub',  label:'교과별 추천 도서', icon:'ti-bookmark', isLink:false},
+  {id:'bookcomp', label:'종합전형 추천도서', icon:'ti-star',     isLink:false},
+];
+
+let state = {menus:[], issues:{}, activeMenu:null, activeDetail:null, searchQ:''};
+let dbReady = false;
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function setSynced(){ document.getElementById('syncDot').className='sync-dot'; document.getElementById('syncText').textContent='실시간 연결됨 · 공동편집 활성'; }
+function setSaving(){ document.getElementById('syncDot').className='sync-dot syncing'; document.getElementById('syncText').textContent='저장 중...'; }
+function setError(){ document.getElementById('syncDot').className='sync-dot error'; document.getElementById('syncText').textContent='연결 오류 — 새로고침 해주세요'; }
+
+// Initialize DB with defaults if empty
+async function initDB() {
+  try {
+    const snap = await get(ref(db, ROOT+'/menus'));
+    if (!snap.exists()) {
+      await set(ref(db, ROOT+'/menus'), DEFAULT_MENUS.reduce((acc,m)=>{acc[m.id]=m;return acc;},{}));
+      // sample data
+      const sampleIssues = {
+        '1188':{id:1188,num:1188,date:'2025.07.02-07.08',entries:{
+          admission:{title:'2026 경희대 수시분석',author:'김지수',date:'2025.07.05',content:'경희대 2026학년도 수시 모집 주요 변경사항\n\n1. 네오르네상스 전형 선발인원 소폭 증가\n- 인문계열 230명 → 245명으로 확대\n\n2. 학교장추천 전형 서류평가 비중 조정\n- 1단계: 서류 100% (5배수) → 4배수로 변경\n\n3. 수능최저학력기준 유지\n- 인문: 국/수/영/탐 중 2개 합 5 이내\n\n4. 상담 포인트\n- 세특 기재 내용이 전공 연계성 중심으로 평가됨\n- 재수생 지원 가능 전형 별도 확인 필요'},
+          subject:{title:'수학 - 방정식과 함수',author:'',date:'',content:''},
+          booksub:{title:'국어',author:'',date:'',content:''},
+          bookcomp:{title:'서강대 정치외교학과',author:'',date:'',content:''},
+        }},
+        '1189':{id:1189,num:1189,date:'2025.07.09-07.15',entries:{
+          admission:{title:'2026 서강대 수시분석',author:'박민준',date:'2025.07.12',content:'서강대 2026학년도 수시 핵심 정리\n\n논술전형 폐지, 학생부종합 중심으로 재편\n\n1. 학생부종합(서강인재): 서류 100%, 면접 없음\n2. 학교장추천: 서류 60% + 면접 40%, 수능최저 3합7\n\n상담 포인트\n- 문과 지원자는 수학 성적 관리 중요'},
+          subject:{title:'국어 - 세계시민',author:'',date:'',content:''},
+        }},
+      };
+      await set(ref(db, ROOT+'/issues'), sampleIssues);
+    }
+    dbReady = true;
+  } catch(e) { setError(); console.error(e); }
+}
+
+// Real-time listener
+function startListening() {
+  onValue(ref(db, ROOT), (snap) => {
+    const data = snap.val() || {};
+    // menus: object → array (preserve order by index)
+    if (data.menus) {
+      const menusObj = data.menus;
+      // try to maintain insertion order; store as array in DB under 'menuOrder'
+      const order = data.menuOrder || Object.keys(menusObj);
+      state.menus = order.filter(id=>menusObj[id]).map(id=>({...menusObj[id],id}));
+    } else {
+      state.menus = [];
+    }
+    state.issues = data.issues || {};
+    setSynced();
+    renderAll();
+  }, (err) => { setError(); });
+}
+
+async function saveMenus() {
+  setSaving();
+  const menusObj = state.menus.reduce((acc,m)=>{acc[m.id]={...m};return acc;},{});
+  const order = state.menus.map(m=>m.id);
+  await update(ref(db, ROOT), {menus: menusObj, menuOrder: order});
+}
+
+async function saveIssue(issueId, data) {
+  setSaving();
+  await set(ref(db, ROOT+'/issues/'+issueId), data);
+}
+
+async function saveEntry(issueId, menuId, entry) {
+  setSaving();
+  await set(ref(db, ROOT+'/issues/'+issueId+'/entries/'+menuId), entry);
+}
+
+async function deleteEntryDB(issueId, menuId) {
+  setSaving();
+  await remove(ref(db, ROOT+'/issues/'+issueId+'/entries/'+menuId));
+}
+
+async function deleteMenuDB(menuId) {
+  setSaving();
+  // remove from all issues
+  const updates = {};
+  Object.keys(state.issues).forEach(iid => { updates[ROOT+'/issues/'+iid+'/entries/'+menuId] = null; });
+  await update(ref(db), updates);
+}
+
+function renderAll(){ renderMenus(); renderContent(); }
+
+function renderMenus(){
+  const ml = document.getElementById('menuList');
+  let h = '';
+  state.menus.forEach(m => {
+    const active = state.activeMenu === m.id && !m.isLink;
+    h += `<div class="menu-item${m.isLink?' link-type':''}${active?' active':''}" onclick="${m.isLink?`goLink('${esc(m.url||'')}')`:`selectMenu('${m.id}')`}">
+      <i class="ti ${m.icon} menu-icon"></i>
+      <span class="menu-label">${esc(m.label)}</span>
+      ${!m.isLink?`<button class="menu-del" onclick="event.stopPropagation();deleteMenu('${m.id}')">✕</button>`:''}
+    </div>`;
+  });
+  ml.innerHTML = h;
+}
+
+function goLink(url){ window.open(url,'_blank'); }
+
+function selectMenu(id){
+  state.activeMenu = id;
+  state.activeDetail = null;
+  renderMenus();
+  renderContent();
+}
+
+function renderContent(){
+  const q = state.searchQ.trim().toLowerCase();
+  const toolbar = document.getElementById('contentToolbar');
+  const body = document.getElementById('contentBody');
+  const toolbarTitle = document.getElementById('toolbarTitle');
+  const btnAdd = document.getElementById('btnAddEntry');
+
+  if(q){ toolbar.style.display='none'; renderSearch(q,body); return; }
+  if(state.activeDetail){ toolbar.style.display='flex'; renderDetail(body,toolbarTitle,btnAdd); return; }
+  if(!state.activeMenu){
+    toolbar.style.display='none';
+    body.innerHTML=`<div class="empty-state"><i class="ti ti-layout-sidebar"></i><span>왼쪽 메뉴를 선택해주세요</span></div>`;
+    return;
+  }
+
+  const menu = state.menus.find(m=>m.id===state.activeMenu);
+  if(!menu){ toolbar.style.display='none'; return; }
+  toolbar.style.display='flex';
+  toolbarTitle.innerHTML=`<i class="ti ${menu.icon}"></i>${esc(menu.label)}`;
+  btnAdd.onclick = ()=>openModal('addEntry');
+
+  const issueList = Object.values(state.issues).sort((a,b)=>b.num-a.num);
+  const relevant = issueList.filter(issue=>issue.entries&&issue.entries[state.activeMenu]);
+
+  if(!relevant.length){
+    body.innerHTML=`<div class="empty-state"><i class="ti ti-pencil"></i><span>아직 내용이 없어요</span><span style="font-size:13px;color:#aaa">오른쪽 상단 '내용 추가' 버튼을 눌러주세요</span></div>`;
+    return;
+  }
+
+  let h='';
+  issueList.forEach(issue=>{
+    const entry = issue.entries&&issue.entries[state.activeMenu];
+    if(!entry) return;
+    const done = entry.content&&entry.content.trim();
+    const detailId = issue.id+'_'+state.activeMenu;
+    h+=`<div class="issue-row">
+      <div class="issue-row-header" onclick="showDetail('${detailId}')">
+        <span class="issue-badge">No.${issue.num}</span>
+        <span class="issue-date-label">${esc(issue.date)}</span>
+        <span class="issue-entry-title">${esc(entry.title||'(제목 없음)')}</span>
+        <span class="${done?'status-done':'status-todo'}">${done?'작성완료':'미작성'}</span>
+        <div class="entry-actions" onclick="event.stopPropagation()">
+          <button class="btn-sm" onclick="openModal('editEntry','${detailId}')"><i class="ti ti-edit"></i></button>
+          <button class="btn-sm-danger" onclick="doDeleteEntry('${detailId}')"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+    </div>`;
+  });
+  body.innerHTML = h;
+}
+
+function renderDetail(body,toolbarTitle,btnAdd){
+  const parts = state.activeDetail.split('_');
+  const menuId = parts[parts.length-1];
+  const issueId = parts.slice(0,-1).join('_');
+  const issue = state.issues[issueId];
+  const menu = state.menus.find(m=>m.id===menuId);
+  if(!issue||!menu){state.activeDetail=null;renderContent();return;}
+  const entry = (issue.entries&&issue.entries[menuId])||{title:'',author:'',date:'',content:''};
+  const done = entry.content&&entry.content.trim();
+
+  toolbarTitle.innerHTML=`<i class="ti ${menu.icon}"></i>${esc(menu.label)}`;
+  btnAdd.onclick=()=>openModal('addEntry');
+
+  body.innerHTML=`<div class="detail-view">
+    <div class="breadcrumb">
+      <button class="btn-outline" style="padding:5px 12px;font-size:12px" onclick="backToList()"><i class="ti ti-arrow-left"></i>목록</button>
+      <span class="badge-num">No.${issue.num}</span>
+      <i class="ti ti-chevron-right" style="font-size:13px;color:#aaa"></i>
+      <span class="badge-cat">${esc(menu.label)}</span>
+    </div>
+    <div class="art-title" style="margin-top:14px">${esc(entry.title||menu.label+' — No.'+issue.num)}</div>
+    <div class="btn-row">
+      <button class="btn-dark" onclick="openModal('editEntry','${state.activeDetail}')"><i class="ti ti-edit"></i>${done?'내용 수정':'내용 작성'}</button>
+      ${done?`<button class="btn-outline" onclick="doCopy()"><i class="ti ti-copy"></i>복사</button>`:''}
+      <button class="btn-danger" onclick="doDeleteEntry('${state.activeDetail}');backToList()"><i class="ti ti-trash"></i>삭제</button>
+    </div>
+    ${done
+      ?`<div class="article-body">${esc(entry.content)}</div>
+        <div class="article-meta"><i class="ti ti-user" style="font-size:14px"></i>${esc(entry.author||'작성자 미입력')}<i class="ti ti-calendar" style="font-size:14px;margin-left:10px"></i>${esc(entry.date||'날짜 미입력')}</div>`
+      :`<div class="no-content-box"><i class="ti ti-pencil"></i><p>아직 정리된 내용이 없어요</p><span>'내용 작성' 버튼으로 입력해주세요</span></div>`
+    }
+  </div>`;
+}
+
+function renderSearch(q,body){
+  const issueList = Object.values(state.issues).sort((a,b)=>b.num-a.num);
+  let results=[];
+  issueList.forEach(issue=>{
+    if(!issue.entries) return;
+    Object.entries(issue.entries).forEach(([menuId,entry])=>{
+      if(!entry) return;
+      if((entry.title||'').toLowerCase().includes(q)||(entry.content||'').toLowerCase().includes(q)){
+        const menu=state.menus.find(m=>m.id===menuId);
+        results.push({issue,menuId,entry,menu});
+      }
+    });
+  });
+  let h=`<div style="padding:12px 22px;font-size:12px;color:#888;border-bottom:1px solid #e8ecf4;background:#fff">"${esc(q)}" 검색 결과 ${results.length}건</div>`;
+  results.forEach(({issue,menuId,entry,menu})=>{
+    h+=`<div class="issue-row"><div class="issue-row-header" onclick="selectMenuAndDetail('${menuId}','${issue.id}_${menuId}')">
+      <span class="issue-badge">No.${issue.num}</span>
+      <span class="issue-date-label">${esc(issue.date)}</span>
+      <span class="issue-entry-title">${esc(entry.title||'(제목 없음)')}</span>
+      <span style="font-size:11px;color:#888;background:#f0f2f7;padding:2px 8px;border-radius:10px">${esc(menu?.label||menuId)}</span>
+      <i class="ti ti-chevron-right" style="font-size:13px;color:#aaa;margin-left:4px"></i>
+    </div></div>`;
+  });
+  if(!results.length) h+=`<div style="padding:50px;text-align:center;color:#aaa;font-size:14px">검색 결과가 없습니다</div>`;
+  body.innerHTML=h;
+}
+
+function showDetail(id){ state.activeDetail=id; renderContent(); }
+function backToList(){ state.activeDetail=null; renderContent(); }
+function selectMenuAndDetail(menuId,detailId){ state.activeMenu=menuId; state.activeDetail=detailId; renderMenus(); renderContent(); }
+function doCopy(){
+  if(!state.activeDetail) return;
+  const parts=state.activeDetail.split('_');
+  const menuId=parts[parts.length-1];
+  const issueId=parts.slice(0,-1).join('_');
+  const issue=state.issues[issueId];
+  if(issue&&issue.entries&&issue.entries[menuId]) navigator.clipboard.writeText(issue.entries[menuId].content).catch(()=>{});
+}
+
+async function deleteMenu(id){
+  if(!confirm('이 메뉴를 삭제할까요?\n(해당 메뉴의 모든 내용도 삭제됩니다)')) return;
+  state.menus=state.menus.filter(m=>m.id!==id);
+  if(state.activeMenu===id){state.activeMenu=null;state.activeDetail=null;}
+  await deleteMenuDB(id);
+  await saveMenus();
+}
+
+async function doDeleteEntry(detailId){
+  if(!confirm('이 항목을 삭제할까요?')) return;
+  const parts=detailId.split('_');
+  const menuId=parts[parts.length-1];
+  const issueId=parts.slice(0,-1).join('_');
+  if(state.activeDetail===detailId) state.activeDetail=null;
+  await deleteEntryDB(issueId,menuId);
+}
+
+function openModal(type,arg){
+  document.getElementById('modalOverlay').classList.add('open');
+  const box=document.getElementById('modalBox');
+
+  if(type==='addMenu'){
+    let selIcon='ti-books';
+    box.innerHTML=`<h3><i class="ti ti-layout-sidebar-left-expand"></i>새 메뉴 추가</h3>
+      <label>메뉴 이름</label><input id="m_label" placeholder="예: 진로 탐색">
+      <label>아이콘 선택</label>
+      <div class="icon-picker" id="iconPicker">${ICON_OPTIONS.map(ic=>`<div class="icon-opt${ic===selIcon?' sel':''}" data-icon="${ic}" onclick="pickIcon('${ic}')"><i class="ti ${ic}"></i></div>`).join('')}</div>
+      <input type="hidden" id="m_icon" value="${selIcon}">
+      <label style="margin-top:14px">메뉴 종류</label>
+      <select id="m_type" onchange="toggleUrlField()"><option value="normal">일반 메뉴 (내용 작성용)</option><option value="link">외부 링크 (클릭 시 이동)</option></select>
+      <div id="urlField" style="display:none"><label>링크 URL</label><input id="m_url" placeholder="https://..."></div>
+      <div class="modal-footer">
+        <button class="btn-outline" onclick="closeModal()">취소</button>
+        <button class="btn-dark" onclick="submitAddMenu()"><i class="ti ti-check"></i>추가</button>
+      </div>`;
+
+  } else if(type==='addIssue'){
+    box.innerHTML=`<h3><i class="ti ti-plus"></i>새 발행호 추가</h3>
+      <label>발행호 번호</label><input id="m_num" type="number" placeholder="예: 1199">
+      <label>발행 기간</label><input id="m_date" placeholder="예: 2025.09.24-09.30">
+      <div class="modal-footer">
+        <button class="btn-outline" onclick="closeModal()">취소</button>
+        <button class="btn-dark" onclick="submitAddIssue()"><i class="ti ti-check"></i>추가</button>
+      </div>`;
+
+  } else if(type==='addEntry'){
+    if(!state.activeMenu){alert('먼저 왼쪽에서 메뉴를 선택해주세요');closeModal();return;}
+    const menu=state.menus.find(m=>m.id===state.activeMenu);
+    box.innerHTML=`<h3><i class="ti ti-plus"></i>'${esc(menu?.label)}' 내용 추가</h3>
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label>발행호 번호</label><input id="m_issue_num" type="number" placeholder="예: 1199" style="width:100%"></div>
+        <div style="flex:2"><label>발행 기간</label><input id="m_issue_date" placeholder="예: 2025.09.24-09.30" style="width:100%"></div>
+      </div>
+      <div style="margin-top:6px;font-size:11px;color:#888;padding:6px 10px;background:#f7f8fb;border-radius:6px;border:1px solid #e8ecf4">
+        <i class="ti ti-info-circle" style="font-size:12px;vertical-align:-1px"></i>
+        이미 등록된 발행호 번호를 입력하면 기존 호에 내용이 추가돼요. 새 번호면 자동으로 발행호가 생성됩니다.
+      </div>
+      <label>제목</label><input id="m_title" placeholder="예: 2026 연세대 수시분석">
+      <label>작성자</label><input id="m_author" placeholder="예: 김지수">
+      <label>작성 날짜</label><input id="m_date2" placeholder="예: 2025.07.05">
+      <label>정리 내용</label><textarea id="m_content" placeholder="주간지 내용을 정리해서 입력해주세요..."></textarea>
+      <div class="modal-footer">
+        <button class="btn-outline" onclick="closeModal()">취소</button>
+        <button class="btn-dark" onclick="submitAddEntry()"><i class="ti ti-check"></i>저장</button>
+      </div>`;
+
+  } else if(type==='editEntry'){
+    const parts=arg.split('_');
+    const menuId=parts[parts.length-1];
+    const issueId=parts.slice(0,-1).join('_');
+    const issue=state.issues[issueId];
+    const menu=state.menus.find(m=>m.id===menuId);
+    const entry=(issue?.entries&&issue.entries[menuId])||{};
+    box.innerHTML=`<h3><i class="ti ti-pencil"></i>${esc(menu?.label)} 수정 — No.${issue?.num}</h3>
+      <label>제목</label><input id="m_title" value="${esc(entry.title||'')}">
+      <label>작성자</label><input id="m_author" value="${esc(entry.author||'')}">
+      <label>작성 날짜</label><input id="m_date2" value="${esc(entry.date||'')}">
+      <label>정리 내용</label><textarea id="m_content">${esc(entry.content||'')}</textarea>
+      <div class="modal-footer">
+        <button class="btn-outline" onclick="closeModal()">취소</button>
+        <button class="btn-dark" onclick="submitEdit('${arg}')"><i class="ti ti-check"></i>저장</button>
+      </div>`;
+  }
+}
+
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
+
+async function submitAddMenu(){
+  const label=document.getElementById('m_label').value.trim();
+  const icon=document.getElementById('m_icon').value;
+  const isLink=document.getElementById('m_type').value==='link';
+  const url=isLink?document.getElementById('m_url').value.trim():'';
+  if(!label){alert('메뉴 이름을 입력해주세요');return;}
+  if(isLink&&!url){alert('링크 URL을 입력해주세요');return;}
+  const id='menu_'+Date.now();
+  state.menus.push({id,label,icon,isLink,url:url||''});
+  closeModal();
+  await saveMenus();
+}
+
+async function submitAddIssue(){
+  const num=parseInt(document.getElementById('m_num').value);
+  const date=document.getElementById('m_date').value.trim();
+  if(!num||!date){alert('발행호 번호와 기간을 입력해주세요');return;}
+  if(state.issues[String(num)]){alert('이미 존재하는 발행호입니다');return;}
+  const newIssue={id:num,num,date,entries:{}};
+  closeModal();
+  await saveIssue(String(num), newIssue);
+}
+
+async function submitAddEntry(){
+  const issueNum=parseInt(document.getElementById('m_issue_num').value);
+  const issueDate=document.getElementById('m_issue_date').value.trim();
+  const title=document.getElementById('m_title').value.trim();
+  const author=document.getElementById('m_author').value.trim();
+  const date=document.getElementById('m_date2').value.trim();
+  const content=document.getElementById('m_content').value.trim();
+  if(!issueNum){alert('발행호 번호를 입력해주세요');return;}
+  if(!issueDate){alert('발행 기간을 입력해주세요');return;}
+  if(!title){alert('제목을 입력해주세요');return;}
+  const issueId=String(issueNum);
+  if(!state.issues[issueId]){
+    await saveIssue(issueId, {id:issueNum, num:issueNum, date:issueDate, entries:{}});
+  }
+  closeModal();
+  await saveEntry(issueId, state.activeMenu, {title,author,date,content});
+}
+
+async function submitEdit(arg){
+  const parts=arg.split('_');
+  const menuId=parts[parts.length-1];
+  const issueId=parts.slice(0,-1).join('_');
+  const title=document.getElementById('m_title').value.trim();
+  const author=document.getElementById('m_author').value.trim();
+  const date=document.getElementById('m_date2').value.trim();
+  const content=document.getElementById('m_content').value.trim();
+  closeModal();
+  await saveEntry(issueId, menuId, {title,author,date,content});
+  if(state.activeDetail===arg){ renderDetail(document.getElementById('contentBody'),document.getElementById('toolbarTitle'),document.getElementById('btnAddEntry')); }
+}
+
+// Global helpers for inline onclick
+window.openModal=openModal; window.closeModal=closeModal;
+window.selectMenu=selectMenu; window.goLink=goLink;
+window.showDetail=showDetail; window.backToList=backToList;
+window.selectMenuAndDetail=selectMenuAndDetail; window.doCopy=doCopy;
+window.deleteMenu=deleteMenu; window.doDeleteEntry=doDeleteEntry;
+window.submitAddMenu=submitAddMenu; window.submitAddIssue=submitAddIssue;
+window.submitAddEntry=submitAddEntry; window.submitEdit=submitEdit;
+window.pickIcon=(ic)=>{
+  document.getElementById('m_icon').value=ic;
+  document.querySelectorAll('.icon-opt').forEach(el=>el.classList.toggle('sel',el.dataset.icon===ic));
+};
+window.toggleUrlField=()=>{ document.getElementById('urlField').style.display=document.getElementById('m_type').value==='link'?'block':'none'; };
+
+document.getElementById('searchInput').addEventListener('input',function(){ state.searchQ=this.value; renderContent(); });
+document.getElementById('modalOverlay').addEventListener('click',function(e){ if(e.target===this) closeModal(); });
+
+// Boot
+await initDB();
+startListening();
+</script>
+</body>
+</html>
