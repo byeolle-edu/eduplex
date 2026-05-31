@@ -193,6 +193,8 @@
     .mf select:focus{outline:none;border-color:var(--navy)}
     .mdiv{height:1px;background:var(--border);margin:13px 0}
   </style>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -393,12 +395,10 @@
   </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script>
 var DB_URL = 'https://silverstar04301-default-rtdb.firebaseio.com/';
-var fbApp = null;
-var db = null;
+var fbApp = firebase.initializeApp({databaseURL: DB_URL});
+var db = firebase.database(fbApp);
 
 var tileLinks = {};
 var customTileData = [];
@@ -440,8 +440,6 @@ function doLogout() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  fbApp = firebase.initializeApp({databaseURL: DB_URL});
-  db = firebase.database(fbApp);
   if (new URLSearchParams(location.search).get('admin') === PW) {
     document.getElementById('loginWrap').style.display = 'none';
     document.getElementById('mainApp').classList.add('show');
@@ -473,7 +471,7 @@ function renderCustomTiles() {
     btn.textContent = '✏️ 링크 수정';
     btn.onclick = (function(tid) { return function(e) { e.stopPropagation(); editTile(tid); }; })(item.id);
     var icon = document.createElement('div'); icon.className = 't-icon'; icon.textContent = item.emoji;
-    var h3 = document.createElement('h3'); h3.textContent = item.name;
+    var h3 = document.createElement('h3'); h3.textContent = (item.name || '').replace(/^tile-custom-\d+$/, '새 항목');
     var p = document.createElement('p'); p.id = item.id + '-desc'; p.textContent = item.desc;
     var lnk = document.createElement('span'); lnk.className = 't-link'; lnk.id = item.id + '-lbl'; lnk.textContent = item.url ? '열기 →' : '링크 없음';
     tile.appendChild(btn); tile.appendChild(icon); tile.appendChild(h3); tile.appendChild(p); tile.appendChild(lnk);
@@ -572,7 +570,8 @@ function saveTileEdit() {
         break;
       }
     }
-    db.ref('staff/customTiles').set(customTileData)
+    if (!db) { showToast('⚠ DB 연결 안됨. 새로고침 후 다시 시도하세요.'); return; }
+  db.ref('staff/customTiles').set(customTileData)
       .then(function() { return db.ref('staff/tileLinks/' + id).set({url: url, desc: desc}); })
       .then(function() { showToast('✓ 수정 저장 완료!'); })
       .catch(function(e) { showToast('⚠ 저장 실패: ' + e.message); });
@@ -603,22 +602,26 @@ function deleteTile() {
 function openAddModal() { document.getElementById('addModal').classList.add('open'); }
 function closeAddModal() { document.getElementById('addModal').classList.remove('open'); }
 
+var _addSaving = false;
 function saveAdd() {
+  if (_addSaving) return;
   var name = document.getElementById('addName').value.trim();
   var emoji = document.getElementById('addEmoji').value.trim() || '📚';
   var url = document.getElementById('addUrl').value.trim();
   var desc = document.getElementById('addDesc').value.trim() || '클릭하면 스터디 자료로 이동합니다.';
   if (!name) { alert('주제 이름을 입력하세요.'); return; }
+  _addSaving = true;
   var id = 'tile-custom-' + Date.now();
   customTileData.push({id:id, name:name, emoji:emoji, url:url, desc:desc});
   tileLinks[id] = url;
   renderCustomTiles();
   closeAddModal();
   ['addName','addEmoji','addUrl','addDesc'].forEach(function(i) { document.getElementById(i).value = ''; });
+  if (!db) { showToast('⚠ DB 연결 안됨. 새로고침 후 다시 시도하세요.'); _addSaving = false; return; }
   db.ref('staff/customTiles').set(customTileData)
     .then(function() { return db.ref('staff/tileLinks/' + id).set({url:url, desc:desc}); })
-    .then(function() { showToast('✓ 저장 완료!'); })
-    .catch(function(e) { showToast('⚠ 저장 실패: ' + e.message); });
+    .then(function() { showToast('✓ 저장 완료!'); _addSaving = false; })
+    .catch(function(e) { showToast('⚠ 저장 실패: ' + e.message); _addSaving = false; });
 }
 
 function renderInfo() {
@@ -1137,7 +1140,6 @@ function gcSaveCase(){
 // 로그인 후 성장센터 로드
 var _origLS=loadStaffData;
 function loadStaffData(){_origLS();gcLoad('CM');gcLoad('TM');}
-// gcLoad는 loadStaffData 내에서 호출됨
 </script>
 </body>
 </html>
