@@ -397,8 +397,8 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script>
 var DB_URL = 'https://silverstar04301-default-rtdb.firebaseio.com/';
-var fbApp = firebase.initializeApp({databaseURL: DB_URL});
-var db = firebase.database(fbApp);
+var fbApp = null;
+var db = null;
 
 var tileLinks = {};
 var customTileData = [];
@@ -439,11 +439,15 @@ function doLogout() {
   document.getElementById('pwInput').value = '';
 }
 
-if (new URLSearchParams(location.search).get('admin') === PW) {
-  document.getElementById('loginWrap').style.display = 'none';
-  document.getElementById('mainApp').classList.add('show');
-  loadStaffData();
-}
+document.addEventListener('DOMContentLoaded', function() {
+  fbApp = firebase.initializeApp({databaseURL: DB_URL});
+  db = firebase.database(fbApp);
+  if (new URLSearchParams(location.search).get('admin') === PW) {
+    document.getElementById('loginWrap').style.display = 'none';
+    document.getElementById('mainApp').classList.add('show');
+    loadStaffData();
+  }
+});
 
 function showPanel(btn, id) {
   document.querySelectorAll('.s-btn').forEach(function(b) { b.classList.remove('active'); });
@@ -1133,6 +1137,7 @@ function gcSaveCase(){
 // 로그인 후 성장센터 로드
 var _origLS=loadStaffData;
 function loadStaffData(){_origLS();gcLoad('CM');gcLoad('TM');}
+// gcLoad는 loadStaffData 내에서 호출됨
 </script>
 </body>
 </html>
