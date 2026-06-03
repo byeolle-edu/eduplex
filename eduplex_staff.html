@@ -637,16 +637,45 @@ function renderInfo() {
     return;
   }
   infoData.forEach(function(item, i) {
-    var el = document.createElement('div'); el.className = 'info-item';
-    var hdr = document.createElement('div'); hdr.className = 'info-item-hdr';
+    var el = document.createElement('div');
+    el.className = 'info-item';
+    el.style.cursor = 'pointer';
+
+    // 헤더 (항상 보임)
+    var hdr = document.createElement('div');
+    hdr.className = 'info-item-hdr';
+
     var h4 = document.createElement('h4'); h4.textContent = item.title;
     var span = document.createElement('span'); span.className = 'info-author'; span.textContent = item.author;
+    var arrow = document.createElement('span');
+    arrow.textContent = '▼';
+    arrow.style.cssText = 'font-size:11px;color:var(--text-light);margin-left:auto;margin-right:8px;transition:transform .2s;';
     var delBtn = document.createElement('button'); delBtn.className = 'del-btn'; delBtn.textContent = '✕';
-    delBtn.onclick = (function(idx) { return function() { deleteInfo(idx); }; })(i);
-    hdr.appendChild(h4); hdr.appendChild(span); hdr.appendChild(delBtn);
-   var p = document.createElement('p'); p.innerHTML = item.body.replace(/\n/g, '<br>');
-    var dateDiv = document.createElement('div'); dateDiv.className = 'info-date'; dateDiv.textContent = item.date;
-    el.appendChild(hdr); el.appendChild(p); el.appendChild(dateDiv);
+    delBtn.onclick = (function(idx) { return function(e) { e.stopPropagation(); deleteInfo(idx); }; })(i);
+
+    hdr.appendChild(h4); hdr.appendChild(span); hdr.appendChild(arrow); hdr.appendChild(delBtn);
+
+    // 본문 (접힌 상태)
+    var body = document.createElement('div');
+    body.style.cssText = 'display:none;padding-top:12px;border-top:1px solid var(--border);margin-top:10px;';
+
+    var p = document.createElement('p');
+    p.style.cssText = 'font-size:13px;color:var(--text-sub);line-height:1.8;white-space:pre-wrap;';
+    p.innerHTML = (item.body || '').replace(/\n/g, '<br>');
+
+    var dateDiv = document.createElement('div');
+    dateDiv.className = 'info-date'; dateDiv.textContent = item.date;
+
+    body.appendChild(p); body.appendChild(dateDiv);
+    el.appendChild(hdr); el.appendChild(body);
+
+    // 클릭 시 토글
+    hdr.onclick = function() {
+      var isOpen = body.style.display !== 'none';
+      body.style.display = isOpen ? 'none' : 'block';
+      arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
+    };
+
     list.appendChild(el);
   });
 }
