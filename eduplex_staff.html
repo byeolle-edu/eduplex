@@ -644,7 +644,7 @@ function renderInfo() {
     var delBtn = document.createElement('button'); delBtn.className = 'del-btn'; delBtn.textContent = '✕';
     delBtn.onclick = (function(idx) { return function() { deleteInfo(idx); }; })(i);
     hdr.appendChild(h4); hdr.appendChild(span); hdr.appendChild(delBtn);
-    var p = document.createElement('p'); p.textContent = item.body;
+   var p = document.createElement('p'); p.innerHTML = item.body.replace(/\n/g, '<br>');
     var dateDiv = document.createElement('div'); dateDiv.className = 'info-date'; dateDiv.textContent = item.date;
     el.appendChild(hdr); el.appendChild(p); el.appendChild(dateDiv);
     list.appendChild(el);
