@@ -439,6 +439,40 @@ function doLogout() {
   document.getElementById('pwInput').value = '';
 }
 
+// ──────────────────────────────────────────────
+// loadStaffData: Firebase에서 데이터 로드 (단일 정의)
+// ──────────────────────────────────────────────
+function loadStaffData() {
+  db.ref('staff').once('value', function(snap) {
+    var val = snap.val() || {};
+
+    if (val.tileLinks) {
+      Object.keys(val.tileLinks).forEach(function(id) {
+        tileLinks[id] = val.tileLinks[id].url || '';
+        var d = document.getElementById(id + '-desc');
+        var l = document.getElementById(id + '-lbl');
+        if (d && val.tileLinks[id].desc) d.textContent = val.tileLinks[id].desc;
+        if (l) l.textContent = val.tileLinks[id].url ? '열기 →' : '링크 없음';
+      });
+    }
+
+    if (val.customTiles && val.customTiles.length) {
+      customTileData = val.customTiles;
+      renderCustomTiles();
+    }
+
+    if (val.infoItems && val.infoItems.length) {
+      infoData = val.infoItems;
+      renderInfo();
+    }
+  });
+
+  // 성장센터도 함께 로드
+  gcLoad('CM');
+  gcLoad('TM');
+}
+
+// 관리자 링크 자동 로그인
 if (new URLSearchParams(location.search).get('admin') === PW) {
   document.getElementById('loginWrap').style.display = 'none';
   document.getElementById('mainApp').classList.add('show');
@@ -478,33 +512,6 @@ function renderCustomTiles() {
   });
 }
 
-function loadStaffData() {
-  // once()로 1회만 읽어 저장 후 리스너 덮어씌우기 방지
-  db.ref('staff').once('value', function(snap) {
-    var val = snap.val() || {};
-
-    if (val.tileLinks) {
-      Object.keys(val.tileLinks).forEach(function(id) {
-        tileLinks[id] = val.tileLinks[id].url || '';
-        var d = document.getElementById(id + '-desc');
-        var l = document.getElementById(id + '-lbl');
-        if (d && val.tileLinks[id].desc) d.textContent = val.tileLinks[id].desc;
-        if (l) l.textContent = val.tileLinks[id].url ? '열기 →' : '링크 없음';
-      });
-    }
-
-    if (val.customTiles && val.customTiles.length) {
-      customTileData = val.customTiles;
-      renderCustomTiles();
-    }
-
-    if (val.infoItems && val.infoItems.length) {
-      infoData = val.infoItems;
-      renderInfo();
-    }
-  });
-}
-
 function openTileLink(id) {
   var u = tileLinks[id];
   if (u) window.open(u, '_blank');
@@ -516,7 +523,6 @@ function editTile(id) {
   document.getElementById('tileEditId').value = id;
   document.getElementById('tileEditUrl').value = tileLinks[id] || '';
   document.getElementById('tileEditDesc').value = (document.getElementById(id + '-desc') || {}).textContent || '';
-  // 커스텀 타일은 이름/이모지도 수정 가능
   var nameRow = document.getElementById('tileEditNameRow');
   var emojiRow = document.getElementById('tileEditEmojiRow');
   var deleteBtn = document.getElementById('tileDeleteBtn');
@@ -524,8 +530,8 @@ function editTile(id) {
     nameRow.style.display = '';
     emojiRow.style.display = '';
     deleteBtn.style.display = '';
-    var ct = customTileData.find ? customTileData.find(function(t){return t.id===id;}) : null;
-    if (!ct) for(var i=0;i<customTileData.length;i++){if(customTileData[i].id===id){ct=customTileData[i];break;}}
+    var ct = null;
+    for (var i = 0; i < customTileData.length; i++) { if (customTileData[i].id === id) { ct = customTileData[i]; break; } }
     document.getElementById('tileEditName').value = ct ? ct.name : '';
     document.getElementById('tileEditEmoji').value = ct ? ct.emoji : '';
     document.getElementById('tileEditTitle').textContent = '✏️ 스터디 수정';
@@ -566,14 +572,12 @@ function saveTileEdit() {
         break;
       }
     }
-    // tileLinks도 업데이트
     tileLinks[id] = url;
     db.ref('staff/customTiles').set(customTileData)
       .then(function() { return db.ref('staff/tileLinks/' + id).set({url: url, desc: desc}); })
       .then(function() { showToast('✓ 수정 저장 완료!'); })
       .catch(function(e) { showToast('⚠ 저장 실패: ' + e.message); });
   } else {
-    // 고정 타일(16타입, 입시) 링크 저장
     tileLinks[id] = url;
     var lbl = document.getElementById(id + '-lbl');
     if (lbl) lbl.textContent = url ? '열기 →' : '링크 없음';
@@ -587,10 +591,8 @@ function saveTileEdit() {
 function deleteTile() {
   var id = document.getElementById('tileEditId').value;
   if (!confirm('이 스터디 카드를 삭제할까요?')) return;
-  // DOM에서 제거
   var tile = document.getElementById(id);
   if (tile) tile.remove();
-  // customTileData에서 제거
   customTileData = customTileData.filter(function(t) { return t.id !== id; });
   delete tileLinks[id];
   closeTileEditModal();
@@ -606,7 +608,6 @@ function closeAddModal() { document.getElementById('addModal').classList.remove(
 var _savingAdd = false;
 function saveAdd() {
   if (_savingAdd) return;
-  // 한글 IME 입력 완료 후 값 가져오기
   setTimeout(function() {
     var name = document.getElementById('addName').value.trim();
     var emoji = document.getElementById('addEmoji').value.trim() || '📚';
@@ -833,19 +834,15 @@ function gcAllSkills(role){
     r.push({id:it.id,cat:d[i].cat,name:it.name,emoji:it.emoji,desc:it.desc,isDefault:true});
   }
   var customs=gcCS[role]||[];
-  // deleted 목록과 수정 목록 분리
   var deleted={}, overrides={};
   for(var k=0;k<customs.length;k++){
     if(customs[k].deleted) deleted[customs[k].id]=true;
     else overrides[customs[k].id]=customs[k];
   }
-  // 기본 역량에 수정/삭제 적용
   for(var n=0;n<r.length;n++){
     if(overrides[r[n].id]) r[n]=overrides[r[n].id];
   }
-  // 삭제된 항목 제거
   r=r.filter(function(s){return !deleted[s.id];});
-  // 순수 신규 커스텀 역량 추가
   var defaultIds={};
   var d2=GCD[role];
   for(var i2=0;i2<d2.length;i2++) for(var j2=0;j2<d2[i2].items.length;j2++) defaultIds[d2[i2].items[j2].id]=true;
@@ -856,7 +853,7 @@ function gcAllSkills(role){
 }
 
 function gcLoad(role){
-  gcRenderList(role); // 기본값 즉시 렌더
+  gcRenderList(role);
   db.ref('gc/'+role+'/skills').on('value',function(s){
     gcCS[role]=s.val()||[];
     gcRenderList(role);
@@ -909,7 +906,6 @@ function gcRenderList(role){
     }
     h+='</div></div>';
   }
-  // 카테고리 추가 + 역량 추가 버튼
   h+='<div style="display:flex;gap:10px;margin-top:14px">'
     +'<div class="gc-add" style="flex:1" onclick="gcOpenCatModal(\''+role+'\')">'
     +'<span style="font-size:17px">📁</span><p>카테고리 추가</p></div>'
@@ -917,7 +913,6 @@ function gcRenderList(role){
     +'<span style="font-size:17px">➕</span><p>역량 추가</p></div>'
     +'</div>';
   area.innerHTML=h;
-  // 게시글 수 배지
   db.ref('gc/'+role+'/posts').once('value',function(s){
     var ps=s.val()||{},sids=Object.keys(ps);
     for(var pi=0;pi<sids.length;pi++){
@@ -988,7 +983,6 @@ function gcRenderBoard(role,sid){
 function gcTog(h){h.nextElementSibling.classList.toggle('open');}
 function gcDel(role,sid,key){if(!confirm('삭제할까요?'))return;db.ref('gc/'+role+'/posts/'+sid+'/'+key).remove().then(function(){showToast('✓ 삭제 완료!');});}
 
-// ── 역량 추가 ──
 function gcOpenSkillModal(role){
   document.getElementById('gcSkillRole').value=role;
   document.getElementById('gcSkillEditId').value='';
@@ -1000,7 +994,6 @@ function gcOpenSkillModal(role){
   document.getElementById('gcSkillModal').classList.add('open');
 }
 
-// ── 역량 수정 ──
 function gcEditSkill(role,sid){
   var all=gcAllSkills(role),sk=null;
   for(var i=0;i<all.length;i++){if(all[i].id===sid){sk=all[i];break;}}
@@ -1028,7 +1021,6 @@ function gcSaveSkill(){
   if(!cat||!name){alert('카테고리와 역량 이름을 입력하세요.');return;}
   var arr=gcCS[role].slice();
   if(editId){
-    // 커스텀 배열에 있으면 수정, 없으면 (기본역량 수정) 추가
     var found=false;
     for(var i=0;i<arr.length;i++){if(arr[i].id===editId){arr[i]={id:editId,cat:cat,name:name,emoji:emoji,desc:desc};found=true;break;}}
     if(!found) arr.push({id:editId,cat:cat,name:name,emoji:emoji,desc:desc});
@@ -1041,12 +1033,9 @@ function gcSaveSkill(){
   });
 }
 
-// ── 역량 삭제 ──
 function gcDelSkill(role,sid){
   if(!confirm('역량을 삭제할까요?\n해당 역량의 자료도 모두 삭제됩니다.')) return;
-  // 커스텀 배열에서 제거, 기본 역량이면 deleted 플래그로 추가
   var arr=gcCS[role].filter(function(s){return s.id!==sid;});
-  // 기본 역량인지 확인
   var isDefault=false;
   var d=GCD[role];
   for(var i=0;i<d.length;i++) for(var j=0;j<d[i].items.length;j++) if(d[i].items[j].id===sid) isDefault=true;
@@ -1057,7 +1046,6 @@ function gcDelSkill(role,sid){
   });
 }
 
-// ── 카테고리 추가 ──
 function gcOpenCatModal(role){
   document.getElementById('gcCatRole').value=role;
   document.getElementById('gcCatOldName').value='';
@@ -1066,7 +1054,6 @@ function gcOpenCatModal(role){
   document.getElementById('gcCatModal').classList.add('open');
 }
 
-// ── 카테고리 수정 ──
 function gcEditCat(role,catName){
   document.getElementById('gcCatRole').value=role;
   document.getElementById('gcCatOldName').value=catName;
@@ -1082,9 +1069,7 @@ function gcSaveCat(){
   if(!newName){alert('카테고리 이름을 입력하세요.');return;}
   var arr=gcCS[role].slice();
   if(oldName){
-    // 기존 카테고리 수정: 커스텀에서 같은 카테고리 이름 변경
     for(var i=0;i<arr.length;i++){if(arr[i].cat===oldName) arr[i]=Object.assign({},arr[i],{cat:newName});}
-    // 기본 역량 중 해당 카테고리도 override로 추가
     var d=GCD[role];
     for(var ci=0;ci<d.length;ci++){
       if(d[ci].cat===oldName){
@@ -1097,7 +1082,6 @@ function gcSaveCat(){
       }
     }
   } else {
-    // 새 카테고리: 빈 역량 하나 생성
     arr.push({id:'cat-'+role.toLowerCase()+'-'+Date.now(),cat:newName,name:'새 역량',emoji:'📌',desc:'역량 설명을 입력하세요'});
   }
   db.ref('gc/'+role+'/skills').set(arr).then(function(){
@@ -1140,10 +1124,6 @@ function gcSaveCase(){
   if(!title){alert('사례 제목을 입력하세요.');return;}
   db.ref('gc/'+role+'/posts/'+sid+'/c'+Date.now()).set({type:'우수사례',author:document.getElementById('gcCaseAuthor').value.trim()||'익명',title:title,sit:document.getElementById('gcCaseSit').value.trim(),cause:document.getElementById('gcCauseTxt').value.trim(),action:document.getElementById('gcActionTxt').value.trim(),result:document.getElementById('gcResultTxt').value.trim(),learn:document.getElementById('gcLearnTxt').value.trim(),date:new Date().toLocaleDateString('ko-KR')}).then(function(){showToast('✓ 우수사례 저장!');document.getElementById('gcCaseModal').classList.remove('open');['gcCaseAuthor','gcCaseTitle','gcCaseSit','gcCauseTxt','gcActionTxt','gcResultTxt','gcLearnTxt'].forEach(function(i){document.getElementById(i).value='';});});
 }
-
-// 로그인 후 성장센터 로드
-var _origLS=loadStaffData;
-function loadStaffData(){_origLS();gcLoad('CM');gcLoad('TM');}
 </script>
 </body>
 </html>
