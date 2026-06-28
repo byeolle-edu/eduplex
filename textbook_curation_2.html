@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>교재 큐레이션 — 자기주도학습 학원</title>
+<style>
+  :root {
+    --bg: #f7f6f3; --surface: #ffffff; --surface2: #f0efe9;
+    --border: #e2e0d8; --border-strong: #c8c5bb;
+    --text-primary: #1a1916; --text-secondary: #5a5850; --text-muted: #9a9688;
+    --accent: #2d6a4f; --accent-light: #e8f4ed; --accent-border: #b7dcc8; --accent-text: #1a4a34;
+    --warn: #7a4f1a; --warn-light: #fdf3e3; --warn-border: #e8c98a;
+    --danger: #7a1a1a; --danger-light: #fdf0f0; --danger-border: #e8b0b0;
+    --radius: 8px; --radius-lg: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Apple SD Gothic Neo','Noto Sans KR',sans-serif; background: var(--bg); color: var(--text-primary); font-size: 15px; line-height: 1.6; min-height: 100vh; }
+  .layout { display: flex; min-height: 100vh; }
+
+  .sidebar { width: 220px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); padding: 28px 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  .sidebar-logo { font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: .06em; padding: 0 20px 18px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+  .nav-section { padding: 0 10px; margin-bottom: 4px; }
+  .nav-label { font-size: 10px; color: var(--text-muted); letter-spacing: .08em; text-transform: uppercase; padding: 4px 8px 8px; display: block; }
+  .grade-btn { display: block; width: 100%; padding: 8px 10px; text-align: left; border: none; background: none; border-radius: var(--radius); font-size: 13px; color: var(--text-secondary); cursor: pointer; margin-bottom: 1px; font-family: inherit; }
+  .grade-btn:hover { background: var(--surface2); }
+  .grade-btn.active { background: var(--accent-light); color: var(--accent-text); font-weight: 600; }
+
+  .main { flex: 1; padding: 32px 36px; max-width: 920px; }
+
+  .filter-bar { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; align-items: center; }
+  .filter-group { display: flex; align-items: center; gap: 7px; }
+  .filter-label { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+  .chip { padding: 5px 13px; border-radius: 20px; border: 1px solid var(--border-strong); font-size: 12px; background: var(--surface); color: var(--text-secondary); cursor: pointer; font-family: inherit; transition: all .1s; }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .chip.sel-high { background: var(--accent-light); border-color: var(--accent-border); color: var(--accent-text); font-weight: 600; }
+  .chip.sel-mid  { background: var(--warn-light);   border-color: var(--warn-border);   color: var(--warn);        font-weight: 600; }
+  .chip.sel-low  { background: var(--danger-light); border-color: var(--danger-border); color: var(--danger);      font-weight: 600; }
+  .chip.sel-season { background: var(--accent-light); border-color: var(--accent-border); color: var(--accent-text); font-weight: 600; }
+  .divider-v { width: 1px; height: 18px; background: var(--border); }
+
+  .subj-area { margin-bottom: 22px; }
+  .subj-group { margin-bottom: 12px; }
+  .subj-group-label { font-size: 11px; color: var(--text-muted); margin-bottom: 7px; padding-left: 2px; }
+  .subj-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .subj-tab { padding: 5px 13px; border-radius: 20px; border: 1px solid var(--border); font-size: 12px; background: var(--surface); color: var(--text-secondary); cursor: pointer; font-family: inherit; transition: all .1s; white-space: nowrap; }
+  .subj-tab:hover { border-color: var(--border-strong); color: var(--text-primary); }
+  .subj-tab.active { background: var(--text-primary); border-color: var(--text-primary); color: #fff; font-weight: 600; }
+
+  .result-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+  .result-title { font-size: 18px; font-weight: 700; }
+  .result-title span { color: var(--accent); }
+  .result-count { font-size: 13px; color: var(--text-muted); }
+
+  .book-list { display: flex; flex-direction: column; gap: 14px; }
+  .book-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 22px 24px; transition: border-color .12s, box-shadow .12s; }
+  .book-card:hover { border-color: var(--border-strong); box-shadow: 0 2px 12px rgba(0,0,0,.05); }
+
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+  .card-name { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+  .card-pub { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+  .card-header-right { display: flex; gap: 5px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+  .badge { font-size: 11px; padding: 3px 9px; border-radius: 8px; font-weight: 600; white-space: nowrap; }
+  .badge-summer { background: #e8f4ed; color: #1a4a34; border: 1px solid #b7dcc8; }
+  .badge-winter { background: #eef2ff; color: #1a2a7a; border: 1px solid #b0bcf0; }
+  .badge-always { background: #f5f5f0; color: #3a3a30; border: 1px solid #d0cfca; }
+  .badge-level-high { background: var(--accent-light); color: var(--accent-text); border: 1px solid var(--accent-border); }
+  .badge-level-mid  { background: var(--warn-light);   color: var(--warn);        border: 1px solid var(--warn-border); }
+  .badge-level-low  { background: var(--danger-light); color: var(--danger);      border: 1px solid var(--danger-border); }
+  .badge-level-all  { background: #f5f5f0; color: #3a3a30; border: 1px solid #d0cfca; }
+
+  .meta-row { display: flex; gap: 0; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 14px; }
+  .meta-cell { flex: 1; padding: 10px 14px; border-right: 1px solid var(--border); }
+  .meta-cell:last-child { border-right: none; }
+  .meta-cell-label { font-size: 10px; color: var(--text-muted); letter-spacing: .04em; text-transform: uppercase; margin-bottom: 5px; }
+  .meta-cell-val { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+  .vol-bar { display: flex; gap: 3px; margin-top: 5px; }
+  .vol-dot { width: 22px; height: 4px; border-radius: 3px; }
+  .vol-dot.on { background: var(--accent); }
+  .vol-dot.off { background: var(--border); }
+  .vol-page { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+  .text-section { margin-bottom: 10px; }
+  .text-section-label { font-size: 10px; color: var(--text-muted); letter-spacing: .04em; text-transform: uppercase; margin-bottom: 5px; }
+  .text-section-body { font-size: 13px; color: var(--text-secondary); line-height: 1.75; background: var(--surface2); border-radius: var(--radius); padding: 10px 13px; }
+  .divider-h { height: 1px; background: var(--border); margin: 12px 0; }
+
+  .card-actions { display: flex; gap: 6px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .btn-sm { font-size: 12px; padding: 5px 12px; border: 1px solid var(--border-strong); border-radius: var(--radius); background: none; cursor: pointer; color: var(--text-muted); font-family: inherit; }
+  .btn-sm:hover { background: var(--surface2); color: var(--text-primary); }
+  .btn-del:hover { background: var(--danger-light); color: var(--danger); border-color: var(--danger-border); }
+
+  .add-btn { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; padding: 13px 18px; border: 1.5px dashed var(--border-strong); border-radius: var(--radius-lg); background: none; cursor: pointer; width: 100%; color: var(--text-muted); font-size: 13px; font-family: inherit; transition: all .12s; }
+  .add-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 14px; }
+  .manager-banner { background: var(--warn-light); border: 1px solid var(--warn-border); border-radius: var(--radius); padding: 9px 14px; font-size: 12px; color: var(--warn); margin-bottom: 18px; }
+
+  .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 100; align-items: center; justify-content: center; }
+  .modal-backdrop.open { display: flex; }
+  .modal { background: var(--surface); border-radius: var(--radius-lg); padding: 28px; width: 520px; max-width: 95vw; max-height: 92vh; overflow-y: auto; }
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; font-weight: 600; }
+  .field input, .field textarea, .field select { width: 100%; padding: 8px 11px; border: 1px solid var(--border-strong); border-radius: var(--radius); font-size: 13px; font-family: inherit; background: var(--surface); color: var(--text-primary); }
+  .field input:focus, .field textarea:focus, .field select:focus { outline: none; border-color: var(--accent); }
+  .field textarea { resize: vertical; min-height: 72px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field-hint { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+  .modal-section-title { font-size: 11px; color: var(--text-muted); letter-spacing: .06em; text-transform: uppercase; margin: 20px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 22px; }
+  .btn-primary { padding: 8px 20px; border-radius: var(--radius); background: var(--accent); color: #fff; border: none; font-size: 13px; font-family: inherit; cursor: pointer; font-weight: 600; }
+  .btn-secondary { padding: 8px 14px; border-radius: var(--radius); background: none; border: 1px solid var(--border-strong); font-size: 13px; font-family: inherit; cursor: pointer; color: var(--text-secondary); }
+</style>
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-logo">📚 교재 큐레이션</div>
+    <div class="nav-section">
+      <span class="nav-label">학년</span>
+      <button class="grade-btn" onclick="setGrade('중1')">중1</button>
+      <button class="grade-btn" onclick="setGrade('중2')">중2</button>
+      <button class="grade-btn" onclick="setGrade('중3')">중3</button>
+      <button class="grade-btn active" onclick="setGrade('고1')">고1</button>
+      <button class="grade-btn" onclick="setGrade('고2')">고2</button>
+      <button class="grade-btn" onclick="setGrade('고3')">고3</button>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div class="filter-bar">
+      <div class="filter-group">
+        <span class="filter-label">역량</span>
+        <button class="chip" id="chip-high" onclick="setLevel('high')">상</button>
+        <button class="chip sel-mid" id="chip-mid" onclick="setLevel('mid')">중</button>
+        <button class="chip" id="chip-low" onclick="setLevel('low')">하</button>
+      </div>
+      <div class="divider-v"></div>
+      <div class="filter-group">
+        <span class="filter-label">시기</span>
+        <button class="chip sel-season" id="chip-summer" onclick="toggleSeason('summer')">여름방학</button>
+        <button class="chip" id="chip-always" onclick="toggleSeason('always')">상시</button>
+        <button class="chip" id="chip-winter" onclick="toggleSeason('winter')">겨울방학</button>
+      </div>
+    </div>
+
+    <div class="subj-area" id="subjectArea"></div>
+    <div class="manager-banner">✏️ <strong>매니저 전용</strong> — 카드 하단 편집 버튼으로 내용을 수정하거나, 아래 버튼으로 교재를 직접 추가할 수 있어요.</div>
+
+    <div class="result-header">
+      <div class="result-title" id="resultTitle">고1 · <span>국어 문학</span> · 중</div>
+      <div class="result-count" id="resultCount">교재 0권</div>
+    </div>
+    <div class="book-list" id="bookList"></div>
+    <button class="add-btn" onclick="openAdd()">+ 교재 직접 추가</button>
+  </main>
+</div>
+
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">교재 추가</div>
+    <div class="modal-section-title">기본 정보</div>
+    <div class="field-row">
+      <div class="field"><label>교재명 *</label><input id="f-title" placeholder="예) 매3문 2027"></div>
+      <div class="field"><label>출판사 / 저자</label><input id="f-pub" placeholder="예) 키출판사 / 안인숙"></div>
+    </div>
+    <div class="modal-section-title">분량</div>
+    <div class="field-row">
+      <div class="field">
+        <label>분량 (대략)</label>
+        <select id="f-vol">
+          <option value="1">적음 — 방학 2~3주 완성</option>
+          <option value="2" selected>중간 — 방학 4~5주 완성</option>
+          <option value="3">많음 — 방학 전체 + α</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>페이지 수 (선택)</label>
+        <input id="f-pages" type="number" placeholder="예) 268" min="1">
+        <div class="field-hint">알라딘 기본정보 &gt; 쪽수 확인</div>
+      </div>
+    </div>
+    <div class="modal-section-title">시기 추천</div>
+    <div class="field">
+      <label>시기 추천</label>
+      <select id="f-season">
+        <option value="summer">여름방학 추천</option>
+        <option value="always">상시 (학기중·방학 모두)</option>
+        <option value="winter">겨울방학 추천</option>
+      </select>
+    </div>
+    <div class="modal-section-title">해설지</div>
+    <div class="field">
+      <label>해설지 수준</label>
+      <select id="f-sol">
+        <option value="3">★★★ 매우 상세 — 혼자 이해 가능</option>
+        <option value="2">★★☆ 보통 — 대부분 이해 가능</option>
+        <option value="1">★☆☆ 간략 — 교사 도움 필요</option>
+      </select>
+    </div>
+    <div class="modal-section-title">내용</div>
+    <div class="field"><label>교재 특징</label><textarea id="f-feature" placeholder="구성, 수록 작품 수, 기출 범위, 난이도 등 교재 자체의 특징을 적어주세요."></textarea></div>
+    <div class="field"><label>매니지먼트 방식</label><textarea id="f-mgmt" placeholder="어떤 학생에게 배정하는지, 학습 페이스, 병행 교재 등을 적어주세요."></textarea></div>
+    <div class="modal-section-title">분류</div>
+    <div class="field-row">
+      <div class="field">
+        <label>역량 추천</label>
+        <select id="f-level">
+          <option value="high">상</option>
+          <option value="mid" selected>중</option>
+          <option value="low">하</option>
+          <option value="all">상/중/하 공통</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>트랙</label>
+        <select id="f-track">
+          <option value="학년 과정">학년 과정</option>
+          <option value="계통별 복습">계통별 복습</option>
+          <option value="선택과목">선택과목</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal()">취소</button>
+      <button class="btn-primary" onclick="saveBook()">저장</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUBJECTS = {
+  '중1':{ '국어':['문학','비문학(독서)','문법·어휘','모의고사','종합'], '영어':['어휘','문법','구문독해','유형독해','모의고사','종합'], '수학':{'학년 과정':['중1 전범위'],'계통별':['수와 연산','문자와 식','함수','도형','통계·확률']}, '과학':{'학년 과정':['중1 전범위'],'계통별':['물질','생명','운동과 에너지','지구와 우주']}, '역사·사회':['역사 (전근대)','사회'] },
+  '중2':{ '국어':['문학','비문학(독서)','문법·어휘','모의고사','종합'], '영어':['어휘','문법','구문독해','유형독해','모의고사','종합'], '수학':{'학년 과정':['중2 전범위'],'계통별':['수와 연산','문자와 식','함수','도형','통계·확률']}, '과학':{'학년 과정':['중2 전범위'],'계통별':['물질','생명','운동과 에너지','지구와 우주']}, '역사·사회':['역사 (근현대)','사회'] },
+  '중3':{ '국어':['문학','비문학(독서)','문법·어휘','모의고사','종합'], '영어':['어휘','문법','구문독해','유형독해','모의고사','종합'], '수학':{'학년 과정':['중3 전범위'],'계통별':['수와 연산','문자와 식','함수','도형','통계·확률']}, '과학':{'학년 과정':['중3 전범위'],'계통별':['물질','생명','운동과 에너지','지구와 우주']}, '역사·사회':['역사','사회'] },
+  '고1':{ '국어':['문학','독서(비문학)','언어(문법)','화법과 작문','개념어·어휘','모의고사','종합'], '영어':['어휘','문법','구문독해','유형독해','모의고사','종합'], '수학':{'학년 과정':['공통수학 전범위'],'영역별':['다항식','방정식과 부등식','도형의 방정식','집합과 명제','함수'],'모의고사':['수학 모의고사']}, '통합사회·통합과학·한국사':['통합사회','통합과학','한국사'] },
+  '고2':{ '국어':['문학','독서','언어와 매체','화법과 작문','개념어·어휘','모의고사','종합'], '영어':['어휘','문법','구문독해','유형독해','모의고사','종합'], '수학':{'선택과목':['수학Ⅰ','수학Ⅱ','확률과 통계','미적분','기하','대수'],'모의고사':['수학 모의고사']}, '과탐':['물리학','화학','생명과학','지구과학','역학과 에너지','전자기와 양자','물질과 에너지','화학 반응의 세계','세포와 물질대사','생물의 유전','지구시스템과학','행성우주과학'], '사탐':['한국지리 탐구','도시의 미래 탐구','동아시아 역사 기행','세계사','정치','법과 사회','경제','사회·문화','윤리와 사상','현대사회와 윤리'] },
+  '고3':{ '국어':['문학','독서','언어와 매체','화법과 작문','개념어·어휘','모의고사','실전·파이널','종합'], '영어':['어휘','문법','구문독해','유형독해','모의고사','실전·파이널','종합'], '수학':{'선택과목':['수학Ⅰ','수학Ⅱ','확률과 통계','미적분','기하','대수'],'모의고사':['수학 모의고사']}, '과탐':['물리학','화학','생명과학','지구과학','역학과 에너지','전자기와 양자','물질과 에너지','화학 반응의 세계','세포와 물질대사','생물의 유전','지구시스템과학','행성우주과학'], '사탐':['한국지리 탐구','도시의 미래 탐구','동아시아 역사 기행','세계사','정치','법과 사회','경제','사회·문화','윤리와 사상','현대사회와 윤리'] },
+};
+
+const BOOKS_DB = {
+'고1__국어__문학__low': [
+  { id:101, title:'예비 매3문 (개정판)', publisher:'키출판사 / 안인숙', volume:1, pages:210, season:'summer', solStars:3, feature:'고등 문학 기출 지문을 처음 접하는 학생을 위한 입문용. 매3문보다 낮은 난이도로 구성되어 있으며 갈래별 기초 개념 설명이 포함되어 있음. 운문·산문 기출 지문을 하루 3지문 페이스로 학습 가능.', mgmt:'고등 문학이 처음인 하위권 학생의 첫 교재로 배정. 방학 3~4주 안에 완성 목표. 끝나면 매3문 또는 자이스토리 기본으로 이어감.', level:'low', track:'학년 과정' },
+  { id:102, title:'EBS 윤혜정의 개념의 나비효과 입문편 1권 문학', publisher:'EBS / 윤혜정', volume:1, pages:null, season:'winter', solStars:3, feature:'예비 고1·고1 대상 문학 개념 입문서. 시어, 비유, 서술 방식 등 기초 개념을 EBS 강의와 연계해서 학습 가능. 2022 개정 교육과정 반영.', mgmt:'국어 기초가 부족한 하위권에게 겨울방학 입문 교재로 추천. EBS 무료 강의 병행을 적극 권장. 개념 이해 후 기출 교재로 이동.', level:'low', track:'학년 과정' },
+  { id:103, title:'EBS 올림포스 공통국어1 (2022 개정)', publisher:'EBS', volume:1, pages:null, season:'always', solStars:3, feature:'EBS 연계 교재로 고1 공통국어 내신과 기초 실력을 동시에 잡을 수 있는 구성. 개념 학습 + 기출 유형 문제 포함. 내신 직결 효과 있음.', mgmt:'내신과 자기주도를 동시에 잡아야 하는 하위권 학생에게 상시 병행 교재로 활용. 학교 진도와 맞춰서 단원별로 풀게 함.', level:'low', track:'학년 과정' },
+  { id:104, title:'자이스토리 국어 문학 기본(고1) 2026', publisher:'수경출판사', volume:2, pages:null, season:'summer', solStars:2, feature:'갈래별 독해 공식 + 문제 풀이 특강 구성. 고1 학력평가 기출을 갈래별로 체계적으로 정리. 현대시·현대소설·고전시가·고전소설·극·갈래복합 전 갈래 수록.', mgmt:'해설이 간략한 편이라 교사 코칭 병행 필요. 주 2회 체크인 구조 권장. 방학 5주 완성 목표로 배정.', level:'low', track:'학년 과정' },
+],
+'고1__국어__문학__mid': [
+  { id:201, title:'매3문 (2027 수능 대비)', publisher:'키출판사 / 안인숙', volume:2, pages:268, season:'summer', solStars:3, feature:'수능·모의평가 기출 문학 지문을 하루 3지문 페이스로 풀도록 구성. 갈래별 접근법과 오답 이유를 상세히 서술한 해설 포함. 매회 제대로 공부법 수록. 2028 수능 예시문항도 반영.', mgmt:'중위권 고1 문학 1순위 교재. 하루 1회차(3지문) 페이스로 5~6주 완성. 틀린 문항은 작품 전체 재독 후 메모하도록 지도.', level:'mid', track:'학년 과정' },
+  { id:202, title:'더 개념 블랙라벨 국어 문학', publisher:'진학사', volume:2, pages:null, season:'always', solStars:3, feature:'문학 개념어 251개 + 운문 34작품·산문 21작품 수록. 개념 정리 → 작품 분석 → OX 점검 순 구성. 특목고 기출 변형 포함으로 난이도 다소 높음.', mgmt:'문학 개념이 흔들리는 중위권에게 개념서로 먼저 투입. 블랙라벨 완성 후 매3문으로 연계하는 2단계 루틴 추천.', level:'mid', track:'학년 과정' },
+  { id:203, title:'자이스토리 국어 문학 기본(고1) 2026', publisher:'수경출판사', volume:2, pages:null, season:'summer', solStars:2, feature:'갈래별 독해 공식 + 문제 풀이 특강. 고1 학력평가 기출 중심으로 체계적 정리. 해설이 비교적 간략한 편.', mgmt:'매3문과 병행하거나 방학 초반 기출 감각 잡기용으로 사용. 교사 코칭 병행 시 효과적.', level:'mid', track:'학년 과정' },
+  { id:204, title:'마더텅 수능기출문제집 국어 문학 2026', publisher:'마더텅', volume:3, pages:568, season:'always', solStars:3, feature:'10개년 수능·모의평가 전 문항 + 우수 기출 284개 작품, 705문항 수록. 유형별 6개 챕터로 배치. 방대한 기출 물량으로 완전 정복 가능.', mgmt:'분량이 매우 많아 방학 단독 완성은 어려움. 학기중 꾸준히 병행하거나 고1 전체 기간에 걸쳐 활용 권장. 기출 레퍼런스용으로도 사용.', level:'mid', track:'학년 과정' },
+  { id:205, title:'EBS 올림포스 전국연합학력평가 기출문제집 국어(고1) 2026', publisher:'EBS', volume:2, pages:null, season:'summer', solStars:3, feature:'고1 전국연합 학력평가 기출 전 영역(문학·독서·화법과작문·언어·매체) 수록. 2022 개정 교육과정 매체 영역 포함. 문학만 별도 추출해서 활용 가능.', mgmt:'EBS 강의 연계 가능. 학평 기출 집중 학습을 원하는 중위권에게 추천. 방학 중 문학 단원만 선별해서 풀게 함.', level:'mid', track:'학년 과정' },
+  { id:206, title:'전형태 나기출 베이직 (입문자용) 2026', publisher:'키출판사 / 전형태', volume:2, pages:null, season:'summer', solStars:3, feature:'평가원 수능 국어 기출을 과외식으로 해설하는 교재. 입문자용(베이직)은 접근하기 쉬운 기출 선별 수록. 선생님이 옆에서 설명하는 듯한 구어체 해설이 특징.', mgmt:'혼자 기출을 분석하기 어려운 중위권에게 적합. 해설 읽는 방법 자체를 익히는 데 집중하도록 안내. 방학 4~5주 완성 목표.', level:'mid', track:'학년 과정' },
+  { id:207, title:'기출의 미래 문학 2027', publisher:'이투스북', volume:2, pages:null, season:'always', solStars:3, feature:'수능·평가원 기출을 갈래별로 분류하여 수록. 작품별 상세 분석과 선지 해설이 친절하고 체계적. 마더텅·자이스토리와 함께 3대 기출 교재로 꼽힘.', mgmt:'매3문 완성 후 보강 기출 교재로 활용하거나, 특정 갈래 취약한 학생에게 갈래별로 선별해서 배정.', level:'mid', track:'학년 과정' },
+],
+'고1__국어__문학__high': [
+  { id:301, title:'매3문 (2027 수능 대비)', publisher:'키출판사 / 안인숙', volume:2, pages:268, season:'summer', solStars:3, feature:'수능·모의평가 기출 전 문항 갈래별 구성. 하루 3지문 페이스. 제대로 공부법 수록으로 자기주도 학습에 최적화.', mgmt:'상위권도 기출 분석 훈련 목적으로 사용. 단순히 풀고 채점하는 것이 아니라 선지 하나하나 근거를 찾는 방식으로 지도.', level:'high', track:'학년 과정' },
+  { id:302, title:'마더텅 수능기출문제집 국어 문학 2026', publisher:'마더텅', volume:3, pages:568, season:'always', solStars:3, feature:'10개년 수능·모의평가 705문항, 284개 작품 전수록. 유형별 체계적 배치로 완전 기출 정복 가능. 상위권의 기출 레퍼런스 교재.', mgmt:'학기중 꾸준히 매주 일정량 배정. 방학 집중 완성 플랜보다 장기 루틴에 적합. 오답 노트 필수 병행.', level:'high', track:'학년 과정' },
+  { id:303, title:'P.I.R.A.M 피램 수능 국어 기출문제집 문학편 1 (2027)', publisher:'피램(김동욱)', volume:3, pages:null, season:'always', solStars:3, feature:'일관된 독해 원리를 기반으로 기출을 분석하는 교재. Daily 형식으로 구성되어 있으며 수능 준비의 체계적 커리큘럼을 제시. 문학편 1·2로 분권.', mgmt:'국어 공부의 큰 틀을 잡고 싶은 상위권에게 적합. 피램 독서편과 함께 국어 전체 커리큘럼으로 운영 가능. 학기중 병행 추천.', level:'high', track:'학년 과정' },
+  { id:304, title:'전형태 나기출 문학 7개년 2026', publisher:'키출판사 / 전형태', volume:3, pages:null, season:'always', solStars:3, feature:'평가원 수능 7개년 기출 문학 전 문항을 과외식으로 해설. 문항별 정확한 근거 추출 방법을 상세히 서술. 고난도 문항 별도 수록.', mgmt:'기출 분석 능력을 키우고 싶은 상위권에게 추천. 해설 읽는 방법 자체가 학습이 되도록 지도. 한 문항당 15~20분 투자 권장.', level:'high', track:'학년 과정' },
+  { id:305, title:'기출의 미래 문학 2027', publisher:'이투스북', volume:2, pages:null, season:'always', solStars:3, feature:'갈래별 기출 선별·수록. 작품 분석과 선지 해설이 체계적이며 고난도 문항 해설이 충실.', mgmt:'매3문과 병행하거나 특정 갈래 집중 보강용으로 배정. 상위권은 스스로 오답 분석 후 매니저와 리뷰.', level:'high', track:'학년 과정' },
+  { id:306, title:'EBS 윤혜정의 개념의 나비효과 본편 1권 문학', publisher:'EBS / 윤혜정', volume:2, pages:null, season:'winter', solStars:3, feature:'수능 국어 문학의 체계적 개념 정리 + 기출 적용. 입문편보다 난이도 높은 본편으로 실전 수능 대비에 적합. 갈래별 핵심 개념과 작품 감상 원리 수록.', mgmt:'겨울방학 선행으로 배정. EBS 강의와 반드시 연계해서 학습하도록 지도. 개념 → 기출 순 학습 플로우 안내.', level:'high', track:'학년 과정' },
+  { id:307, title:'더 개념 블랙라벨 국어 문학', publisher:'진학사', volume:2, pages:null, season:'always', solStars:3, feature:'개념어 251개 + 특목고·수능 기출 변형 문항 다수 수록. 상위권 학생도 도전적인 난이도. OX 점검 문항으로 정확한 개념 확인 가능.', mgmt:'상위권에게 개념 정밀 점검용으로 투입. 틀린 개념어는 직접 정리하도록 안내. 매3문과 병행 운영 가능.', level:'high', track:'학년 과정' },
+  { id:308, title:'마더텅 전국연합학력평가 기출문제집 고1 국어 문학+독서 세트', publisher:'마더텅', volume:2, pages:null, season:'summer', solStars:3, feature:'고1 학력평가 기출 중 문학+독서를 묶은 세트. 전 문항 해설 수록. 상위권이 학평 수준을 빠르게 정리하기 좋은 구성.', mgmt:'여름방학 초반 2~3주 속성 정리용으로 투입. 끝난 후 수능 기출 교재로 바로 전환.', level:'high', track:'학년 과정' },
+  { id:309, title:'P.I.R.A.M 피램 수능 국어 기출문제집 문학편 2 (2027)', publisher:'피램(김동욱)', volume:3, pages:null, season:'always', solStars:3, feature:'문학편 1 이후 연계되는 심화 기출 교재. 고난도 작품·문항 집중 수록. 1편과 함께 문학 기출 완전 정복 커리큘럼 완성.', mgmt:'문학편 1 완성 후 바로 이어서 투입. 학기중 장기 루틴으로 운영. 오답은 반드시 원문 재독과 함께.', level:'high', track:'학년 과정' },
+],
+};
+
+let ST = { grade:'고1', level:'mid', mainSubj:'국어', subSubj:'문학', seasons:['summer'], editingId:null };
+
+function getKey() { return `${ST.grade}__${ST.mainSubj}__${ST.subSubj}__${ST.level}`; }
+function getBooks() { return BOOKS_DB[getKey()] || []; }
+
+function renderSubjects() {
+  const map = SUBJECTS[ST.grade] || {};
+  let html = '';
+  Object.entries(map).forEach(([main, subs]) => {
+    html += `<div class="subj-group"><div class="subj-group-label">${main}</div><div class="subj-row">`;
+    if (Array.isArray(subs)) {
+      subs.forEach(s => {
+        html += `<button class="subj-tab${ST.mainSubj===main&&ST.subSubj===s?' active':''}" onclick="setSubj('${esc(main)}','${esc(s)}')">${s}</button>`;
+      });
+    } else {
+      Object.entries(subs).forEach(([cat, items]) => {
+        items.forEach(s => {
+          const tag = (cat==='학년 과정'||cat==='모의고사') ? '' : `<span style="font-size:10px;opacity:.55;margin-left:2px">(${cat})</span>`;
+          html += `<button class="subj-tab${ST.mainSubj===main&&ST.subSubj===s?' active':''}" onclick="setSubj('${esc(main)}','${esc(s)}')">${s}${tag}</button>`;
+        });
+      });
+    }
+    html += `</div></div>`;
+  });
+  document.getElementById('subjectArea').innerHTML = html;
+}
+
+function esc(s) { return s.replace(/'/g,"\\'"); }
+
+function volLabel(v) { return v===1?'적음':v===2?'중간':'많음'; }
+function volDots(v) { return [1,2,3].map(i=>`<div class="vol-dot ${i<=v?'on':'off'}"></div>`).join(''); }
+function solLabel(s) { return s===3?'★★★ 매우 상세':s===2?'★★☆ 보통':'★☆☆ 간략'; }
+function seasonLabel(s) { return s==='summer'?'여름방학 추천':s==='winter'?'겨울방학 추천':'상시'; }
+function seasonCls(s) { return s==='summer'?'badge-summer':s==='winter'?'badge-winter':'badge-always'; }
+function levelLabel(l) { return l==='high'?'상':l==='mid'?'중':l==='low'?'하':'상/중/하 공통'; }
+function levelCls(l) { return l==='high'?'badge-level-high':l==='mid'?'badge-level-mid':l==='low'?'badge-level-low':'badge-level-all'; }
+
+function renderBooks() {
+  const lMap = {high:'상', mid:'중', low:'하'};
+  document.getElementById('resultTitle').innerHTML = `${ST.grade} · <span>${ST.mainSubj} ${ST.subSubj}</span> · ${lMap[ST.level]}`;
+  const books = getBooks();
+  document.getElementById('resultCount').textContent = `교재 ${books.length}권`;
+  if (!books.length) {
+    document.getElementById('bookList').innerHTML = `<div class="empty-state">📭<br><br>아직 등록된 교재가 없어요.<br><span style="font-size:12px">아래 버튼으로 직접 추가해주세요.</span></div>`;
+    return;
+  }
+  document.getElementById('bookList').innerHTML = books.map(b => `
+    <div class="book-card">
+      <div class="card-header">
+        <div>
+          <div class="card-name">${b.title}</div>
+          <div class="card-pub">${b.publisher}</div>
+        </div>
+        <div class="card-header-right">
+          <span class="badge ${seasonCls(b.season)}">${seasonLabel(b.season)}</span>
+          <span class="badge ${levelCls(b.level)}">${levelLabel(b.level)}</span>
+        </div>
+      </div>
+      <div class="meta-row">
+        <div class="meta-cell">
+          <div class="meta-cell-label">분량</div>
+          <div class="meta-cell-val">${volLabel(b.volume)}</div>
+          <div class="vol-bar">${volDots(b.volume)}</div>
+          ${b.pages ? `<div class="vol-page">약 ${b.pages}쪽</div>` : '<div class="vol-page" style="color:var(--border-strong)">쪽수 미입력</div>'}
+        </div>
+        <div class="meta-cell">
+          <div class="meta-cell-label">해설지</div>
+          <div class="meta-cell-val" style="font-size:12px">${solLabel(b.solStars)}</div>
+        </div>
+        <div class="meta-cell">
+          <div class="meta-cell-label">역량 추천</div>
+          <div class="meta-cell-val">${levelLabel(b.level)}</div>
+        </div>
+      </div>
+      <div class="text-section">
+        <div class="text-section-label">교재 특징</div>
+        <div class="text-section-body">${b.feature||'—'}</div>
+      </div>
+      <div class="divider-h"></div>
+      <div class="text-section">
+        <div class="text-section-label">매니지먼트 방식</div>
+        <div class="text-section-body">${b.mgmt||'—'}</div>
+      </div>
+      <div class="card-actions">
+        <button class="btn-sm" onclick="openEdit(${b.id})">✏️ 편집</button>
+        <button class="btn-sm btn-del" onclick="deleteBook(${b.id})">🗑 삭제</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function render() { renderSubjects(); renderBooks(); }
+
+function setGrade(g) {
+  ST.grade = g;
+  const map = SUBJECTS[g]||{};
+  const first = Object.keys(map)[0];
+  const subs = map[first];
+  ST.mainSubj = first;
+  ST.subSubj = Array.isArray(subs) ? subs[0] : Object.values(subs)[0][0];
+  document.querySelectorAll('.grade-btn').forEach(b => b.classList.toggle('active', b.textContent===g));
+  render();
+}
+function setLevel(l) {
+  ST.level = l;
+  ['high','mid','low'].forEach(x => { document.getElementById('chip-'+x).className = 'chip'+(x===l?` sel-${x}`:''); });
+  renderBooks();
+}
+function toggleSeason(s) {
+  const i = ST.seasons.indexOf(s);
+  if(i>=0) ST.seasons.splice(i,1); else ST.seasons.push(s);
+  document.getElementById('chip-'+s).className = 'chip'+(ST.seasons.includes(s)?' sel-season':'');
+}
+function setSubj(main,sub) { ST.mainSubj=main; ST.subSubj=sub; render(); }
+
+function openAdd() {
+  ST.editingId=null;
+  document.getElementById('modalTitle').textContent='교재 추가';
+  ['title','pub','pages','feature','mgmt'].forEach(f=>document.getElementById('f-'+f).value='');
+  document.getElementById('f-vol').value='2';
+  document.getElementById('f-season').value='summer';
+  document.getElementById('f-sol').value='2';
+  document.getElementById('f-level').value=ST.level;
+  document.getElementById('f-track').value='학년 과정';
+  document.getElementById('modal').classList.add('open');
+}
+function openEdit(id) {
+  const b = getBooks().find(x=>x.id===id); if(!b) return;
+  ST.editingId=id;
+  document.getElementById('modalTitle').textContent='교재 편집';
+  document.getElementById('f-title').value=b.title;
+  document.getElementById('f-pub').value=b.publisher;
+  document.getElementById('f-pages').value=b.pages||'';
+  document.getElementById('f-vol').value=b.volume;
+  document.getElementById('f-season').value=b.season;
+  document.getElementById('f-sol').value=b.solStars;
+  document.getElementById('f-feature').value=b.feature||'';
+  document.getElementById('f-mgmt').value=b.mgmt||'';
+  document.getElementById('f-level').value=b.level;
+  document.getElementById('f-track').value=b.track||'학년 과정';
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function saveBook() {
+  const title=document.getElementById('f-title').value.trim();
+  if(!title){alert('교재명을 입력해주세요.');return;}
+  const k=getKey(); if(!BOOKS_DB[k]) BOOKS_DB[k]=[];
+  const data={ title, publisher:document.getElementById('f-pub').value||'-', volume:parseInt(document.getElementById('f-vol').value), pages:parseInt(document.getElementById('f-pages').value)||null, season:document.getElementById('f-season').value, solStars:parseInt(document.getElementById('f-sol').value), feature:document.getElementById('f-feature').value||'', mgmt:document.getElementById('f-mgmt').value||'', level:document.getElementById('f-level').value, track:document.getElementById('f-track').value };
+  if(ST.editingId!==null){ const idx=BOOKS_DB[k].findIndex(x=>x.id===ST.editingId); if(idx>=0) BOOKS_DB[k][idx]={id:ST.editingId,...data}; }
+  else { BOOKS_DB[k].push({id:Date.now(),...data}); }
+  closeModal(); renderBooks();
+}
+function deleteBook(id) {
+  if(!confirm('이 교재를 삭제할까요?')) return;
+  const k=getKey(); BOOKS_DB[k]=(BOOKS_DB[k]||[]).filter(x=>x.id!==id); renderBooks();
+}
+document.getElementById('modal').addEventListener('click',e=>{ if(e.target===document.getElementById('modal')) closeModal(); });
+render();
+</script>
+</body>
+</html>
