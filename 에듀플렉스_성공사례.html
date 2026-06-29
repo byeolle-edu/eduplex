@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>에듀플렉스 개별지도 성공 사례</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --brand: #3B5BDB;
+    --brand-light: #EEF2FF;
+    --brand-mid: #C5D0F7;
+    --brand-dark: #1E3A8A;
+    --success: #0F6E56;
+    --success-light: #E1F5EE;
+    --warning: #854F0B;
+    --warning-light: #FAEEDA;
+    --danger: #A32D2D;
+    --danger-light: #FCEBEB;
+    --pro: #534AB7;
+    --pro-light: #EEEDFE;
+    --gray-50: #F8F9FA;
+    --gray-100: #F1F3F5;
+    --gray-200: #E9ECEF;
+    --gray-300: #DEE2E6;
+    --gray-500: #868E96;
+    --gray-700: #495057;
+    --gray-900: #212529;
+    --sidebar-w: 240px;
+    --header-h: 56px;
+  }
+
+  body {
+    font-family: 'Noto Sans KR', sans-serif;
+    background: var(--gray-50);
+    color: var(--gray-900);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    position: fixed; top: 0; left: 0; right: 0; height: var(--header-h);
+    background: #fff;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex; align-items: center; padding: 0 24px;
+    z-index: 100;
+    gap: 16px;
+  }
+  .header-logo {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-mark {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--brand);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 14px; font-weight: 700; letter-spacing: -0.5px;
+  }
+  .logo-text { font-size: 15px; font-weight: 700; color: var(--gray-900); letter-spacing: -0.3px; }
+  .logo-sub { font-size: 12px; color: var(--gray-500); margin-left: 4px; }
+  .header-spacer { flex: 1; }
+  .btn-pdf {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--brand); color: #fff;
+    border: none; border-radius: 8px;
+    padding: 8px 16px; font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: inherit;
+    transition: background 0.15s;
+  }
+  .btn-pdf:hover { background: var(--brand-dark); }
+  .btn-pdf svg { width: 15px; height: 15px; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    position: fixed; top: var(--header-h); left: 0; bottom: 0;
+    width: var(--sidebar-w);
+    background: #fff; border-right: 1px solid var(--gray-200);
+    overflow-y: auto; padding: 16px 12px;
+    z-index: 90;
+  }
+  .sidebar-section-label {
+    font-size: 10px; font-weight: 600; color: var(--gray-500);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 0 8px; margin-bottom: 6px; margin-top: 16px;
+  }
+  .sidebar-section-label:first-child { margin-top: 0; }
+  .student-btn {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%; padding: 9px 10px;
+    border: none; background: none; border-radius: 8px;
+    cursor: pointer; font-family: inherit; text-align: left;
+    transition: background 0.12s;
+    margin-bottom: 2px;
+  }
+  .student-btn:hover { background: var(--gray-100); }
+  .student-btn.active { background: var(--brand-light); }
+  .student-avatar {
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    background: var(--brand-light); color: var(--brand);
+  }
+  .student-btn.active .student-avatar { background: var(--brand); color: #fff; }
+  .student-info { flex: 1; min-width: 0; }
+  .student-name-sb { font-size: 13px; font-weight: 600; color: var(--gray-900); }
+  .student-meta-sb { font-size: 11px; color: var(--gray-500); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .add-btn {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    width: 100%; padding: 9px; margin-top: 8px;
+    border: 1.5px dashed var(--gray-300); background: none; border-radius: 8px;
+    cursor: pointer; font-family: inherit; font-size: 12px; color: var(--gray-500);
+    transition: all 0.12s;
+  }
+  .add-btn:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-light); }
+
+  /* ── MAIN ── */
+  .main {
+    margin-left: var(--sidebar-w); margin-top: var(--header-h);
+    padding: 32px 40px; max-width: 900px;
+  }
+
+  /* ── STUDENT PAGE ── */
+  .student-page { display: none; }
+  .student-page.active { display: block; }
+
+  /* hero */
+  .s-hero {
+    background: linear-gradient(135deg, var(--brand) 0%, #5C7CFA 100%);
+    border-radius: 16px; padding: 28px 28px 24px;
+    color: #fff; margin-bottom: 24px; position: relative; overflow: hidden;
+  }
+  .s-hero::after {
+    content: ''; position: absolute; right: -40px; top: -40px;
+    width: 200px; height: 200px; border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+  }
+  .s-hero-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(255,255,255,0.2); color: #fff;
+    font-size: 11px; font-weight: 600; padding: 4px 11px;
+    border-radius: 20px; margin-bottom: 14px; letter-spacing: 0.04em;
+  }
+  .s-hero-name { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 14px; }
+  .s-hero-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .s-hero-chip {
+    display: flex; align-items: center; gap: 5px;
+    background: rgba(255,255,255,0.18); color: rgba(255,255,255,0.95);
+    border: 1px solid rgba(255,255,255,0.25);
+    font-size: 12px; padding: 5px 12px; border-radius: 20px;
+  }
+
+  /* section */
+  .s-section { margin-bottom: 28px; }
+  .s-section-title {
+    font-size: 11px; font-weight: 600; color: var(--gray-500);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    padding-bottom: 8px; border-bottom: 1px solid var(--gray-200);
+    margin-bottom: 14px;
+  }
+
+  /* score grid */
+  .score-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .score-card {
+    background: #fff; border: 1px solid var(--gray-200);
+    border-radius: 12px; padding: 14px; text-align: center;
+  }
+  .sc-subj { font-size: 12px; color: var(--gray-500); margin-bottom: 10px; font-weight: 500; }
+  .sc-row { display: flex; justify-content: space-between; font-size: 11px; padding: 2px 0; }
+  .sc-lbl { color: var(--gray-500); }
+  .sc-val { font-weight: 600; color: var(--gray-700); }
+  .sc-val.up { color: var(--brand); font-size: 15px; }
+  .sc-val.dn { color: var(--danger); }
+  .sc-badge {
+    display: inline-block; font-size: 10px; font-weight: 600;
+    padding: 3px 8px; border-radius: 20px; margin-top: 8px;
+  }
+  .badge-up { background: var(--success-light); color: var(--success); }
+  .badge-warn { background: var(--warning-light); color: var(--warning); }
+
+  /* trait list */
+  .trait-list { display: flex; flex-direction: column; gap: 8px; }
+  .trait-item {
+    display: flex; gap: 12px; align-items: flex-start;
+    background: #fff; border: 1px solid var(--gray-200);
+    border-radius: 10px; padding: 12px 14px;
+  }
+  .trait-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .trait-text { font-size: 13px; color: var(--gray-700); line-height: 1.7; }
+
+  /* method grid */
+  .method-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .method-card {
+    background: #fff; border: 1px solid var(--gray-200);
+    border-radius: 12px; padding: 16px;
+  }
+  .method-subj {
+    font-size: 12px; font-weight: 700; color: var(--brand);
+    margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--gray-100);
+  }
+  .phase { margin-bottom: 10px; }
+  .phase-lbl { font-size: 10px; font-weight: 700; color: var(--gray-500); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 3px; }
+  .phase-txt { font-size: 12px; color: var(--gray-700); line-height: 1.7; }
+  .tip {
+    background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px;
+    padding: 8px 12px; font-size: 11px; color: #92400E; margin-top: 8px;
+    display: flex; gap: 6px; align-items: flex-start;
+  }
+
+  /* math roadmap */
+  .math-banner {
+    background: var(--brand-light); border: 1.5px solid var(--brand-mid);
+    border-radius: 12px; padding: 16px 18px; margin-bottom: 16px;
+  }
+  .math-banner-title {
+    font-size: 13px; font-weight: 700; color: var(--brand-dark);
+    margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+  }
+  .math-banner-desc { font-size: 12px; color: var(--gray-700); line-height: 1.8; }
+
+  .math-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+  .math-stat {
+    background: #fff; border: 1px solid var(--gray-200);
+    border-radius: 10px; padding: 14px; text-align: center;
+  }
+  .math-stat-num { font-size: 24px; font-weight: 700; color: var(--brand); }
+  .math-stat-lbl { font-size: 11px; color: var(--gray-500); margin-top: 3px; }
+
+  /* timeline */
+  .timeline { display: flex; flex-direction: column; }
+  .tl-row { display: flex; gap: 14px; }
+  .tl-spine { display: flex; flex-direction: column; align-items: center; width: 18px; flex-shrink: 0; }
+  .tl-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+  .tl-dot.base { background: var(--brand); }
+  .tl-dot.vaca { background: #0F6E56; }
+  .tl-dot.done { background: #0F6E56; box-shadow: 0 0 0 3px var(--success-light); }
+  .tl-dot.high { background: var(--pro); }
+  .tl-line { width: 2px; background: var(--gray-200); flex: 1; margin: 3px 0; min-height: 20px; }
+  .tl-body { padding-bottom: 20px; flex: 1; }
+  .tl-month { font-size: 13px; font-weight: 600; color: var(--gray-900); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .tl-pill {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    padding: 2px 9px; border-radius: 20px;
+  }
+  .pill-base { background: var(--brand-light); color: var(--brand); }
+  .pill-vaca { background: var(--success-light); color: var(--success); }
+  .pill-high { background: var(--pro-light); color: var(--pro); }
+  .tl-milestone {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 600;
+    background: var(--success-light); color: var(--success);
+    border-radius: 20px; padding: 3px 10px; margin-top: 5px;
+  }
+  .tl-desc { font-size: 12px; color: var(--gray-500); margin-top: 3px; line-height: 1.6; }
+
+  .strategy-box {
+    background: #fff; border: 1px solid var(--gray-200);
+    border-radius: 12px; padding: 14px 16px; margin-top: 12px;
+  }
+  .strategy-title { font-size: 12px; font-weight: 700; color: var(--gray-700); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .strategy-row { display: flex; gap: 12px; margin-bottom: 8px; align-items: flex-start; }
+  .strategy-row:last-child { margin-bottom: 0; }
+  .s-lbl { font-size: 11px; font-weight: 600; color: var(--gray-500); width: 64px; flex-shrink: 0; padding-top: 1px; }
+  .s-desc { font-size: 12px; color: var(--gray-700); line-height: 1.7; }
+
+  /* plan blocks */
+  .plan-block {
+    background: #fff; border: 1px solid var(--gray-200);
+    border-radius: 12px; padding: 16px 18px; margin-bottom: 12px;
+  }
+  .plan-hd {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 14px;
+  }
+  .plan-title { font-size: 13px; font-weight: 700; color: var(--gray-900); }
+  .plan-total {
+    font-size: 11px; color: var(--gray-500);
+    background: var(--gray-100); border: 1px solid var(--gray-200);
+    border-radius: 20px; padding: 2px 10px;
+  }
+  .subj-rows { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
+  .subj-row { display: flex; gap: 8px; align-items: flex-start; }
+  .subj-tag {
+    font-size: 10px; font-weight: 700; padding: 3px 10px;
+    border-radius: 20px; flex-shrink: 0; white-space: nowrap;
+  }
+  .tag-math { background: var(--brand-light); color: var(--brand); }
+  .tag-korean { background: var(--success-light); color: var(--success); }
+  .tag-english { background: var(--pro-light); color: var(--pro); }
+  .tag-science { background: var(--warning-light); color: var(--warning); }
+  .tag-history { background: var(--danger-light); color: var(--danger); }
+  .subj-desc { font-size: 12px; color: var(--gray-700); line-height: 1.7; }
+
+  .plan-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .plan-table th { font-size: 10px; font-weight: 600; color: var(--gray-500); text-align: left; padding: 5px 0; border-bottom: 1px solid var(--gray-200); letter-spacing: 0.05em; }
+  .plan-table td { padding: 6px 0; color: var(--gray-700); border-bottom: 1px solid var(--gray-100); }
+  .plan-table td:last-child { text-align: right; font-weight: 600; color: var(--gray-900); }
+
+  /* summary */
+  .summary-box {
+    background: var(--brand-light); border: 1.5px solid var(--brand-mid);
+    border-radius: 12px; padding: 18px 20px;
+  }
+  .summary-title {
+    font-size: 13px; font-weight: 700; color: var(--brand-dark);
+    margin-bottom: 12px; display: flex; align-items: center; gap: 7px;
+  }
+  .summary-point {
+    display: flex; gap: 10px; font-size: 13px; color: var(--gray-700);
+    line-height: 1.7; margin-bottom: 8px; align-items: flex-start;
+  }
+  .summary-point:last-child { margin-bottom: 0; }
+  .s-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--brand); flex-shrink: 0; margin-top: 8px;
+  }
+
+  /* empty state */
+  .empty-state {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 80px 40px; text-align: center;
+  }
+  .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+  .empty-title { font-size: 18px; font-weight: 700; color: var(--gray-700); margin-bottom: 8px; }
+  .empty-desc { font-size: 14px; color: var(--gray-500); line-height: 1.7; }
+
+  /* PDF print styles */
+  @media print {
+    .header, .sidebar, .btn-pdf { display: none !important; }
+    .main { margin: 0 !important; padding: 20px !important; max-width: 100% !important; }
+    .student-page { display: none !important; }
+    .student-page.print-active { display: block !important; }
+    body { background: #fff; }
+    .s-hero { background: var(--brand) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .score-card, .trait-item, .method-card, .plan-block, .strategy-box { break-inside: avoid; }
+    .s-section { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-logo">
+    <div class="logo-mark">E</div>
+    <span class="logo-text">에듀플렉스</span>
+    <span class="logo-sub">개별지도 성공 사례</span>
+  </div>
+  <div class="header-spacer"></div>
+  <button class="btn-pdf" onclick="printCurrentStudent()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+      <rect x="6" y="14" width="12" height="8"/>
+    </svg>
+    PDF 저장
+  </button>
+</header>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-section-label">학생 목록</div>
+  <button class="student-btn active" onclick="showStudent('shin')" id="btn-shin">
+    <div class="student-avatar">신</div>
+    <div class="student-info">
+      <div class="student-name-sb">신승현</div>
+      <div class="student-meta-sb">한별중 3학년 · 9타입</div>
+    </div>
+  </button>
+  <!-- 추가 학생 예시 (비활성) -->
+  <button class="student-btn" onclick="alert('준비 중인 사례입니다.')" style="opacity:0.45">
+    <div class="student-avatar" style="background:var(--success-light);color:var(--success)">김</div>
+    <div class="student-info">
+      <div class="student-name-sb">김○○</div>
+      <div class="student-meta-sb">○○중 2학년 · 3타입</div>
+    </div>
+  </button>
+  <button class="add-btn" onclick="alert('새 학생 사례를 추가하세요!')">
+    <span style="font-size:16px">＋</span> 사례 추가하기
+  </button>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- ── 신승현 페이지 ── -->
+  <div class="student-page active" id="page-shin">
+
+    <!-- Hero -->
+    <div class="s-hero">
+      <div class="s-hero-badge">⭐ 개별지도 성공 사례</div>
+      <div class="s-hero-name">신승현 학생</div>
+      <div class="s-hero-chips">
+        <div class="s-hero-chip">🏫 한별중 3학년</div>
+        <div class="s-hero-chip">💎 9타입 (유리구슬)</div>
+        <div class="s-hero-chip">👤 ESFJ</div>
+      </div>
+    </div>
+
+    <!-- 성적 변화 -->
+    <div class="s-section">
+      <div class="s-section-title">성적 변화</div>
+      <div class="score-grid">
+        <div class="score-card">
+          <div class="sc-subj">국어</div>
+          <div class="sc-row"><span class="sc-lbl">중2 2학기 중간</span><span class="sc-val">59</span></div>
+          <div class="sc-row"><span class="sc-lbl">중2 2학기 기말</span><span class="sc-val">38</span></div>
+          <div class="sc-row"><span class="sc-lbl">중3 1학기 중간</span><span class="sc-val up">86</span></div>
+          <span class="sc-badge badge-up">+27점 최고점</span>
+        </div>
+        <div class="score-card">
+          <div class="sc-subj">영어</div>
+          <div class="sc-row"><span class="sc-lbl">중2 2학기 중간</span><span class="sc-val">88</span></div>
+          <div class="sc-row"><span class="sc-lbl">중2 2학기 기말</span><span class="sc-val">74</span></div>
+          <div class="sc-row"><span class="sc-lbl">중3 1학기 중간</span><span class="sc-val up">77</span></div>
+          <span class="sc-badge badge-up">안정적 유지</span>
+        </div>
+        <div class="score-card">
+          <div class="sc-subj">과학</div>
+          <div class="sc-row"><span class="sc-lbl">중2 2학기 기말</span><span class="sc-val dn">28</span></div>
+          <div class="sc-row"><span class="sc-lbl">&nbsp;</span><span class="sc-val" style="visibility:hidden">-</span></div>
+          <div class="sc-row"><span class="sc-lbl">중3 1학기 중간</span><span class="sc-val up">72</span></div>
+          <span class="sc-badge badge-up">+44점 급등</span>
+        </div>
+        <div class="score-card">
+          <div class="sc-subj">수학</div>
+          <div class="sc-row"><span class="sc-lbl">중2 2학기 중간</span><span class="sc-val">31</span></div>
+          <div class="sc-row"><span class="sc-lbl">중2 2학기 기말</span><span class="sc-val">60</span></div>
+          <div class="sc-row"><span class="sc-lbl">중3 1학기 중간</span><span class="sc-val dn">14</span></div>
+          <span class="sc-badge badge-warn">중등 후행 복습 중</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 학생 특징 -->
+    <div class="s-section">
+      <div class="s-section-title">학생 특징</div>
+      <div class="trait-list">
+        <div class="trait-item">
+          <div class="trait-icon">🎮</div>
+          <div class="trait-text">게임 중독 수준으로 일상적인 학습 자체가 어려운 상태. 상담과 개별 프로그램을 병행하여 진행.</div>
+        </div>
+        <div class="trait-item">
+          <div class="trait-icon">😔</div>
+          <div class="trait-text">학습 효능감이 매우 낮고 진로 목표도 없는 상태. 기분이 안 좋은 날엔 90분 수업 중 5문제도 풀지 못하는 경우 있음.</div>
+        </div>
+        <div class="trait-item">
+          <div class="trait-icon">🔇</div>
+          <div class="trait-text">유리구슬 타입 특성상 매우 예민함. 컨디션에 따라 튜터 및 교실장 면담에서도 무응답이 많은 까다로운 케이스.</div>
+        </div>
+        <div class="trait-item">
+          <div class="trait-icon">📅</div>
+          <div class="trait-text">개별지도 콤마 수: 3월 주 10콤마 → 4월 주 14~16콤마 (국어/수학/영어/과학 4과목 전체 수업)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 과목별 지도법 -->
+    <div class="s-section">
+      <div class="s-section-title">과목별 수업 지도 방법</div>
+      <div class="method-grid">
+        <div class="method-card">
+          <div class="method-subj">📖 국어</div>
+          <div class="phase">
+            <div class="phase-lbl">3월</div>
+            <div class="phase-txt">자습서로 개념·어휘 스스로 읽고 대답 반복 (문제 풀이 없음). 숙제는 노트 필기만.</div>
+          </div>
+          <div class="phase">
+            <div class="phase-lbl">4월</div>
+            <div class="phase-txt">기출 기본 문제 풀이 시작. 숙제는 여전히 노트 필기 위주.</div>
+          </div>
+          <div class="tip">💡 역질문 중심 수업 + 밝은 리액션과 세심한 칭찬으로 라포 형성</div>
+        </div>
+        <div class="method-card">
+          <div class="method-subj">🌐 영어</div>
+          <div class="phase">
+            <div class="phase-lbl">3월</div>
+            <div class="phase-txt">수업 중 30분 단어 암기. 숙제 전체 영단어 5번씩 쓰기. 대화문 구두 해석.</div>
+          </div>
+          <div class="phase">
+            <div class="phase-lbl">4월</div>
+            <div class="phase-txt">본문 암기 영작 워크북 무한 반복 (5분에 1~2줄 암기 + 역질문 체크).</div>
+          </div>
+          <div class="tip">💡 시험 직전: 학교 프린트 무한 복습 + 암기 점검</div>
+        </div>
+        <div class="method-card">
+          <div class="method-subj">🔬 과학</div>
+          <div class="phase">
+            <div class="phase-lbl">스낵콤마 전략</div>
+            <div class="phase-txt">시험 2주 전부터 주 4콤마 배정.</div>
+          </div>
+          <div class="phase">
+            <div class="phase-lbl">수업 집중도 설계</div>
+            <div class="phase-txt">수업 중 객관식 10문항 + 서술형 5문항 완료 시 숙제 없음 → 집중도 향상.</div>
+          </div>
+          <div class="tip">💡 정확한 문제 수 세팅으로 집중력 유도</div>
+        </div>
+        <div class="method-card">
+          <div class="method-subj">📐 수학</div>
+          <div class="phase">
+            <div class="phase-lbl">중간고사 이후 전략</div>
+            <div class="phase-txt">단기 점수 올리기 대신 중등 전 과정 기반학습으로 방향 전환. 어머님께 장기 로드맵 공유.</div>
+          </div>
+          <div class="phase">
+            <div class="phase-lbl">목표</div>
+            <div class="phase-txt">중3 2학기 내신보다 수학 기초 완성 우선 — 이후 공통수학1 연계.</div>
+          </div>
+          <div class="tip">💡 단기 점수 아닌 장기 기반 다지기 전략 제시</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 수학 후행 로드맵 -->
+    <div class="s-section">
+      <div class="s-section-title">수학 중등 후행 복습 — 학부모 공유 로드맵</div>
+
+      <div class="math-banner">
+        <div class="math-banner-title">📈 왜 내신 대신 후행 복습인가?</div>
+        <div class="math-banner-desc">중3 1학기 중간 수학 14점 확인 후, 어머님과 상담을 통해 "3학년 기말/2학기 내신 대신 중등 기반학습을 먼저 완성하자"는 전략을 함께 수립했습니다. 단기 점수보다 고등 수학까지 이어지는 실력을 쌓는 것이 이 학생에게 더 현실적인 길이라고 판단했습니다.</div>
+      </div>
+
+      <div class="math-stats">
+        <div class="math-stat">
+          <div class="math-stat-num">40개</div>
+          <div class="math-stat-lbl">중등 수학 소단원 수</div>
+        </div>
+        <div class="math-stat">
+          <div class="math-stat-num">70콤마</div>
+          <div class="math-stat-lbl">기반학습 완료 목표</div>
+        </div>
+        <div class="math-stat">
+          <div class="math-stat-num">9개월</div>
+          <div class="math-stat-lbl">5월~2월 집중 기간</div>
+        </div>
+      </div>
+
+      <div class="timeline">
+        <div class="tl-row">
+          <div class="tl-spine"><div class="tl-dot base"></div><div class="tl-line"></div></div>
+          <div class="tl-body">
+            <div class="tl-month">5월 <span class="tl-pill pill-base">12콤마</span></div>
+            <div class="tl-desc">주 3콤마 — 내신 학습 병행하며 기반학습 시작</div>
+          </div>
+        </div>
+        <div class="tl-row">
+          <div class="tl-spine"><div class="tl-dot base"></div><div class="tl-line"></div></div>
+          <div class="tl-body">
+            <div class="tl-month">6월 <span class="tl-pill pill-base">12콤마</span></div>
+            <div class="tl-desc">주 3콤마 — 내신 학습 병행하며 기반학습 지속</div>
+          </div>
+        </div>
+        <div class="tl-row">
+          <div class="tl-spine"><div class="tl-dot vaca"></div><div class="tl-line"></div></div>
+          <div class="tl-body">
+            <div class="tl-month">7월 1~3주 <span class="tl-pill pill-vaca">9콤마</span></div>
+            <div class="tl-desc">방학 전환 준비 — 학기 마무리 + 기반학습 병행</div>
+          </div>
+        </div>
+        <div class="tl-row">
+          <div class="tl-spine"><div class="tl-dot vaca"></div><div class="tl-line"></div></div>
+          <div class="tl-body">
+            <div class="tl-month">7월 4주 ~ 8월 2주 <span class="tl-pill pill-vaca">28콤마</span></div>
+            <div class="tl-desc">주 7콤마 — 여름방학 집중 기간, 수학 기반학습 최대로 진행</div>
+          </div>
+        </div>
+        <div class="tl-row">
+          <div class="tl-spine"><div class="tl-dot vaca"></div><div class="tl-line"></div></div>
+          <div class="tl-body">
+            <div class="tl-month">8월 3~4주 <span class="tl-pill pill-base">6콤마</span></div>
+            <div class="tl-desc">개학 준비 — 2학기 내신 적응</div>
+          </div>
+        </div>
+        <div class="tl-row">
+          <div class="tl-spine"><div class="tl-dot done"></div><div class="tl-line"></div></div>
+          <div class="tl-body">
+            <div class="tl-month">9월 <span class="tl-pill pill-base">12콤마</span></div>
+            <div class="tl-desc">주 3콤마 — 기반학습 마무리</div>
+            <div class="tl-milestone">✅ 중등 기반학습 완료</div>
+          </div>
+        </div>
+        <div class="tl-row">
+          <div class="tl-spine"><div class="tl-dot high"></div><div class="tl-line"></div></div>
+          <div class="tl-body">
+            <div class="tl-month">10월 <span class="tl-pill pill-high">12콤마</span></div>
+            <div class="tl-desc">공통수학1 시작 — 중등 기반 위에서 고등 수학 연계</div>
+          </div>
+        </div>
+        <div class="tl-row">
+          <div class="tl-spine"><div class="tl-dot high"></div><div class="tl-line"></div></div>
+          <div class="tl-body">
+            <div class="tl-month">11월 <span class="tl-pill pill-high">12콤마</span></div>
+            <div class="tl-desc">공통수학1 심화</div>
+          </div>
+        </div>
+        <div class="tl-row">
+          <div class="tl-spine"><div class="tl-dot high"></div><div class="tl-line"></div></div>
+          <div class="tl-body">
+            <div class="tl-month">12월 <span class="tl-pill pill-high">12콤마</span></div>
+            <div class="tl-desc">공통수학1 완성 목표</div>
+          </div>
+        </div>
+        <div class="tl-row">
+          <div class="tl-spine"><div class="tl-dot high"></div><div class="tl-line"></div></div>
+          <div class="tl-body">
+            <div class="tl-month">1월 <span class="tl-pill pill-high">35콤마</span></div>
+            <div class="tl-desc">겨울방학 집중 — 공통수학1 1회독 완료 목표</div>
+            <div class="tl-milestone">✅ 공통수학1 1회독 완료</div>
+          </div>
+        </div>
+        <div class="tl-row">
+          <div class="tl-spine"><div class="tl-dot high"></div></div>
+          <div class="tl-body" style="padding-bottom:0">
+            <div class="tl-month">2월 <span class="tl-pill pill-high">28콤마</span></div>
+            <div class="tl-desc">겨울방학 마무리 집중 — 공통수학 심화 및 정리</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="strategy-box">
+        <div class="strategy-title">💡 콤마 배분 전략</div>
+        <div class="strategy-row">
+          <div class="s-lbl">학기 중</div>
+          <div class="s-desc">주 3콤마 — 내신 학습과 병행하여 기반학습 진행</div>
+        </div>
+        <div class="strategy-row">
+          <div class="s-lbl">방학 중</div>
+          <div class="s-desc">주 7콤마 — 수학 기반학습에 최대 집중 (여름·겨울 모두 활용)</div>
+        </div>
+        <div class="strategy-row">
+          <div class="s-lbl">속도</div>
+          <div class="s-desc">1소단원당 1~2콤마 소요 → 총 40개 소단원, 70콤마로 완성</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5·6월 전체 계획 -->
+    <div class="s-section">
+      <div class="s-section-title">학부모 공유 — 5·6월 전체 학습 계획</div>
+      <div class="plan-block">
+        <div class="plan-hd">
+          <div class="plan-title">5월 계획</div>
+          <div class="plan-total">2~5주 총 36콤마</div>
+        </div>
+        <div class="subj-rows">
+          <div class="subj-row"><span class="subj-tag tag-math">수학</span><span class="subj-desc">주 3회 — 중등 과정 기반학습 집중</span></div>
+          <div class="subj-row"><span class="subj-tag tag-korean">국어</span><span class="subj-desc">주 3회 — 음운 심화 + 4단원 설득의 힘 개인학습</span></div>
+          <div class="subj-row"><span class="subj-tag tag-history">역사</span><span class="subj-desc">주 2회 — 1단원부터 연속 수업으로 총학습 시작</span></div>
+          <div class="subj-row"><span class="subj-tag tag-english">영어</span><span class="subj-desc">4주차 시작 — 2~3주 개인학습(영단어) 후 의사소통 단원부터</span></div>
+        </div>
+        <table class="plan-table">
+          <tr><th>주차</th><th>구성</th><th>콤마</th></tr>
+          <tr><td>2주</td><td>수3, 국3, 역2</td><td>8</td></tr>
+          <tr><td>3주</td><td>수3, 국3, 역2</td><td>8</td></tr>
+          <tr><td>4주</td><td>수3, 국3, 역2, 영2</td><td>10</td></tr>
+          <tr><td>5주</td><td>수3, 국3, 역2, 영2</td><td>10</td></tr>
+        </table>
+      </div>
+      <div class="plan-block">
+        <div class="plan-hd">
+          <div class="plan-title">6월 계획</div>
+          <div class="plan-total">월 총 50콤마</div>
+        </div>
+        <div class="subj-rows">
+          <div class="subj-row"><span class="subj-tag tag-math">수학</span><span class="subj-desc">주 3회 — 중등 과정 기반학습 지속</span></div>
+          <div class="subj-row"><span class="subj-tag tag-science">과학</span><span class="subj-desc">주 2회 — 생명 → 물리 단원 순서로 진행</span></div>
+          <div class="subj-row"><span class="subj-tag tag-english">영어</span><span class="subj-desc">주 3회 — 내신콘서트 확실히 완성</span></div>
+          <div class="subj-row"><span class="subj-tag tag-history">역사</span><span class="subj-desc">주 2회 — 나눠서 진행해 개념 끊기지 않게</span></div>
+          <div class="subj-row"><span class="subj-tag tag-korean">국어</span><span class="subj-desc">홀수주 2회 / 짝수주 3회 — 대단원 문제풀이는 개인으로</span></div>
+        </div>
+        <table class="plan-table">
+          <tr><th>주차</th><th>구성</th><th>콤마</th></tr>
+          <tr><td>1주</td><td>수3, 과2, 영3, 역2, 국2</td><td>12</td></tr>
+          <tr><td>2주</td><td>수3, 과2, 영3, 역2, 국3</td><td>13</td></tr>
+          <tr><td>3주</td><td>수3, 과2, 영3, 역2, 국2</td><td>12</td></tr>
+          <tr><td>4주</td><td>수3, 과2, 영3, 역2, 국3</td><td>13</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- 총정리 -->
+    <div class="s-section">
+      <div class="s-section-title">이 사례의 핵심</div>
+      <div class="summary-box">
+        <div class="summary-title">⭐ 왜 성공 사례인가</div>
+        <div class="summary-point"><div class="s-dot"></div><span>수업 집중력이 낮고 피드백이 거의 없는 학생 타입에서도 개별지도로 성적 향상을 이끌어낸 케이스</span></div>
+        <div class="summary-point"><div class="s-dot"></div><span>담당 튜터의 밝은 리액션과 세심한 칭찬으로 학생과 라포를 먼저 형성</span></div>
+        <div class="summary-point"><div class="s-dot"></div><span>문제 풀이 대신 역질문과 노트 정리로 학생 수준에 맞는 수업/숙제 구성</span></div>
+        <div class="summary-point"><div class="s-dot"></div><span>과목별 최적 콤마 수 설계와 스낵콤마 전략으로 효율적인 성적 변화 달성</span></div>
+        <div class="summary-point"><div class="s-dot"></div><span>단기 내신 점수 대신 중등 후행 복습 → 공통수학1까지 이어지는 9개월 장기 로드맵을 학부모와 공유하며 신뢰 구축</span></div>
+      </div>
+    </div>
+
+  </div>
+  <!-- /신승현 페이지 -->
+
+</main>
+
+<script>
+  function showStudent(id) {
+    document.querySelectorAll('.student-page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.student-btn').forEach(b => b.classList.remove('active'));
+    const page = document.getElementById('page-' + id);
+    const btn = document.getElementById('btn-' + id);
+    if (page) page.classList.add('active');
+    if (btn) btn.classList.add('active');
+  }
+
+  function printCurrentStudent() {
+    const active = document.querySelector('.student-page.active');
+    if (!active) { alert('표시된 학생 사례가 없습니다.'); return; }
+    active.classList.add('print-active');
+    window.print();
+    setTimeout(() => active.classList.remove('print-active'), 1000);
+  }
+</script>
+</body>
+</html>
