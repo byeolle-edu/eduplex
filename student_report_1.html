@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>학생별 순회 리포트</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root {
+    --ep-navy: #00012D;
+    --ep-navy2: #000118;
+    --ep-white: #FFFFFF;
+    --ep-card-light: #EEF2FF;
+    --ep-card-news: #F0F4FF;
+    --ep-yellow: #FFE000;
+    --ep-blue: #0047C7;
+    --ep-blue-deep: #02057A;
+    --ep-font: 'Pretendard', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--ep-white);
+    font-family:var(--ep-font); color:var(--ep-blue-deep);
+    padding:32px 20px 60px;
+  }
+  .wrap{max-width:880px;margin:0 auto;}
+
+  .search-row{
+    display:flex; align-items:center; gap:10px;
+    background:var(--ep-white); border:1.5px solid var(--ep-blue);
+    border-radius:10px; padding:10px 16px; margin-bottom:22px;
+    box-shadow:3px 3px 0 var(--ep-navy);
+  }
+  .search-row .tag{font-size:11px; font-weight:700; letter-spacing:.06em; color:var(--ep-blue); white-space:nowrap;}
+  .search-row input{
+    flex:1; border:none; outline:none; font-family:var(--ep-font);
+    font-size:16px; font-weight:700; color:var(--ep-blue-deep); background:transparent;
+  }
+  .search-row input::placeholder{color:rgba(2,5,122,.4); font-weight:400;}
+
+  /* ---- Header: compact, name only ---- */
+  .header-card{
+    background:var(--ep-navy); border-radius:12px;
+    padding:16px 20px; margin-bottom:18px; position:relative; overflow:hidden;
+  }
+  .header-card::before{
+    content:"STUDY RECORD"; position:absolute; top:10px; right:-40px;
+    background:var(--ep-navy2); color:var(--ep-yellow);
+    font-size:9px; font-weight:700; letter-spacing:.12em;
+    padding:3px 44px; transform:rotate(38deg);
+  }
+  .header-card h1{font-size:22px; margin:0; font-weight:800; color:var(--ep-white);}
+  .header-sub{color:rgba(255,255,255,.6); font-size:12px; margin-top:4px;}
+
+  /* ---- Capture zone (학부모 발송용) ---- */
+  .capture-zone{
+    border:2px dashed var(--ep-blue); border-radius:16px;
+    padding:18px 16px 6px; margin-bottom:18px; position:relative;
+  }
+  .capture-tag{
+    position:absolute; top:-12px; left:16px;
+    background:var(--ep-white); color:var(--ep-blue);
+    font-size:11px; font-weight:800; padding:2px 10px;
+    border:1.5px solid var(--ep-blue); border-radius:20px;
+  }
+
+  .section{
+    background:var(--ep-card-light); border-radius:14px;
+    padding:22px 24px; margin-bottom:16px;
+  }
+  .section-head{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:4px;}
+  .section h2{font-size:17px; margin:0 0 4px; font-weight:800; color:var(--ep-blue-deep);}
+  .section .desc{font-size:12.5px; color:rgba(2,5,122,.65); margin-bottom:16px;}
+
+  select#weekSelect{
+    font-family:var(--ep-font); font-size:12.5px; font-weight:600;
+    border:1.5px solid var(--ep-blue); border-radius:8px;
+    padding:6px 10px; background:var(--ep-white); color:var(--ep-blue-deep);
+  }
+
+  .best-banner{background:var(--ep-yellow); border-radius:10px; padding:14px 16px; margin-bottom:16px;}
+  .best-banner .top-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .best-banner .star{font-size:18px; color:var(--ep-blue-deep);}
+  .best-banner .txt{font-size:13.5px; color:var(--ep-blue-deep); font-weight:700;}
+  .best-banner .delta{font-size:11.5px; font-weight:700; margin-left:4px; color:var(--ep-blue-deep);}
+  .chip-row{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;}
+  .chip{
+    font-size:11px; font-weight:600; background:var(--ep-white); color:var(--ep-blue-deep);
+    border:1.3px solid var(--ep-blue-deep); border-radius:14px; padding:3px 9px;
+  }
+  .chip.on-issue{background:var(--ep-white); color:var(--ep-blue); border-color:var(--ep-blue);}
+  .none-txt{font-size:11.5px; color:rgba(2,5,122,.5); margin-top:6px;}
+
+  /* ---- 2x4 category grid ---- */
+  .cat-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  .cat-cell{background:var(--ep-white); border-radius:10px; padding:12px 14px;}
+  .cat-cell .cat-top{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+  .cat-cell .label{font-size:13px; font-weight:700; color:var(--ep-blue-deep);}
+  .cat-cell .count{font-size:13.5px; font-weight:800; color:var(--ep-blue);}
+
+  /* ---- Growth callout ---- */
+  .callout{
+    background:var(--ep-card-news); border-left:4px solid var(--ep-blue);
+    border-radius:10px; padding:18px 20px; margin-bottom:6px;
+  }
+  .callout h3{font-size:14.5px; margin:0 0 8px; color:var(--ep-blue-deep); font-weight:800;}
+  .fixed-msg{font-size:13.5px; line-height:1.65; color:var(--ep-blue-deep); margin-bottom:12px;}
+  .callout-divider{border-top:1px dashed rgba(2,5,122,.25); margin:0 0 12px;}
+  .student-msg{font-size:14px; line-height:1.65; color:var(--ep-blue-deep);}
+  .student-msg b{color:var(--ep-blue);}
+
+  .log-item{
+    display:flex; gap:14px; padding:10px 0; border-bottom:1px solid rgba(2,5,122,.12);
+    font-size:13.5px; align-items:flex-start;
+  }
+  .log-item:last-child{border-bottom:none;}
+  .log-item .t{font-weight:600; color:rgba(2,5,122,.65); width:80px; flex-shrink:0;}
+  .badge{font-size:11px; font-weight:700; padding:2px 8px; border-radius:8px; flex-shrink:0; height:fit-content;}
+  .badge.best{background:var(--ep-yellow); color:var(--ep-blue-deep);}
+  .badge.issue{background:var(--ep-white); color:var(--ep-blue); border:1px solid var(--ep-blue);}
+  .log-item .tags{color:var(--ep-blue-deep); font-weight:700;}
+  .log-item .memo{color:rgba(2,5,122,.65);}
+  .empty-note{font-size:13px; color:rgba(2,5,122,.6); padding:8px 0;}
+
+  .mgr-btn{
+    display:inline-flex; align-items:center; gap:6px; font-family:var(--ep-font);
+    font-size:12.5px; font-weight:700; background:var(--ep-yellow); color:var(--ep-blue-deep);
+    border:none; border-radius:8px; padding:9px 14px; cursor:pointer; margin-bottom:18px;
+  }
+  .mgr-btn:hover{opacity:.88;}
+  .mgr-panel{display:none;}
+  .mgr-panel.open{display:block;}
+  .mgr-section{background:var(--ep-navy); border-radius:14px; padding:22px 24px; margin-bottom:18px;}
+  .mgr-section h2{color:var(--ep-yellow); font-size:16px; margin:0 0 4px; font-weight:800;}
+  .mgr-section .desc{color:rgba(255,255,255,.6); font-size:12.5px; margin-bottom:14px;}
+  .mgr-table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  .mgr-table th{text-align:left; font-weight:700; font-size:11px; color:rgba(255,255,255,.6); border-bottom:1.5px solid rgba(255,255,255,.3); padding:6px 8px;}
+  .mgr-table td{padding:7px 8px; border-bottom:1px solid rgba(255,255,255,.12); vertical-align:top; color:rgba(255,255,255,.9);}
+  .mgr-table .badge.normal{background:rgba(255,255,255,.12); color:rgba(255,255,255,.7);}
+  .mgr-table .badge.issue{background:transparent; border:1px solid rgba(255,255,255,.5); color:rgba(255,255,255,.9);}
+
+  .empty{text-align:center; padding:60px 20px; color:rgba(2,5,122,.6);}
+  .empty .big{font-size:20px; color:var(--ep-blue-deep); font-weight:800; margin-bottom:8px;}
+
+  @media (max-width:500px){
+    .cat-cell .label{font-size:12px;}
+    .chip{font-size:10px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="search-row">
+    <span class="tag">SEARCH</span>
+    <input id="searchInput" list="studentList" placeholder="학생 이름을 입력하세요 (예: 김지유)" />
+    <datalist id="studentList"></datalist>
+  </div>
+
+  <div id="content"></div>
+</div>
+
+<script>
+const CATS = [
+  '정시등원(지각)', '잠', '졸음', '엎드림(자세)',
+  '책상 정돈', '손장난(그림 등)', '좌석 이탈', '주변 두리번'
+];
+
+const FIXED_MSGS = [
+  "썸머스쿨 첫 시작 주입니다. 썸머스쿨 시작이라 많이 힘들 수 있음에도 적응하려 열심히 한 자녀를 칭찬해 주시면 감사하겠습니다.",
+  "썸머스쿨 2주차입니다. 지난 주보다 더욱 성장하고자 노력한 자녀를 칭찬해 주세요. 남은 썸머스쿨 지치지 않도록 원에서도 열심히 지도하겠습니다.",
+  "더운 여름, 2주 동안 썸머스쿨 프로그램을 진행하느라 힘들 시기입니다. 지점 내에서 동기부여 얻을 수 있도록 지도하고 남은 방학 잘 마무리 할 수 있도록 하겠습니다.",
+  "썸머스쿨 마지막 주입니다. 짧지만 알찬 방학을 보낸 자녀에게 칭찬과 격려를 해주신다면 2학기 시작을 더욱 힘내서 할 수 있을 것 같습니다. 2학기 시작을 응원합니다^^"
+];
+
+function mkLog(time, tags, memo){ return {time, status: tags.length ? 'issue' : 'normal', tags, memo}; }
+function mkBest(time, memo){ return {time, status:'best', tags:[], memo}; }
+
+const DATA = {
+  "김지유": { weeks:[
+    {label:"7/20 ~ 7/24 (썸머스쿨 1주차)", totalRounds:30, logs:[
+      mkLog("7/21 15:00",["잠"],"졸음 심함"), mkLog("7/21 15:30",["잠"],""),
+      mkLog("7/22 14:30",["좌석 이탈"],"3~4회"), mkLog("7/23 14:00",["좌석 이탈"],""),
+      mkLog("7/23 15:30",["엎드림(자세)"],""), mkBest("7/24 14:00","셀프리더 우수")
+    ]},
+    {label:"7/26 ~ 7/31 (썸머스쿨 2주차)", totalRounds:30, logs:[
+      mkLog("7/27 15:00",["잠"],"1~2회"), mkLog("7/29 14:30",["좌석 이탈"],""),
+      mkBest("7/30 14:30","집중 우수"), mkBest("7/31 15:00","자세 바름")
+    ]},
+    {label:"8/3 ~ 8/7 (썸머스쿨 3주차)", totalRounds:30, logs:[
+      mkLog("8/4 14:30",["엎드림(자세)"],""),
+      mkBest("8/5 15:00","셀프리더 꼼꼼"), mkBest("8/6 14:30","자세 바름"), mkBest("8/7 15:30","집중 우수")
+    ]},
+    {label:"8/10 ~ 8/14 (썸머스쿨 4주차)", totalRounds:30, logs:[
+      mkLog("8/11 14:30",["잠"],"1~2회"),
+      mkBest("8/11 15:00","셀프리더 우수, 자세 바름"), mkBest("8/12 14:30","집중 양호"),
+      mkBest("8/13 15:00","정돈 잘함"), mkBest("8/14 14:00","집중 우수")
+    ]}
+  ]},
+  "김태린": { weeks:[
+    {label:"7/20 ~ 7/24 (썸머스쿨 1주차)", totalRounds:30, logs:[
+      mkLog("7/21 15:00",["손장난(그림 등)"],""), mkLog("7/22 14:30",["좌석 이탈","주변 두리번"],"3~4회"),
+      mkLog("7/23 15:00",["주변 두리번"],""), mkLog("7/24 14:30",["잠"],"")
+    ]},
+    {label:"7/26 ~ 7/31 (썸머스쿨 2주차)", totalRounds:30, logs:[
+      mkLog("7/28 15:00",["잠"],""), mkLog("7/29 14:00",["주변 두리번"],""),
+      mkBest("7/30 14:30","집중 잘함")
+    ]},
+    {label:"8/3 ~ 8/7 (썸머스쿨 3주차)", totalRounds:30, logs:[
+      mkLog("8/4 15:30",["손장난(그림 등)"],""), mkBest("8/6 14:00","착석 유지")
+    ]},
+    {label:"8/10 ~ 8/14 (썸머스쿨 4주차)", totalRounds:30, logs:[
+      mkLog("8/11 15:30",["손장난(그림 등)"],""), mkLog("8/12 14:30",["잠"],""),
+      mkBest("8/13 16:00","집중 잘함"), mkBest("8/14 15:00","착석 유지")
+    ]}
+  ]},
+  "김주혁": { weeks:[
+    {label:"7/20 ~ 7/24 (썸머스쿨 1주차)", totalRounds:30, logs:[
+      mkLog("7/21 15:00",["잠"],""), mkLog("7/23 14:30",["좌석 이탈"],"")
+    ]},
+    {label:"7/26 ~ 7/31 (썸머스쿨 2주차)", totalRounds:30, logs:[
+      mkLog("7/27 15:00",["잠"],""), mkLog("7/29 14:30",["잠","좌석 이탈"],""), mkLog("7/30 15:00",["좌석 이탈"],"")
+    ]},
+    {label:"8/3 ~ 8/7 (썸머스쿨 3주차)", totalRounds:30, logs:[
+      mkLog("8/4 14:30",["잠"],""), mkLog("8/5 15:00",["잠"],""), mkLog("8/5 14:30",["잠"],""),
+      mkLog("8/6 15:30",["좌석 이탈"],"3~4회"), mkLog("8/7 14:00",["좌석 이탈"],"")
+    ]},
+    {label:"8/10 ~ 8/14 (썸머스쿨 4주차)", totalRounds:30, logs:[
+      mkLog("8/10 16:00",["좌석 이탈"],"3~4회"),
+      mkLog("8/11 14:30",["잠"],""), mkLog("8/11 15:30",["잠"],""),
+      mkLog("8/12 14:00",["잠"],""), mkLog("8/12 15:30",["잠"],""),
+      mkLog("8/13 15:00",["좌석 이탈"],""), mkLog("8/14 14:30",["주변 두리번"],"")
+    ]}
+  ]},
+  "홍석현": { weeks:[
+    {label:"7/20 ~ 7/24 (썸머스쿨 1주차)", totalRounds:30, logs:[
+      mkBest("7/22 15:00","집중 우수"), mkLog("7/23 14:30",["엎드림(자세)"],"")
+    ]},
+    {label:"7/26 ~ 7/31 (썸머스쿨 2주차)", totalRounds:30, logs:[
+      mkBest("7/28 15:00","집중 매우 우수"), mkBest("7/30 14:30","자세 바름")
+    ]},
+    {label:"8/3 ~ 8/7 (썸머스쿨 3주차)", totalRounds:30, logs:[
+      mkBest("8/4 15:00","셀프리더 꼼꼼"), mkBest("8/5 14:30","집중 우수"), mkBest("8/6 15:30","정돈 잘함")
+    ]},
+    {label:"8/10 ~ 8/14 (썸머스쿨 4주차)", totalRounds:30, logs:[
+      mkBest("8/11 15:00","집중 매우 우수"), mkBest("8/12 15:30","셀프리더 꼼꼼히 작성"),
+      mkBest("8/13 14:30","자세 바름"), mkBest("8/14 15:00","정돈 잘함")
+    ]}
+  ]}
+};
+
+const searchInput = document.getElementById('searchInput');
+const content = document.getElementById('content');
+const studentList = document.getElementById('studentList');
+let mgrOpen = false;
+
+Object.keys(DATA).forEach(name=>{
+  const opt = document.createElement('option');
+  opt.value = name;
+  studentList.appendChild(opt);
+});
+
+function countsFor(wk){
+  const c = {};
+  CATS.forEach(cat=>{ c[cat] = wk.logs.filter(l=>l.tags.includes(cat)).length; });
+  c.__best = wk.logs.filter(l=>l.status==='best').length;
+  return c;
+}
+function datesFor(wk, cat){ return wk.logs.filter(l=>l.tags.includes(cat)).map(l=>l.time); }
+function bestDatesFor(wk){ return wk.logs.filter(l=>l.status==='best').map(l=>l.time); }
+
+function deltaInfo(curr, prev){
+  const diff = curr - prev;
+  if(diff === 0) return {txt:'변화 없음', arrow:'―'};
+  const arrow = diff > 0 ? '▲' : '▼';
+  return {txt:`${diff>0?'+':''}${diff}회 (전주 대비)`, arrow};
+}
+
+function buildGrowthText(weeks, idx){
+  if(idx === 0) return "썸머스쿨 첫 주 기록을 시작합니다. 앞으로 매주 변화를 비교해서 보여드릴게요.";
+  const cur = countsFor(weeks[idx]), prev = countsFor(weeks[idx-1]);
+  let improved = [], worsened = [];
+  CATS.forEach(cat=>{
+    const d = cur[cat] - prev[cat];
+    if(d < 0) improved.push({label:cat, d});
+    else if(d > 0) worsened.push({label:cat, d});
+  });
+  improved.sort((a,b)=>a.d-b.d);
+  worsened.sort((a,b)=>b.d-a.d);
+  const bestDiff = cur.__best - prev.__best;
+
+  let parts = [];
+  if(improved.length){
+    parts.push(improved.slice(0,2).map(i=>`'${i.label}' ${Math.abs(i.d)}회 감소`).join(', '));
+  }
+  if(bestDiff > 0) parts.push(`베스트 선정 ${bestDiff}회 증가`);
+  if(worsened.length){
+    parts.push(`다만 '${worsened[0].label}' ${worsened[0].d}회 증가 — 조금 더 살펴봐 주세요`);
+  }
+  if(parts.length === 0) return "지난주와 비슷한 흐름을 유지하고 있어요.";
+  return parts.join(', ') + ".";
+}
+
+function render(name){
+  const student = DATA[name];
+  mgrOpen = false;
+  if(!student){
+    content.innerHTML = `
+      <div class="empty">
+        <div class="big">학생을 검색해주세요</div>
+        <div>예시: 김지유, 김태린, 김주혁, 홍석현</div>
+      </div>`;
+    return;
+  }
+  renderStudent(name, student, student.weeks.length - 1);
+}
+
+function renderStudent(name, student, weekIdx){
+  const weeks = student.weeks;
+  const wk = weeks[weekIdx];
+  const prev = weekIdx > 0 ? weeks[weekIdx-1] : null;
+  const cur = countsFor(wk);
+  const prevCounts = prev ? countsFor(prev) : null;
+
+  const catCells = CATS.map(cat=>{
+    const val = cur[cat];
+    const dates = datesFor(wk, cat);
+    const chips = dates.length
+      ? `<div class="chip-row">${dates.map(d=>`<span class="chip on-issue">${d}</span>`).join('')}</div>`
+      : `<div class="none-txt">이슈 없음</div>`;
+    return `
+      <div class="cat-cell">
+        <div class="cat-top">
+          <div class="label">${cat}</div>
+          <div class="count">${val}회</div>
+        </div>
+        ${chips}
+      </div>`;
+  }).join('');
+
+  const bestDates = bestDatesFor(wk);
+  const bestDelta = prevCounts ? deltaInfo(cur.__best, prevCounts.__best) : {txt:'-', arrow:''};
+  const bestChips = bestDates.length
+    ? `<div class="chip-row">${bestDates.map(d=>`<span class="chip">${d}</span>`).join('')}</div>`
+    : `<div class="none-txt">이번 주 베스트 선정 없음</div>`;
+
+  const filteredLogs = wk.logs.filter(l=>l.status !== 'normal').sort((a,b)=> b.time.localeCompare(a.time));
+  const logHtml = filteredLogs.length ? filteredLogs.map(l=>`
+      <div class="log-item">
+        <div class="t">${l.time}</div>
+        <div class="badge ${l.status}">${l.status==='best'?'베스트':'이슈'}</div>
+        <div class="tags">${l.tags.length ? l.tags.join(', ') : ''}</div>
+        <div class="memo">${l.memo||''}</div>
+      </div>`).join('')
+    : `<div class="empty-note">이번 주는 베스트·이슈 기록이 없어요 (모두 정상 순회).</div>`;
+
+  const weekOptions = weeks.map((w,i)=>`<option value="${i}" ${i===weekIdx?'selected':''}>${w.label}</option>`).join('');
+
+  const allLogsSorted = [];
+  weeks.forEach(w=> w.logs.forEach(l=> allLogsSorted.push(l)));
+  allLogsSorted.sort((a,b)=> b.time.localeCompare(a.time));
+  const mgrRows = allLogsSorted.map(l=>`
+    <tr>
+      <td>${l.time}</td>
+      <td><span class="badge ${l.status}">${l.status==='best'?'베스트':l.status==='issue'?'이슈':'정상'}</span></td>
+      <td>${l.tags && l.tags.length ? l.tags.join(', ') : '-'}</td>
+      <td>${l.memo||'-'}</td>
+    </tr>`).join('');
+
+  content.innerHTML = `
+    <div class="header-card">
+      <h1>${name}</h1>
+      <div class="header-sub">학습실 순회 체크 기준 리포트 · 이슈는 발생 날짜·시간으로 기록돼요</div>
+    </div>
+
+    <div class="capture-zone">
+      <div class="capture-tag">학부모 발송용 캡처 영역</div>
+
+      <div class="section">
+        <div class="section-head">
+          <h2>주간 순회 요약</h2>
+          <select id="weekSelect">${weekOptions}</select>
+        </div>
+        <div class="desc">${wk.label} · 총 순회 ${wk.totalRounds}회 기준</div>
+
+        <div class="best-banner">
+          <div class="top-row">
+            <span class="star">★</span>
+            <span class="txt">베스트 학생 선정 ${cur.__best}회</span>
+            <span class="delta">${bestDelta.arrow} ${bestDelta.txt}</span>
+          </div>
+          ${bestChips}
+        </div>
+
+        <div class="cat-grid">${catCells}</div>
+      </div>
+
+      <div class="callout">
+        <h3>이번 주 성장 포인트</h3>
+        <div class="fixed-msg">${FIXED_MSGS[weekIdx]}</div>
+        <div class="callout-divider"></div>
+        <div class="student-msg"><b>${name}</b> 학생 — ${buildGrowthText(weeks, weekIdx)}</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>주요 순회 기록</h2>
+      <div class="desc">베스트로 선정되었거나 이슈가 체크된 라운드만 표시돼요</div>
+      ${logHtml}
+    </div>
+
+    <button class="mgr-btn" id="mgrToggle">${mgrOpen ? '전체 로그 닫기' : '전체 순회 로그 보기 (매니저용)'} ▾</button>
+    <div class="mgr-panel ${mgrOpen?'open':''}" id="mgrPanel">
+      <div class="mgr-section">
+        <h2>전체 순회 로그 — 매니저용</h2>
+        <div class="desc">정상 순회 포함, 전체 기간 기록 (최신순)</div>
+        <table class="mgr-table">
+          <thead><tr><th>시간</th><th>상태</th><th>체크 항목</th><th>메모</th></tr></thead>
+          <tbody>${mgrRows}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('weekSelect').addEventListener('change', (e)=>{
+    renderStudent(name, student, parseInt(e.target.value));
+  });
+  document.getElementById('mgrToggle').addEventListener('click', ()=>{
+    mgrOpen = !mgrOpen;
+    document.getElementById('mgrPanel').classList.toggle('open', mgrOpen);
+    document.getElementById('mgrToggle').innerHTML = (mgrOpen ? '전체 로그 닫기' : '전체 순회 로그 보기 (매니저용)') + ' ▾';
+  });
+}
+
+searchInput.addEventListener('input', (e)=>{
+  render(e.target.value.trim());
+});
+
+render('김지유');
+</script>
+</body>
+</html>
