@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>수강료(교습비) 게시 — 별내 에듀플렉스</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1a2a5e;--navy-mid:#2c3e7a;--gold:#b8960c;--gold-btn:#c9a227;
+    --white:#fff;--bg:#f8f9fc;--bg2:#eef0f7;
+    --text:#1a1a2e;--text-sub:#555e7a;--text-light:#8892aa;
+    --border:#dde2f0;--shadow:0 2px 16px rgba(26,42,94,.08);--shadow-hover:0 8px 32px rgba(26,42,94,.16);
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Noto Sans KR','Apple SD Gothic Neo',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;}
+  a{color:inherit;text-decoration:none;}
+
+  .topbar{background:var(--navy);color:rgba(255,255,255,.7);font-size:12px;padding:7px 24px;display:flex;justify-content:space-between;align-items:center;}
+  .topbar a{color:rgba(255,255,255,.7);margin-left:12px;}
+  .topbar a:hover{color:#fff;}
+
+  .page-header{background:var(--white);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;height:56px;gap:14px;box-shadow:0 2px 8px rgba(26,42,94,.06);}
+  .page-header h1{font-size:16px;font-weight:700;color:var(--navy);}
+  .back-link{margin-left:auto;font-size:13px;color:var(--text-sub);font-weight:500;}
+  .back-link:hover{color:var(--navy);}
+
+  .page-content{max-width:1100px;margin:0 auto;padding:36px 24px;}
+
+  .notice-head{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:26px;box-shadow:var(--shadow);margin-bottom:24px;}
+  .notice-head h2{font-family:'Noto Serif KR',serif;font-size:22px;font-weight:700;color:var(--navy);margin-bottom:8px;}
+  .notice-head p{font-size:13.5px;color:var(--text-sub);}
+  .notice-date{display:inline-block;margin-top:10px;font-size:12.5px;color:var(--gold-btn);font-weight:700;}
+
+  .tuition-gallery{display:flex;flex-direction:column;gap:20px;}
+  .tuition-img-wrap{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);}
+  .tuition-img-wrap img{width:100%;display:block;cursor:zoom-in;}
+
+  .notice-foot{margin-top:24px;font-size:12.5px;color:var(--text-light);text-align:center;}
+
+  /* 전체화면 뷰어 */
+  .fullscreen{display:none;position:fixed;inset:0;background:rgba(10,12,26,.94);z-index:3000;align-items:center;justify-content:center;padding:30px;}
+  .fullscreen.open{display:flex;}
+  .fullscreen img{max-width:100%;max-height:100%;border-radius:6px;}
+  .fs-close{position:absolute;top:20px;right:26px;color:#fff;font-size:26px;cursor:pointer;background:none;border:none;}
+
+  @media(max-width:700px){
+    .page-content{padding:24px 16px;}
+    .notice-head{padding:20px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span>별내 에듀플렉스 · 수강료 안내</span>
+  <div>
+    <a href="https://blog.naver.com/dpeblee">📝 블로그</a>
+    <a href="tel:031-522-4201">📞 031-522-4201</a>
+  </div>
+</div>
+
+<div class="page-header">
+  <h1>💰 수강료(교습비) 게시</h1>
+  <a href="eduplex_main.html" class="back-link">← 홈페이지로</a>
+</div>
+
+<div class="page-content">
+  <div class="notice-head">
+    <h2>수강료(교습비) 게시</h2>
+    <p>학원의설립·운영 및 과외교습에관한법률 제15조 제2항에 의하여 수강료 등을 아래와 같이 게시합니다.</p>
+    <span class="notice-date">2026년 7월 1일 현재</span>
+  </div>
+
+  <div class="tuition-gallery">
+    <div class="tuition-img-wrap"><img src="tuition_1.jpg" alt="수강료 게시 1" onclick="openFs(this.src)"></div>
+    <div class="tuition-img-wrap"><img src="tuition_2.jpg" alt="수강료 게시 2" onclick="openFs(this.src)"></div>
+    <div class="tuition-img-wrap"><img src="tuition_3.jpg" alt="수강료 게시 3" onclick="openFs(this.src)"></div>
+  </div>
+
+  <p class="notice-foot">이미지를 클릭하면 크게 볼 수 있습니다.</p>
+</div>
+
+<div class="fullscreen" id="fs" onclick="closeFs()">
+  <button class="fs-close" onclick="closeFs()">✕</button>
+  <img id="fsImg" src="" alt="수강료 게시 확대">
+</div>
+
+<script>
+function openFs(src){
+  document.getElementById('fsImg').src = src;
+  document.getElementById('fs').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeFs(){
+  document.getElementById('fs').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeFs(); });
+</script>
+
+</body>
+</html>
