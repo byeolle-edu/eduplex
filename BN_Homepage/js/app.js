@@ -286,13 +286,100 @@ function findAdjacentCell(input, direction) {
   return targetTd ? targetTd.querySelector(".sched-cell") : null;
 }
 
+function timeStrToMinutes(t) {
+  const [h, m] = String(t || "0:0").split(":").map(Number);
+  return (h || 0) * 60 + (m || 0);
+}
+async function applyScheduleRangeCells(dateStr, startMin, endMin, label, color) {
+  const ref = doc(db, "scheduleEntries", dateStr);
+  const existing = (await getDoc(ref)).data() || { date: dateStr, cells: {} };
+  const cells = existing.cells || {};
+  for (const slot of SCHEDULE_TIME_SLOTS) {
+    const [sh, sm] = slot.split(":").map(Number);
+    const slotMin = sh * 60 + sm;
+    if (slotMin >= startMin && slotMin < endMin) {
+      cells["time_" + slot] = { text: label, color: color || null, textColor: null };
+    }
+  }
+  await setDoc(ref, { date: dateStr, cells });
+}
+async function clearScheduleRangeCells(dateStr, startMin, endMin) {
+  const ref = doc(db, "scheduleEntries", dateStr);
+  const existing = (await getDoc(ref)).data() || { date: dateStr, cells: {} };
+  const cells = existing.cells || {};
+  for (const slot of SCHEDULE_TIME_SLOTS) {
+    const [sh, sm] = slot.split(":").map(Number);
+    const slotMin = sh * 60 + sm;
+    if (slotMin >= startMin && slotMin < endMin) {
+      cells["time_" + slot] = { text: "", color: null, textColor: null };
+    }
+  }
+  await setDoc(ref, { date: dateStr, cells });
+}
+function openScheduleBlockModal(section, existing) {
+  const root = document.getElementById("modalRoot");
+  root.innerHTML = `<div class="modal-bg" id="modalBg">
+    <div class="modal">
+      <h3>${existing ? "일정 수정" : "새 일정 등록"}</h3>
+      <form id="scheduleBlockForm">
+        <div class="field"><label>날짜</label><input type="date" id="sbDate" value="${escapeHtml(existing?.date || "")}" required></div>
+        <div class="grid-2">
+          <div class="field"><label>시작 시간</label><input type="time" id="sbStart" value="${escapeHtml(existing?.startTime || "10:00")}" step="1800" required></div>
+          <div class="field"><label>종료 시간</label><input type="time" id="sbEnd" value="${escapeHtml(existing?.endTime || "11:00")}" step="1800" required></div>
+        </div>
+        <div class="field"><label>내용</label><input type="text" id="sbLabel" value="${escapeHtml(existing?.label || "")}" placeholder="예: 회의, 연차, 상담" required></div>
+        <div class="field"><label>색상</label><input type="color" id="sbColor" value="${escapeHtml(existing?.color || "#EAF3E3")}" style="width:60px;height:36px;padding:2px;"></div>
+        <p style="font-size:11px;color:var(--text-muted);margin:-6px 0 10px;">30분 단위로 잘려서 그 시간대 모든 칸에 자동으로 채워져요.</p>
+        <div class="grid-2" style="margin-top:10px;">
+          <button type="button" class="btn secondary" id="cancelBtn">취소</button>
+          <button type="submit" class="btn" id="saveSbBtn">저장</button>
+        </div>
+      </form>
+    </div></div>`;
+  document.getElementById("cancelBtn").onclick = () => root.innerHTML = "";
+  document.getElementById("modalBg").addEventListener("click", (e) => { if (e.target.id === "modalBg") root.innerHTML = ""; });
+  document.getElementById("scheduleBlockForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const date = document.getElementById("sbDate").value;
+    const startTime = document.getElementById("sbStart").value;
+    const endTime = document.getElementById("sbEnd").value;
+    const label = document.getElementById("sbLabel").value.trim();
+    const color = document.getElementById("sbColor").value;
+    const startMin = timeStrToMinutes(startTime);
+    const endMin = timeStrToMinutes(endTime);
+    if (endMin <= startMin) { alert("종료 시간은 시작 시간보다 늦어야 해요."); return; }
+    const saveBtn = document.getElementById("saveSbBtn");
+    saveBtn.disabled = true;
+    try {
+      if (existing) {
+        // 기존 칸을 먼저 비우고 새 범위로 다시 채웁니다 (날짜나 시간을 바꾼 경우 대비).
+        await clearScheduleRangeCells(existing.date, timeStrToMinutes(existing.startTime), timeStrToMinutes(existing.endTime));
+        await applyScheduleRangeCells(date, startMin, endMin, label, color);
+        await updateDoc(doc(db, "scheduleBlocks", existing.id), { date, startTime, endTime, label, color });
+      } else {
+        await applyScheduleRangeCells(date, startMin, endMin, label, color);
+        await addDoc(collection(db, "scheduleBlocks"), {
+          date, startTime, endTime, label, color,
+          createdBy: state.profile.name, createdAt: new Date().toISOString()
+        });
+      }
+      root.innerHTML = "";
+      showToast("저장되었습니다.");
+      renderSection(section.key);
+    } catch (err) {
+      saveBtn.disabled = false;
+      alert("저장 중 오류가 발생했습니다: " + err.message);
+    }
+  });
+}
+
 async function renderMonthlySchedule(section) {
   const main = document.getElementById("mainContent");
   const canEdit = canWriteSection(section);
   main.innerHTML = `<div class="page-header">
       <div>
         <h1><span class="badge" style="background:${COLOR_HEX[section.color]}"></span>${section.label}</h1>
-        <p>${section.desc}${canEdit ? " · 칸을 클릭해서 바로 입력하고, 다른 곳을 클릭하면 저장돼요." : ""}</p>
+        <p>${section.desc}${canEdit ? " · 아래 목록에서 일정을 등록하면 달력에 자동으로 반영돼요. 칸을 직접 클릭해서 바로 입력할 수도 있어요." : ""}</p>
       </div>
       <div style="display:flex;gap:8px;align-items:center;">
         <button class="icon-btn" id="prevMonthBtn" style="font-size:18px;">‹</button>
@@ -300,8 +387,15 @@ async function renderMonthlySchedule(section) {
         <button class="icon-btn" id="nextMonthBtn" style="font-size:18px;">›</button>
       </div>
     </div>
+    ${canEdit ? `<div class="card" style="padding:14px 20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <h2 style="margin:0;font-size:14px;">이번 달 등록된 일정</h2>
+        <button class="btn small" id="addScheduleBlockBtn" type="button">+ 일정 등록</button>
+      </div>
+      <div id="scheduleBlockList">불러오는 중...</div>
+    </div>` : ""}
     ${canEdit ? `<div class="card" style="padding:12px 20px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
-      <span style="font-size:12px;font-weight:700;color:var(--text-muted);">선택한 칸 서식:</span>
+      <span style="font-size:12px;font-weight:700;color:var(--text-muted);">칸을 직접 클릭해서 고칠 때 서식:</span>
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;">배경색 <input type="color" id="cellBgPicker" value="#ffffff"></label>
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;">글자색 <input type="color" id="cellTextPicker" value="#000000"></label>
       <button class="btn small secondary" id="cellClearFormatBtn" type="button">자동 서식으로 되돌리기</button>
@@ -309,6 +403,10 @@ async function renderMonthlySchedule(section) {
     </div>` : ""}
     <div id="scheduleTopScroll" style="overflow-x:auto;overflow-y:hidden;height:16px;margin-bottom:4px;"><div id="scheduleTopScrollInner" style="height:1px;"></div></div>
     <div class="card" id="scheduleScrollCard" style="overflow:auto;max-height:calc(100vh - 190px);"><div id="scheduleCalendar">불러오는 중...</div></div>`;
+
+  if (canEdit) {
+    document.getElementById("addScheduleBlockBtn").onclick = () => openScheduleBlockModal(section, null);
+  }
 
   document.getElementById("prevMonthBtn").onclick = () => {
     scheduleViewState.month--;
@@ -329,6 +427,47 @@ async function renderMonthlySchedule(section) {
   const snap = await getDocs(q);
   const byDate = {};
   snap.docs.forEach(d => { byDate[d.id] = d.data(); });
+
+  if (canEdit) {
+    const blockQ = query(collection(db, "scheduleBlocks"), where("date", ">=", start), where("date", "<=", end));
+    const blockSnap = await getDocs(blockQ);
+    const blocks = blockSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => {
+      if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+      return (a.startTime || "").localeCompare(b.startTime || "");
+    });
+    const listWrap = document.getElementById("scheduleBlockList");
+    if (listWrap) {
+      if (!blocks.length) {
+        listWrap.innerHTML = `<div class="empty-state" style="padding:16px;">아직 등록된 일정이 없어요. "+ 일정 등록"으로 추가해보세요.</div>`;
+      } else {
+        listWrap.innerHTML = blocks.map(b => `<div class="ledger-row" style="padding:8px 0;">
+          <div style="flex:1;display:flex;align-items:center;gap:10px;">
+            <span style="width:14px;height:14px;border-radius:4px;background:${escapeHtml(b.color || "#EAF3E3")};flex-shrink:0;"></span>
+            <span class="mono" style="font-size:12.5px;color:var(--text-muted);white-space:nowrap;">${escapeHtml(b.date)} ${escapeHtml(b.startTime)}~${escapeHtml(b.endTime)}</span>
+            <span style="font-weight:700;font-size:13.5px;">${escapeHtml(b.label)}</span>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="icon-btn" data-block-edit="${b.id}">수정</button>
+            <button class="icon-btn danger" data-block-del="${b.id}">삭제</button>
+          </div>
+        </div>`).join("");
+        listWrap.querySelectorAll("[data-block-edit]").forEach(btn => {
+          btn.onclick = () => openScheduleBlockModal(section, blocks.find(b => b.id === btn.dataset.blockEdit));
+        });
+        listWrap.querySelectorAll("[data-block-del]").forEach(btn => {
+          btn.onclick = async () => {
+            const block = blocks.find(b => b.id === btn.dataset.blockDel);
+            if (!block) return;
+            if (!confirm(`"${block.label}" 일정을 삭제할까요? (달력 칸도 함께 지워집니다)`)) return;
+            await clearScheduleRangeCells(block.date, timeStrToMinutes(block.startTime), timeStrToMinutes(block.endTime));
+            await deleteDoc(doc(db, "scheduleBlocks", block.id));
+            showToast("삭제되었습니다.");
+            renderMonthlySchedule(section);
+          };
+        });
+      }
+    }
+  }
 
   const nDays = daysInMonth(year, month);
   const dates = [];
@@ -2521,16 +2660,23 @@ async function renderPersonalTDL(section) {
   renderPersonalTDLBody(section, docs);
 }
 
+const TDL_PROGRESS_META = {
+  none: { label:"미완료", pct:0,   bg:"#F1EFE8", color:"#5F5E5A" },
+  half: { label:"50% 완료", pct:50, bg:"#FFF4DE", color:"#B9770E" },
+  done: { label:"완료", pct:100,   bg:"#EAF3E3", color:"var(--green-deep)" }
+};
+function taskProgress(t) { return t.progress || (t.done ? "done" : "none"); } // 예전(done boolean) 데이터 호환
+
 function renderPersonalTDLStats(tasks) {
   const wrap = document.getElementById("taskStatsWrap");
   if (!wrap) return;
   if (!tasks.length) { wrap.innerHTML = ""; return; }
-  const doneCount = tasks.filter(t => t.done).length;
-  const rate = Math.round((doneCount / tasks.length) * 100);
-  const overdueCount = tasks.filter(t => !t.done && taskDdayInfo(t.dueDate)?.tone === "overdue").length;
+  const doneCount = tasks.filter(t => taskProgress(t) === "done").length;
+  const rate = Math.round(tasks.reduce((sum, t) => sum + TDL_PROGRESS_META[taskProgress(t)].pct, 0) / tasks.length);
+  const overdueCount = tasks.filter(t => taskProgress(t) !== "done" && taskDdayInfo(t.dueDate)?.tone === "overdue").length;
   wrap.innerHTML = `<div class="stat-grid">
     <div class="stat-card"><div class="label">전체 할 일</div><div class="value">${tasks.length}건</div></div>
-    <div class="stat-card"><div class="label">완료율</div><div class="value">${rate}%</div></div>
+    <div class="stat-card"><div class="label">진행률(평균)</div><div class="value">${rate}%</div></div>
     <div class="stat-card"><div class="label">완료</div><div class="value">${doneCount}건</div></div>
     <div class="stat-card"><div class="label">마감 지남(미완료)</div><div class="value" style="${overdueCount ? "color:#C0392B;" : ""}">${overdueCount}건</div></div>
   </div>`;
@@ -2544,7 +2690,7 @@ function renderPersonalTDLBody(section, docs) {
   const tasks = [...docs].sort((a, b) => {
     let cmp = 0;
     if (column === "title") cmp = (a.title || "").localeCompare(b.title || "", "ko");
-    else if (column === "done") cmp = (a.done ? 1 : 0) - (b.done ? 1 : 0);
+    else if (column === "progress") cmp = TDL_PROGRESS_META[taskProgress(a)].pct - TDL_PROGRESS_META[taskProgress(b)].pct;
     else {
       if (a.dueDate && b.dueDate) cmp = a.dueDate < b.dueDate ? -1 : (a.dueDate > b.dueDate ? 1 : 0);
       else if (a.dueDate) cmp = -1;
@@ -2563,24 +2709,38 @@ function renderPersonalTDLBody(section, docs) {
   let html = `<table><thead><tr>
     ${sortableTh("title", "업무명", "min-width:220px;")}
     ${sortableTh("dueDate", "마감기한", "min-width:130px;")}
-    ${sortableTh("done", "완료", "text-align:center;min-width:70px;")}
+    ${sortableTh("progress", "진행률", "text-align:center;min-width:220px;")}
+    <th style="min-width:120px;">원장님 보고</th>
     ${editable ? `<th style="min-width:80px;">관리</th>` : ""}
   </tr></thead><tbody>`;
 
   tasks.forEach(task => {
     const dday = taskDdayInfo(task.dueDate);
-    const rowTone = (!task.done && dday?.tone === "overdue") ? "background:#FFFBF8;" : "";
+    const progress = taskProgress(task);
+    const rowTone = (progress !== "done" && dday?.tone === "overdue") ? "background:#FFFBF8;" : "";
+    const hasReport = !!(task.report && task.report.trim());
     html += `<tr style="${rowTone}">
       <td>
-        <div style="font-weight:700;${task.done ? "text-decoration:line-through;color:var(--text-muted);" : ""}">${escapeHtml(task.title || "")}</div>
+        <div style="font-weight:700;${progress === "done" ? "text-decoration:line-through;color:var(--text-muted);" : ""}">${escapeHtml(task.title || "")}</div>
         ${task.note ? `<div style="font-size:12px;color:var(--text-muted);margin-top:2px;white-space:pre-wrap;">${escapeHtml(task.note)}</div>` : ""}
       </td>
       <td style="white-space:nowrap;">
         ${task.dueDate ? `<div class="mono" style="font-size:12.5px;">${escapeHtml(task.dueDate)}</div>` : ""}
-        ${!task.done && dday ? `<span class="pill" style="display:inline-block;margin-top:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;${TASK_TONE_STYLE[dday.tone]}">${dday.label}</span>` : (task.done ? `<span class="pill" style="display:inline-block;margin-top:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;background:#EAF3E3;color:var(--green-deep);">완료</span>` : "")}
+        ${progress !== "done" && dday ? `<span class="pill" style="display:inline-block;margin-top:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;${TASK_TONE_STYLE[dday.tone]}">${dday.label}</span>` : ""}
       </td>
-      <td style="text-align:center;">
-        <input type="checkbox" data-task-toggle="${task.id}" ${task.done ? "checked" : ""} ${editable ? "" : "disabled"} style="width:18px;height:18px;cursor:${editable ? "pointer" : "default"};">
+      <td>
+        <div style="display:flex;gap:4px;justify-content:center;">
+          ${["none","half","done"].map(key => {
+            const meta = TDL_PROGRESS_META[key];
+            const active = progress === key;
+            return `<button type="button" class="btn small" data-progress-btn="${task.id}" data-value="${key}"
+              style="padding:4px 10px;font-size:11.5px;background:${meta.bg};color:${meta.color};border:1.5px solid ${active ? meta.color : "transparent"};font-weight:${active ? "800" : "600"};${editable ? "" : "opacity:.6;cursor:default;"}"
+              ${editable ? "" : "disabled"}>${meta.label}</button>`;
+          }).join("")}
+        </div>
+      </td>
+      <td>
+        <button class="btn small secondary" data-report-btn="${task.id}" style="white-space:nowrap;">${hasReport ? "보고 내용 보기/수정" : "보고 작성"}</button>
       </td>
       ${editable ? `<td style="white-space:nowrap;">
         <button class="icon-btn" data-edit-task="${task.id}">수정</button>
@@ -2601,22 +2761,25 @@ function renderPersonalTDLBody(section, docs) {
       renderPersonalTDLBody(section, tasks);
     };
   });
-  wrap.querySelectorAll("[data-task-toggle]").forEach(chk => {
-    chk.onchange = async () => {
-      const taskId = chk.dataset.taskToggle;
-      const wasChecked = chk.checked;
-      chk.disabled = true;
+  wrap.querySelectorAll("[data-progress-btn]").forEach(btn => {
+    btn.onclick = async () => {
+      const taskId = btn.dataset.progressBtn;
+      const value = btn.dataset.value;
+      const task = tasks.find(t => t.id === taskId);
+      if (!task) return;
+      const prevProgress = taskProgress(task);
       try {
-        await updateDoc(doc(db, section.collectionName, taskId), { done: wasChecked });
-        const task = tasks.find(t => t.id === taskId);
-        if (task) task.done = wasChecked;
+        await updateDoc(doc(db, section.collectionName, taskId), { progress: value });
+        task.progress = value;
         renderPersonalTDLBody(section, tasks);
       } catch (err) {
-        chk.checked = !wasChecked;
-        chk.disabled = false;
+        task.progress = prevProgress;
         alert("저장 중 오류가 발생했습니다: " + err.message);
       }
     };
+  });
+  wrap.querySelectorAll("[data-report-btn]").forEach(btn => {
+    btn.onclick = () => openPersonalTaskReportModal(section, tasks.find(t => t.id === btn.dataset.reportBtn), () => renderPersonalTDLBody(section, tasks));
   });
   wrap.querySelectorAll("[data-edit-task]").forEach(btn => {
     btn.onclick = () => openPersonalTaskModal(section, tasks.find(t => t.id === btn.dataset.editTask));
@@ -2629,6 +2792,43 @@ function renderPersonalTDLBody(section, docs) {
       renderSection(section.key);
     };
   });
+}
+
+function openPersonalTaskReportModal(section, task, onSaved) {
+  if (!task) return;
+  const root = document.getElementById("modalRoot");
+  const canEdit = canWriteSection(section);
+  root.innerHTML = `<div class="modal-bg" id="modalBg">
+    <div class="modal" style="max-width:640px;">
+      <h3>원장님 보고 · ${escapeHtml(task.title || "")}</h3>
+      <p style="font-size:12px;color:var(--text-muted);margin:-6px 0 12px;">진행 상황을 원장님께 전달할 내용으로 자세히 적어주세요.</p>
+      <div class="field">
+        <textarea id="taskReportText" rows="10" ${canEdit ? "" : "disabled"} placeholder="예) 8/1~8/9 상담일지 12건 중 9건 완료. 나머지 3건은 학부모 회신 대기 중이라 8/12까지 마무리 예정입니다.">${escapeHtml(task.report || "")}</textarea>
+      </div>
+      <div class="grid-2" style="margin-top:10px;">
+        <button type="button" class="btn secondary" id="closeReportBtn">닫기</button>
+        ${canEdit ? `<button type="button" class="btn" id="saveReportBtn">저장</button>` : ""}
+      </div>
+    </div></div>`;
+  document.getElementById("closeReportBtn").onclick = () => root.innerHTML = "";
+  document.getElementById("modalBg").addEventListener("click", (e) => { if (e.target.id === "modalBg") root.innerHTML = ""; });
+  if (canEdit) {
+    document.getElementById("saveReportBtn").onclick = async () => {
+      const btn = document.getElementById("saveReportBtn");
+      btn.disabled = true;
+      try {
+        const report = document.getElementById("taskReportText").value;
+        await updateDoc(doc(db, section.collectionName, task.id), { report });
+        task.report = report;
+        root.innerHTML = "";
+        showToast("보고 내용이 저장되었습니다.");
+        if (onSaved) onSaved();
+      } catch (err) {
+        btn.disabled = false;
+        alert("저장 중 오류가 발생했습니다: " + err.message);
+      }
+    };
+  }
 }
 
 function openPersonalTaskModal(section, existing) {
