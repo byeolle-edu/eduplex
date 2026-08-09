@@ -15,7 +15,7 @@ import {
 =========================================================== */
 const SECTIONS = [
   { key:"schedule", label:"별내점 일정", group:"일정/회의", color:"green",
-    collectionName:"scheduleEntries", scope:"team", writable:"leader",
+    collectionName:"scheduleEntries", scope:"team", writable:"all",
     desc:"별내점 일정을 월 단위로 직접 입력하고 관리합니다.",
     isMonthlySchedule:true },
 
@@ -44,7 +44,7 @@ const SECTIONS = [
     ], columns:["title"] },
 
   { key:"leadership", label:"별내점 자료", group:"자료실", color:"neutral",
-    collectionName:"leadership", scope:"team", writable:"leader",
+    collectionName:"leadership", scope:"team", writable:"all",
     desc:"시험지 분석 등 별내점 자료입니다.",
     cardView:true, headerFields:["title"],
     fields:[
@@ -218,8 +218,8 @@ function generateTimeSlots() {
   return slots; // 10:00 ~ 21:30, 30분 단위
 }
 const SCHEDULE_TIME_SLOTS = generateTimeSlots();
-const SCHEDULE_NOTE_ROWS = ["에듀본사", "상상", "전농", "돈암", "행당", "별내", "다산"];
-const SCHEDULE_ROW_ORDER = ["location", ...SCHEDULE_NOTE_ROWS.map(l => "note_" + l), ...SCHEDULE_TIME_SLOTS.map(s => "time_" + s)];
+const SCHEDULE_NOTE_ROWS = [];
+const SCHEDULE_ROW_ORDER = [...SCHEDULE_TIME_SLOTS.map(s => "time_" + s)];
 
 const scheduleViewState = { year: new Date().getFullYear(), month: new Date().getMonth() + 1 };
 
@@ -357,20 +357,6 @@ async function renderMonthlySchedule(section) {
     </tr>
   </thead><tbody>`;
 
-  // 근무장소 행
-  html += `<tr><td style="${leftLabelStyle}">근무장소</td>`;
-  dates.forEach(d => { html += cellHtml(ymd(year, month, d), "location"); });
-  html += `</tr>`;
-
-  // 지점별 특이사항 행
-  SCHEDULE_NOTE_ROWS.forEach(rowLabel => {
-    const rowColor = LOCATION_COLORS[rowLabel] || "#9CA88F";
-    const rowTextColor = LOCATION_TEXT_COLORS[rowLabel] || "#fff";
-    html += `<tr><td style="${leftLabelStyle}background:${rowColor};color:${rowTextColor};">${escapeHtml(rowLabel)}</td>`;
-    dates.forEach(d => { html += cellHtml(ymd(year, month, d), "note_" + rowLabel); });
-    html += `</tr>`;
-  });
-
   // 30분 단위 시간표 행
   SCHEDULE_TIME_SLOTS.forEach((slot, si) => {
     const dividerStyle = si === 0 ? "border-top:3px solid var(--text-main);" : "";
@@ -466,7 +452,29 @@ async function renderMonthlySchedule(section) {
         const dateStr = input.dataset.date;
         const rowKey = input.dataset.row;
         const value = input.value.trim();
+        // "10시~15시 회의" / "10:00-15:00 회의" / "10~15 회의" 처럼 입력하면
+        // 그 시간 구간의 모든 30분 칸에 자동으로 라벨을 채워줍니다.
+        const rangeMatch = value.match(/^(\d{1,2})(?::(\d{2}))?\s*시?\s*(?:부터)?\s*[~\-]\s*(\d{1,2})(?::(\d{2}))?\s*시?\s*(?:까지)?\s*(.*)$/);
         try {
+          if (rangeMatch && rangeMatch[5] && rangeMatch[5].trim()) {
+            const label = rangeMatch[5].trim();
+            const startMin = parseInt(rangeMatch[1], 10) * 60 + (parseInt(rangeMatch[2], 10) || 0);
+            const endMin = parseInt(rangeMatch[3], 10) * 60 + (parseInt(rangeMatch[4], 10) || 0);
+            if (!byDate[dateStr]) byDate[dateStr] = { date: dateStr, cells: {} };
+            if (!byDate[dateStr].cells) byDate[dateStr].cells = {};
+            for (const slot of SCHEDULE_TIME_SLOTS) {
+              const [sh, sm] = slot.split(":").map(Number);
+              const slotMin = sh * 60 + sm;
+              if (slotMin >= startMin && slotMin < endMin) {
+                const k = "time_" + slot;
+                const existing = byDate[dateStr].cells[k] || {};
+                byDate[dateStr].cells[k] = { text: label, color: existing.color || null, textColor: existing.textColor || null };
+              }
+            }
+            await setDoc(doc(db, "scheduleEntries", dateStr), { date: dateStr, cells: byDate[dateStr].cells });
+            renderMonthlySchedule(section);
+            return;
+          }
           if (!byDate[dateStr]) byDate[dateStr] = { date: dateStr, cells: {} };
           if (!byDate[dateStr].cells) byDate[dateStr].cells = {};
           const existing = byDate[dateStr].cells[rowKey] || {};
