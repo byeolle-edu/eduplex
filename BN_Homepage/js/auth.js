@@ -1,8 +1,12 @@
 import {
   auth, db,
   onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  updateProfile, doc, setDoc, getDocs, collection
+  updateProfile, doc, setDoc
 } from "./firebase-init.js";
+
+// 단일 지점 운영이므로 지점 정보를 고정값으로 사용합니다.
+const BRANCH_ID = "byeollae";
+const BRANCH_NAME = "별내점";
 
 // 이미 로그인되어 있으면 대시보드로 이동
 onAuthStateChanged(auth, (user) => {
@@ -26,25 +30,7 @@ tabSignup.onclick = () => {
   tabLogin.classList.remove("active");
   signupForm.style.display = "block";
   loginForm.style.display = "none";
-  loadBranches();
 };
-
-// 지점 목록 불러오기 (회원가입 시 선택용)
-async function loadBranches() {
-  const select = document.getElementById("suBranch");
-  try {
-    const snap = await getDocs(collection(db, "branches"));
-    if (snap.empty) {
-      select.innerHTML = `<option value="">등록된 지점이 없습니다 (팀장 문의)</option>`;
-      return;
-    }
-    select.innerHTML = snap.docs
-      .map(d => `<option value="${d.id}" data-name="${d.data().name}">${d.data().name}</option>`)
-      .join("");
-  } catch (e) {
-    select.innerHTML = `<option value="">지점 목록을 불러올 수 없습니다</option>`;
-  }
-}
 
 // 로그인
 loginForm.addEventListener("submit", async (e) => {
@@ -65,22 +51,20 @@ loginForm.addEventListener("submit", async (e) => {
 signupForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const name = document.getElementById("suName").value.trim();
-  const branchSelect = document.getElementById("suBranch");
-  const branchId = branchSelect.value;
-  const branchName = branchSelect.selectedOptions[0]?.dataset.name || "";
   const email = document.getElementById("suEmail").value.trim();
   const password = document.getElementById("suPassword").value;
   const errEl = document.getElementById("signupError");
   errEl.textContent = "";
 
-  if (!branchId) { errEl.textContent = "담당 지점을 선택해주세요."; return; }
-
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(cred.user, { displayName: name });
-    // 기본 role은 'member'. 팀장 계정은 Firebase 콘솔에서 role 값을 'leader'로 수동 변경합니다.
+    // 기본 role은 'member'. 팀장(관리자) 계정은 Firebase 콘솔에서 role 값을 'leader'로 수동 변경합니다.
     await setDoc(doc(db, "users", cred.user.uid), {
-      name, email, branchId, branchName, role: "member",
+      name, email,
+      branchId: BRANCH_ID,
+      branchName: BRANCH_NAME,
+      role: "member",
       createdAt: new Date().toISOString()
     });
     window.location.href = "dashboard.html";
