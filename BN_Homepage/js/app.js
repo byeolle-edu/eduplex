@@ -76,7 +76,60 @@ const SECTIONS = [
       { key:"images", label:"첨부파일 (이미지·PDF·PPT)", type:"imageUpload" }
     ], columns:["title"] }
 ];
-const GROUP_ORDER = ["일정/회의", "자료실"];
+const GROUP_ORDER = ["일정/회의", "개인 미팅", "자료실"];
+const TEAM_LEADER_EMAIL = "sangsangplexhq1@sangsangplex.com";
+const PEOPLE = [
+  { key:"seo", name:"서지은", email:"souji4614@gmail.com" },
+  { key:"kim", name:"김영상", email:"ender5032@gmail.com" },
+  { key:"yj",  name:"이유진", email:"lyj826089@gmail.com" },
+  { key:"jh",  name:"이준희", email:"nym143019@gmail.com" }
+];
+function personSections(p) {
+  return [
+    { key:`perf_${p.key}`, label:`${p.name} · 성과/전략`, group:"개인 미팅", color:"blue",
+      personEmail:p.email, personGroupLabel:p.name, personSub:"성과/전략",
+      collectionName:`perf_${p.key}`, scope:"team", writable:"all",
+      desc:"1년 단위 성과 지표입니다.",
+      fields:[
+        { key:"year", label:"연도", type:"text" },
+        { key:"students", label:"학생 수", type:"number" },
+        { key:"promotionRate", label:"프미율(%)", type:"text" },
+        { key:"churnRate", label:"이탈률(%)", type:"text" },
+        { key:"commaTotal", label:"전체 콤마 수", type:"number" },
+        { key:"commaPerStudent", label:"1인당 콤마 수", type:"text" },
+        { key:"shortTermRate", label:"단기(3개월) 비율(%)", type:"text" },
+        { key:"midTermRate", label:"중기(6개월) 비율(%)", type:"text" },
+        { key:"longTermRate", label:"장기(9개월) 비율(%)", type:"text" }
+      ], columns:["year","students","promotionRate","churnRate"] },
+
+    { key:`dm_${p.key}`, label:`${p.name} · 원장 미팅`, group:"개인 미팅", color:"blue",
+      personEmail:p.email, personGroupLabel:p.name, personSub:"원장 미팅",
+      collectionName:`dm_${p.key}`, scope:"team", writable:"all",
+      desc:"원장님과의 미팅 내용을 주차별로 기록합니다.",
+      cardView:true, headerFields:["title","date","director"],
+      fields:[
+        { key:"title", label:"제목", type:"text" },
+        { key:"date", label:"날짜", type:"date" },
+        { key:"director", label:"원장 이름", type:"text" },
+        { key:"content", label:"미팅 내용", type:"richtext", tall:true },
+        { key:"followUp", label:"후속조치", type:"textarea" },
+        { key:"images", label:"첨부파일 (이미지·PDF·PPT)", type:"imageUpload" }
+      ], columns:["date","director","content"] },
+
+    { key:`tdl_${p.key}`, label:`${p.name} · TDL`, group:"개인 미팅", color:"blue",
+      personEmail:p.email, personGroupLabel:p.name, personSub:"TDL",
+      collectionName:`tdl_${p.key}`, scope:"team", writable:"all",
+      desc:"해야 할 일을 관리합니다.",
+      cardView:true, headerFields:["title","dueDate","status"],
+      fields:[
+        { key:"title", label:"할 일", type:"text" },
+        { key:"dueDate", label:"마감일", type:"date" },
+        { key:"status", label:"진행 상태 (예: 진행중/완료)", type:"text" },
+        { key:"content", label:"메모", type:"textarea" }
+      ], columns:["title","dueDate","status"] }
+  ];
+}
+PEOPLE.forEach(p => SECTIONS.push(...personSections(p)));
 const COLOR_HEX = { blue:"var(--blue-bright)", green:"var(--green-bright)", magenta:"var(--magenta-bright)", neutral:"#9CA88F" };
 
 /* ===================== 팀장 일정 - 구글 시트 연동 (OAuth) =====================
@@ -841,10 +894,34 @@ function buildNav() {
   // "본사" 지점 소속 팀원(이사님 제외)은 아래 메뉴만 보이게 합니다.
   const isHqStaff = state.profile.role === "member" && state.profile.branchName === "본사";
   const HQ_STAFF_ALLOWED_LABELS = ["팀장 일정", "팀 회의", "전체 회의", "본사 회의", "지표 분석", "지점 운영 자료", "리더십 자료", "팀 스터디 자료", "지점 인적 구성"];
-  const allItems = [...allBuiltIn, ...allFolders].filter(s => !isHqStaff || HQ_STAFF_ALLOWED_LABELS.includes(s.label));
+  const isTeamLeaderPerson = state.user && state.user.email === TEAM_LEADER_EMAIL;
+  const allItems = [...allBuiltIn, ...allFolders]
+    .filter(s => !isHqStaff || HQ_STAFF_ALLOWED_LABELS.includes(s.label))
+    .filter(s => !s.personEmail || isTeamLeaderPerson || (state.user && state.user.email === s.personEmail));
   GROUP_ORDER.forEach(group => {
     const items = allItems.filter(s => s.group === group).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     html += `<div class="nav-group"><div class="nav-group-label">${group}</div>`;
+
+    if (group === "개인 미팅") {
+      // 사람별로 묶어서, 사람 이름을 펼치면 성과/전략·원장 미팅·TDL 세 개가 나오게 합니다.
+      const byPerson = {};
+      items.forEach(s => { (byPerson[s.personGroupLabel] = byPerson[s.personGroupLabel] || []).push(s); });
+      Object.keys(byPerson).forEach(personName => {
+        const subItems = byPerson[personName];
+        const navKey = "person_" + personName;
+        const expanded = !!state.navExpanded[navKey];
+        html += `<div class="nav-item" data-key="${navKey}" data-branch="" data-expandable="true" style="--nav-color:${COLOR_HEX.blue}">
+          <span class="nav-label"><span class="dot" style="background:${COLOR_HEX.blue}"></span>${escapeHtml(personName)}</span>
+          <span class="nav-chevron ${expanded ? "open" : ""}">›</span>
+        </div>`;
+        html += `<div class="nav-sub" style="display:${expanded ? "block" : "none"};">
+          ${subItems.map(s => `<div class="nav-subitem" data-key="${s.key}" data-branch="">${escapeHtml(s.personSub)}</div>`).join("")}
+        </div>`;
+      });
+      html += `</div>`;
+      return;
+    }
+
     items.forEach(s => {
       const expandable = s.hasBranchSubmenu && canViewAllRole();
       const expanded = !!state.navExpanded[s.key];
