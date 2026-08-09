@@ -14,16 +14,16 @@ import {
    columns         : 목록 표에 보여줄 필드 (없으면 fields 앞 3개 사용)
 =========================================================== */
 const SECTIONS = [
-  { key:"schedule", label:"팀장 일정", group:"일정·미팅", color:"green",
+  { key:"schedule", label:"별내점 일정", group:"일정/회의", color:"green",
     collectionName:"scheduleEntries", scope:"team", writable:"leader",
-    desc:"팀장 일정을 월 단위로 직접 입력하고 관리합니다.",
+    desc:"별내점 일정을 월 단위로 직접 입력하고 관리합니다.",
     isMonthlySchedule:true },
 
-  { key:"teamMeeting", label:"팀 회의 일지", group:"일정·미팅", color:"green",
+  { key:"teamMeeting", label:"별내점 회의 일지", group:"일정/회의", color:"green",
     collectionName:"teamMeetings", scope:"team", writable:"all",
-    desc:"팀 전체 회의 내용을 기록합니다.",
+    desc:"별내점 회의 내용을 기록합니다. (기존 노션 기록은 아래 버튼으로 확인하세요)",
     cardView:true, headerFields:["title","date","attendees"],
-    extraLink:{ label:"회의록 원본 열기", url:"https://docs.google.com/presentation/d/1xrRu5zRNooseQG-fHA4D8v6SDc1eEsDmMgc7e2pDhUs/edit" },
+    extraLink:{ label:"기존 노션 회의 기록 보기", url:"https://www.notion.so/2de6541b3eaa818ba61dd6d1a57a1c04?v=2de6541b3eaa81ff8490000c675403c1&source=copy_link" },
     fields:[
       { key:"title", label:"제목", type:"text" },
       { key:"date", label:"날짜", type:"date" },
@@ -33,56 +33,19 @@ const SECTIONS = [
       { key:"images", label:"회의 슬라이드 이미지", type:"imageUpload" }
     ], columns:["date","attendees","agenda"] },
 
-  { key:"directorMeeting", label:"지점 원장 미팅 일지", group:"일정·미팅", color:"green",
-    collectionName:"directorMeetings", scope:"branch", writable:"leader",
-    desc:"지점 원장님과의 미팅 내용을 기록합니다. (팀장만 열람 가능)",
-    leaderOnly:true, isMeetingGrid:true, headerFields:["title","date","branchName","director"],
-    fields:[
-      { key:"title", label:"제목", type:"text" },
-      { key:"date", label:"날짜", type:"date" },
-      { key:"branchId", label:"지점", type:"branchSelect" },
-      { key:"director", label:"원장 이름", type:"text" },
-      { key:"content", label:"미팅 내용", type:"richtext" },
-      { key:"followUp", label:"후속조치", type:"textarea" },
-      { key:"images", label:"첨부파일 (이미지·PDF·PPT)", type:"imageUpload" }
-    ], columns:["date","branchName","director"] },
-
-  { key:"memberMeeting", label:"지점 팀원 개별 미팅 일지", group:"일정·미팅", color:"green",
-    collectionName:"memberMeetings", scope:"branch", writable:"leader-and-branch",
-    desc:"지점 팀원과의 개별 미팅 내용을 기록합니다.",
-    isMeetingGrid:true, headerFields:["title","date","branchName","memberName"],
-    fields:[
-      { key:"title", label:"제목", type:"text" },
-      { key:"date", label:"날짜", type:"date" },
-      { key:"branchId", label:"지점", type:"branchSelect" },
-      { key:"memberName", label:"팀원 이름", type:"text" },
-      { key:"content", label:"미팅 내용", type:"textarea" },
-      { key:"followUp", label:"후속조치", type:"textarea" },
-      { key:"images", label:"첨부파일 (이미지·PDF·PPT)", type:"imageUpload" }
-    ], columns:["date","branchName","memberName"] },
-
-  { key:"performance", label:"지점 성과 지표", group:"성과·전략", color:"blue",
-    desc:"고객지표 · 경영지표 등 평가지표를 그대로 보여줍니다.",
-    isEvalSheet:true },
-
-  { key:"notice", label:"팀 공지사항", group:"소통·협업", color:"magenta",
-    collectionName:"notices", scope:"team", writable:"leader",
-    desc:"팀 전체 공지사항입니다.",
-    cardView:true, headerFields:["title","important"],
-    fields:[
-      { key:"title", label:"제목", type:"text" },
-      { key:"important", label:"중요 공지", type:"importanceSelect" },
-      { key:"content", label:"내용", type:"textarea" },
-      { key:"images", label:"첨부파일 (이미지·PDF·PPT)", type:"imageUpload" }
-    ], columns:["title","important"] },
-
   { key:"operation", label:"지점 운영 자료", group:"자료실", color:"neutral",
-    desc:"지점별 자료 링크를 한눈에 모아 봅니다. (지점 × 양식 표)",
-    isOpsGrid:true },
+    collectionName:"operationLinks", scope:"team", writable:"all",
+    desc:"별내점에서 사용하는 구글 링크 등을 제목과 함께 등록합니다.",
+    cardView:true, headerFields:["title"],
+    fields:[
+      { key:"title", label:"링크 제목", type:"text" },
+      { key:"fileLink", label:"링크 주소(URL)", type:"link" },
+      { key:"content", label:"설명 (선택)", type:"textarea" }
+    ], columns:["title"] },
 
-  { key:"leadership", label:"리더십 자료", group:"자료실", color:"neutral",
+  { key:"leadership", label:"별내점 자료", group:"자료실", color:"neutral",
     collectionName:"leadership", scope:"team", writable:"leader",
-    desc:"리더십 관련 자료입니다.",
+    desc:"시험지 분석 등 별내점 자료입니다.",
     cardView:true, headerFields:["title"],
     fields:[
       { key:"title", label:"제목", type:"text" },
@@ -91,9 +54,9 @@ const SECTIONS = [
       { key:"images", label:"첨부파일 (이미지·PDF·PPT)", type:"imageUpload" }
     ], columns:["title"] },
 
-  { key:"study", label:"팀 스터디 자료", group:"자료실", color:"neutral",
-    collectionName:"study", scope:"team", writable:"all",
-    desc:"팀 스터디 자료를 함께 공유합니다.",
+  { key:"study25", label:"25 스터디", group:"자료실", color:"neutral",
+    collectionName:"study25", scope:"team", writable:"all",
+    desc:"2025년 스터디 자료를 함께 공유합니다.",
     cardView:true, headerFields:["title"],
     fields:[
       { key:"title", label:"제목", type:"text" },
@@ -102,11 +65,18 @@ const SECTIONS = [
       { key:"images", label:"첨부파일 (이미지·PDF·PPT)", type:"imageUpload" }
     ], columns:["title"] },
 
-  { key:"roster", label:"지점 인적 구성", group:"자료실", color:"neutral",
-    desc:"지점별 인력 이동 현황(잔류/신규입사/이동/퇴사)을 색깔 그대로 보여줍니다.",
-    isRosterGrid:true }
+  { key:"study26", label:"26 스터디", group:"자료실", color:"neutral",
+    collectionName:"study26", scope:"team", writable:"all",
+    desc:"2026년 스터디 자료를 함께 공유합니다.",
+    cardView:true, headerFields:["title"],
+    fields:[
+      { key:"title", label:"제목", type:"text" },
+      { key:"content", label:"내용", type:"textarea" },
+      { key:"fileLink", label:"첨부 링크(URL)", type:"link" },
+      { key:"images", label:"첨부파일 (이미지·PDF·PPT)", type:"imageUpload" }
+    ], columns:["title"] }
 ];
-const GROUP_ORDER = ["일정·미팅", "성과·전략", "소통·협업", "자료실"];
+const GROUP_ORDER = ["일정/회의", "자료실"];
 const COLOR_HEX = { blue:"var(--blue-bright)", green:"var(--green-bright)", magenta:"var(--magenta-bright)", neutral:"#9CA88F" };
 
 /* ===================== 팀장 일정 - 구글 시트 연동 (OAuth) =====================
