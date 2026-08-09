@@ -36,7 +36,7 @@ const SECTIONS = [
   { key:"operation", label:"지점 운영 자료", group:"자료실", color:"neutral",
     collectionName:"operationLinks", scope:"team", writable:"all",
     desc:"별내점에서 사용하는 구글 링크 등을 제목과 함께 등록합니다.",
-    cardView:true, headerFields:["title"],
+    isLinkPills:true,
     fields:[
       { key:"title", label:"링크 제목", type:"text" },
       { key:"fileLink", label:"링크 주소(URL)", type:"link" },
@@ -84,8 +84,28 @@ const PEOPLE = [
   { key:"yj",  name:"이유진", email:"lyj826089@gmail.com" },
   { key:"jh",  name:"이준희", email:"nym143019@gmail.com" }
 ];
+const REG_CONSULT_LINKS = {
+  seo: "https://docs.google.com/spreadsheets/d/1eQKAHAgCjbD4POIGAdyOvwLs6-lUAZJe_DsJzJiQTtQ/edit?gid=585564078#gid=585564078",
+  kim: "https://docs.google.com/spreadsheets/d/1PooPmmjI1Ucz_3x2zd9t2ga1MhtCl7GV5yZn73UTsHQ/edit?gid=1837174058#gid=1837174058",
+  yj:  "https://docs.google.com/spreadsheets/d/1aWSqEUPGCRu6tQSP-s4MNOEZgCUhtubj_mKMpaaMIR4/edit?gid=1649087173#gid=1649087173",
+  jh:  "https://docs.google.com/spreadsheets/d/1wX4ttZE5wF90AKZqBD-2ivZpNwYfeS3vp61jrkLHqPQ/edit?gid=1629041033#gid=1629041033"
+};
 function personSections(p) {
   return [
+    { key:`reg_${p.key}`, label:`${p.name} · 등록 상담`, group:"개인 미팅", color:"blue",
+      personEmail:p.email, personGroupLabel:p.name, personSub:"등록 상담",
+      collectionName:`reg_${p.key}`, scope:"team", writable:"all",
+      desc:"등록 상담 내용을 기록합니다. 기존 시트는 위 버튼으로 확인하세요.",
+      extraLink:{ label:"기존 등록 상담 시트 열기", url:REG_CONSULT_LINKS[p.key] },
+      cardView:true, headerFields:["title","date"],
+      fields:[
+        { key:"title", label:"제목 (예: 학생 이름)", type:"text" },
+        { key:"date", label:"날짜", type:"date" },
+        { key:"recordingLink", label:"녹음 파일 링크 (선택, 구글 드라이브 등)", type:"link" },
+        { key:"content", label:"상담 내용", type:"richtext", tall:true },
+        { key:"images", label:"첨부파일 (이미지·PDF·PPT)", type:"imageUpload" }
+      ], columns:["date","title"] },
+
     { key:`perf_${p.key}`, label:`${p.name} · 성과/전략`, group:"개인 미팅", color:"blue",
       personEmail:p.email, personGroupLabel:p.name, personSub:"성과/전략",
       collectionName:`perf_${p.key}`, scope:"team", writable:"all",
@@ -234,8 +254,7 @@ const SCHEDULE_KEYWORD_RULES = [
   { word: "휴무", bg: "#FFFFFF", color: "#E03C3C" }
 ];
 function computeScheduleCellStyle(text, explicitColor, explicitTextColor) {
-  // 지점명이나 "연차/회의/식사" 같은 키워드가 글자에 들어있으면, 예전에 지정해둔(또는 붙여넣기로 딸려온)
-  // 수동 색상이 남아있어도 자동 서식이 항상 우선 적용되도록 합니다.
+  // 지점명이나 "연차/회의/식사" 같은 키워드가 글자에 들어있으면 자동으로 정해진 색을 우선 적용합니다.
   if (text) {
     for (const rule of SCHEDULE_KEYWORD_RULES) {
       if (text.includes(rule.word)) return { bg: rule.bg, color: rule.color };
@@ -246,8 +265,13 @@ function computeScheduleCellStyle(text, explicitColor, explicitTextColor) {
       return { bg: autoBg, color: autoTextColor || "#fff" };
     }
   }
+  // 사용자가 상단 "선택한 칸 서식" 도구로 직접 고른 색이 있으면 그 색을 씁니다.
   if (explicitColor || explicitTextColor) {
     return { bg: explicitColor || null, color: explicitTextColor || (explicitColor ? "#fff" : "inherit") };
+  }
+  // 그 외에는 글자가 있는 모든 칸에 기본 배경(연한 초록)과 굵은 글씨를 적용합니다.
+  if (text) {
+    return { bg: "#EAF3E3", color: "#22301A" };
   }
   return { bg: null, color: "inherit" };
 }
@@ -902,7 +926,7 @@ function buildNav() {
   // "본사" 지점 소속 팀원(이사님 제외)은 아래 메뉴만 보이게 합니다.
   const isHqStaff = state.profile.role === "member" && state.profile.branchName === "본사";
   const HQ_STAFF_ALLOWED_LABELS = ["팀장 일정", "팀 회의", "전체 회의", "본사 회의", "지표 분석", "지점 운영 자료", "리더십 자료", "팀 스터디 자료", "지점 인적 구성"];
-  const isTeamLeaderPerson = state.user && state.user.email === TEAM_LEADER_EMAIL;
+  const isTeamLeaderPerson = (state.user && state.user.email === TEAM_LEADER_EMAIL) || canViewAllRole();
   const allItems = [...allBuiltIn, ...allFolders]
     .filter(s => !isHqStaff || HQ_STAFF_ALLOWED_LABELS.includes(s.label))
     .filter(s => !s.personEmail || isTeamLeaderPerson || (state.user && state.user.email === s.personEmail));
@@ -1017,6 +1041,7 @@ async function renderSection(key) {
   const section = getSectionByKey(key);
   if (!section) { main.innerHTML = `<div class="empty-state">찾을 수 없는 메뉴입니다.</div>`; return; }
   if (section.hidden && state.profile.role !== "leader") { main.innerHTML = `<div class="empty-state">삭제된 메뉴입니다.</div>`; return; }
+  if (section.isLinkPills) { renderLinkPills(section); return; }
   if (section.isMonthlySchedule) { renderMonthlySchedule(section); return; }
   if (section.isEvalSheet) { renderEvalSheet(section); return; }
   if (section.isOpsGrid) { renderOpsGrid(section); return; }
@@ -1256,6 +1281,62 @@ function renderAttachmentGallery(urls) {
 }
 
 /* ===================== 사용자 정의 폴더 - 4칸 그리드 보기 (순서는 ▲▼로 직접 조정) ===================== */
+async function renderLinkPills(section) {
+  const main = document.getElementById("mainContent");
+  main.innerHTML = `<div class="page-header">
+      <div>
+        <h1><span class="badge" style="background:${COLOR_HEX[section.color]}"></span>${section.label}</h1>
+        <p>${section.desc}</p>
+      </div>
+      ${canWriteSection(section) ? `<button class="btn small" id="addBtn">+ 링크 추가</button>` : ""}
+    </div>
+    <div id="linkPillsWrap">불러오는 중...</div>`;
+
+  if (canWriteSection(section)) {
+    document.getElementById("addBtn").onclick = () => openModal(section, null);
+  }
+
+  const docs = await fetchDocs(section);
+  docs.sort((a, b) => {
+    const oa = a.order !== undefined ? a.order : Infinity;
+    const ob = b.order !== undefined ? b.order : Infinity;
+    if (oa !== ob) return oa - ob;
+    return (b.createdAt || "").localeCompare(a.createdAt || "");
+  });
+
+  const wrap = document.getElementById("linkPillsWrap");
+  if (!docs.length) {
+    wrap.innerHTML = `<div class="card"><div class="empty-state"><div class="shape"></div>아직 등록된 링크가 없습니다.</div></div>`;
+    return;
+  }
+
+  wrap.innerHTML = `<div class="card"><div style="display:flex;flex-direction:column;gap:10px;">
+    ${docs.map(d => {
+      const editable = canEditDoc(section, d);
+      return `<div style="display:flex;align-items:center;gap:10px;">
+        <a href="${escapeHtml(d.fileLink || "#")}" target="_blank" rel="noopener"
+           style="flex:1;display:inline-flex;align-items:center;gap:6px;background:var(--amber-bright,#FAC775);color:#412402;font-weight:800;font-size:13.5px;padding:10px 16px;border-radius:20px;text-decoration:none;">
+          ${escapeHtml(d.title || "(제목 없음)")} <span style="font-size:12px;">↗</span>
+        </a>
+        ${editable ? `<button class="icon-btn" data-act="edit" data-id="${d.id}">수정</button>
+        <button class="icon-btn danger" data-act="del" data-id="${d.id}">삭제</button>` : ""}
+      </div>`;
+    }).join("")}
+  </div></div>`;
+
+  wrap.querySelectorAll('[data-act="edit"]').forEach(btn => {
+    btn.onclick = () => openModal(section, docs.find(d => d.id === btn.dataset.id));
+  });
+  wrap.querySelectorAll('[data-act="del"]').forEach(btn => {
+    btn.onclick = async () => {
+      if (!confirm("정말 삭제하시겠습니까?")) return;
+      await deleteDoc(doc(db, section.collectionName, btn.dataset.id));
+      showToast("삭제되었습니다.");
+      renderSection(section.key);
+    };
+  });
+}
+
 async function renderFolderGrid(section) {
   const main = document.getElementById("mainContent");
   const branchId = state.branchFilter[section.key];
@@ -1369,40 +1450,100 @@ async function moveFolderEntry(section, entries, id, direction) {
 function openFolderEntryDetailModal(section, entry) {
   const root = document.getElementById("modalRoot");
   const canEdit = canEditDoc(section, entry);
+  const canAnnotate = canEdit || state.profile.role === "viewer";
   const uploadDate = (entry.createdAt || entry.updatedAt || "").slice(0, 10);
   const imageField = section.fields.find(f => f.type === "imageUpload");
   const images = (imageField && entry[imageField.key]) || [];
 
-  const bodyHtml = section.fields
-    .filter(f => f.key !== "title" && f.type !== "imageUpload" && f.type !== "branchSelect")
-    .map(f => {
-      const val = entry[f.key];
-      if (f.type === "importanceSelect") {
-        return val === "yes" ? `<p style="margin:0 0 12px;"><span class="pill important">중요</span></p>` : "";
-      }
-      if (!val) return "";
-      if (f.type === "link") {
-        return `<p style="margin-bottom:14px;"><a href="${escapeHtml(val)}" target="_blank" rel="noopener" style="color:var(--blue-deep);font-weight:700;">${escapeHtml(f.label)} 열기 ↗</a></p>`;
-      }
-      const display = f.type === "richtext" ? sanitizeRichHtml(val) : escapeHtml(val).replace(/\n/g, "<br>");
-      return `<div style="margin-bottom:12px;"><div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:4px;">${f.label}</div><div class="rich-content">${display}</div></div>`;
-    }).join("");
+  // 굵기·색을 화면에서 바로 표시할 수 있는(annotatable) 필드: richtext/textarea (제목·링크·이미지·중요표시 제외)
+  const annotatableFields = section.fields.filter(f =>
+    (f.type === "richtext" || f.type === "textarea") && f.key !== "title"
+  );
+  const staticFields = section.fields.filter(f =>
+    f.key !== "title" && f.type !== "imageUpload" && f.type !== "branchSelect" && !annotatableFields.includes(f)
+  );
+
+  const staticHtml = staticFields.map(f => {
+    const val = entry[f.key];
+    if (f.type === "importanceSelect") {
+      return val === "yes" ? `<p style="margin:0 0 12px;"><span class="pill important">중요</span></p>` : "";
+    }
+    if (!val) return "";
+    if (f.type === "link") {
+      return `<p style="margin-bottom:14px;"><a href="${escapeHtml(val)}" target="_blank" rel="noopener" style="color:var(--blue-deep);font-weight:700;">${escapeHtml(f.label)} 열기 ↗</a></p>`;
+    }
+    return `<div style="margin-bottom:12px;"><div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:4px;">${f.label}</div><div class="rich-content">${escapeHtml(val).replace(/\n/g, "<br>")}</div></div>`;
+  }).join("");
+
+  const annotatableHtml = annotatableFields.map(f => {
+    const val = entry[f.key];
+    if (!val && !canAnnotate) return "";
+    const display = f.type === "richtext" ? sanitizeRichHtml(val || "") : escapeHtml(val || "").replace(/\n/g, "<br>");
+    if (canAnnotate) {
+      return `<div style="margin-bottom:20px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text-muted);margin-bottom:6px;">${f.label}</div>
+        ${richtextToolbarHtml(`detail_${f.key}`)}
+        <div class="rich-content meeting-detail-rich has-toolbar" id="detail_${f.key}" contenteditable="true">${display}</div>
+      </div>`;
+    }
+    return `<div style="margin-bottom:20px;"><div style="font-size:13px;font-weight:700;color:var(--text-muted);margin-bottom:6px;">${f.label}</div><div class="rich-content">${display}</div></div>`;
+  }).join("");
 
   root.innerHTML = `<div class="modal-bg" id="modalBg">
     <div class="modal" style="max-width:1280px;">
       <h3>${escapeHtml(entry.title || "")}</h3>
       ${uploadDate ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">업로드: ${escapeHtml(uploadDate)}</div>` : ""}
-      ${bodyHtml || `<p style="color:var(--text-muted);font-size:13px;">등록된 내용이 없습니다.</p>`}
+      ${canAnnotate ? `<p style="font-size:12px;color:var(--text-muted);margin:-6px 0 14px;">글자를 드래그해서 굵기·색·크기로 표시할 수 있어요. 표시한 내용은 "표시 저장"을 눌러야 남습니다.</p>` : ""}
+      ${staticHtml}
+      ${annotatableHtml || (staticHtml ? "" : `<p style="color:var(--text-muted);font-size:13px;">등록된 내용이 없습니다.</p>`)}
       ${renderAttachmentGallery(images)}
-      <div class="grid-2" style="margin-top:16px;">
+      <div class="grid-2" style="margin-top:10px;">
         <button type="button" class="btn secondary" id="closeDetailBtn">닫기</button>
-        ${canEdit ? `<button type="button" class="btn" id="editFromDetailBtn">수정</button>` : ""}
+        ${canAnnotate ? `<button type="button" class="btn" id="saveAnnotateBtn">표시 저장</button>` : ""}
+      </div>
+      <div class="grid-2" style="margin-top:10px;">
+        ${canEdit ? `<button type="button" class="btn secondary" id="editFromDetailBtn">전체 수정</button>` : "<span></span>"}
+        ${canEdit ? `<button type="button" class="icon-btn danger" id="deleteFromDetailBtn" style="text-align:center;">삭제</button>` : ""}
       </div>
     </div></div>`;
+
   document.getElementById("closeDetailBtn").onclick = () => root.innerHTML = "";
   document.getElementById("modalBg").addEventListener("click", (e) => { if (e.target.id === "modalBg") root.innerHTML = ""; });
+
+  if (canAnnotate) {
+    annotatableFields.forEach(f => {
+      wireRichtextToolbarFor(document.getElementById(`detail_${f.key}`), document.querySelector(`.rt-toolbar[data-for="detail_${f.key}"]`));
+    });
+    document.getElementById("saveAnnotateBtn").onclick = async () => {
+      const btn = document.getElementById("saveAnnotateBtn");
+      btn.disabled = true;
+      btn.textContent = "저장 중...";
+      try {
+        const data = {};
+        annotatableFields.forEach(f => {
+          const el = document.getElementById(`detail_${f.key}`);
+          if (el) data[f.key] = sanitizeRichHtml(el.innerHTML);
+        });
+        await updateDoc(doc(db, section.collectionName, entry.id), data);
+        Object.assign(entry, data);
+        showToast("표시가 저장되었습니다.");
+      } catch (err) {
+        alert("저장 중 오류: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "표시 저장";
+      }
+    };
+  }
   if (canEdit) {
     document.getElementById("editFromDetailBtn").onclick = () => openModal(section, entry);
+    document.getElementById("deleteFromDetailBtn").onclick = async () => {
+      if (!confirm("정말 삭제하시겠습니까?")) return;
+      await deleteDoc(doc(db, section.collectionName, entry.id));
+      root.innerHTML = "";
+      showToast("삭제되었습니다.");
+      renderSection(section.key);
+    };
   }
 }
 async function renderMeetingGrid(section) {
