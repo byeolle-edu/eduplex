@@ -652,7 +652,7 @@ async function renderProfileRepairScreen(user) {
 
   document.body.innerHTML = `<div class="auth-wrap">
     <div class="auth-card">
-      <div class="auth-logo"><span style="font-weight:800;font-size:15px;">셀프팀 홈페이지</span></div>
+      <div class="auth-logo"><span style="font-weight:800;font-size:15px;">별내점 홈페이지</span></div>
       <p class="auth-sub">로그인 계정은 있는데 프로필 정보가 비어있어요. (가입 중 일시적인 오류였을 수 있어요.) 이름과 담당 지점을 입력하면 바로 이용하실 수 있어요.</p>
       <form id="profileRepairForm">
         <div class="field"><label>이름</label><input type="text" id="repairName" required></div>
