@@ -139,14 +139,8 @@ function personSections(p) {
     { key:`tdl_${p.key}`, label:`${p.name} · TDL`, group:"개인 미팅", color:"blue",
       personEmail:p.email, personGroupLabel:p.name, personSub:"TDL",
       collectionName:`tdl_${p.key}`, scope:"team", writable:"all",
-      desc:"해야 할 일을 관리합니다.",
-      cardView:true, headerFields:["title","dueDate","status"],
-      fields:[
-        { key:"title", label:"할 일", type:"text" },
-        { key:"dueDate", label:"마감일", type:"date" },
-        { key:"status", label:"진행 상태 (예: 진행중/완료)", type:"text" },
-        { key:"content", label:"메모", type:"textarea" }
-      ], columns:["title","dueDate","status"] }
+      desc:"해야 할 일을 등록하고, 마감기한과 완료 여부를 관리합니다.",
+      isPersonalTDL:true }
   ];
 }
 PEOPLE.forEach(p => SECTIONS.push(...personSections(p)));
@@ -1042,6 +1036,7 @@ async function renderSection(key) {
   if (!section) { main.innerHTML = `<div class="empty-state">찾을 수 없는 메뉴입니다.</div>`; return; }
   if (section.hidden && state.profile.role !== "leader") { main.innerHTML = `<div class="empty-state">삭제된 메뉴입니다.</div>`; return; }
   if (section.isLinkPills) { renderLinkPills(section); return; }
+  if (section.isPersonalTDL) { renderPersonalTDL(section); return; }
   if (section.isMonthlySchedule) { renderMonthlySchedule(section); return; }
   if (section.isEvalSheet) { renderEvalSheet(section); return; }
   if (section.isOpsGrid) { renderOpsGrid(section); return; }
@@ -2504,6 +2499,180 @@ function sortArrow(sectionKey, column) {
   const s = getTaskSortState(sectionKey);
   if (s.column !== column) return `<span style="opacity:.25;">↕</span>`;
   return s.dir === "asc" ? "↑" : "↓";
+}
+
+async function renderPersonalTDL(section) {
+  const main = document.getElementById("mainContent");
+  main.innerHTML = `<div class="page-header">
+      <div>
+        <h1><span class="badge" style="background:${COLOR_HEX[section.color]}"></span>${section.label}</h1>
+        <p>${section.desc}</p>
+      </div>
+      ${canWriteSection(section) ? `<button class="btn small" id="addTaskBtn">+ 새 할 일 등록</button>` : ""}
+    </div>
+    <div id="taskStatsWrap" style="margin-bottom:16px;"></div>
+    <div class="card" style="overflow:auto;"><div id="taskGridWrap">불러오는 중...</div></div>`;
+
+  if (canWriteSection(section)) {
+    document.getElementById("addTaskBtn").onclick = () => openPersonalTaskModal(section, null);
+  }
+
+  const docs = await fetchDocs(section);
+  renderPersonalTDLBody(section, docs);
+}
+
+function renderPersonalTDLStats(tasks) {
+  const wrap = document.getElementById("taskStatsWrap");
+  if (!wrap) return;
+  if (!tasks.length) { wrap.innerHTML = ""; return; }
+  const doneCount = tasks.filter(t => t.done).length;
+  const rate = Math.round((doneCount / tasks.length) * 100);
+  const overdueCount = tasks.filter(t => !t.done && taskDdayInfo(t.dueDate)?.tone === "overdue").length;
+  wrap.innerHTML = `<div class="stat-grid">
+    <div class="stat-card"><div class="label">전체 할 일</div><div class="value">${tasks.length}건</div></div>
+    <div class="stat-card"><div class="label">완료율</div><div class="value">${rate}%</div></div>
+    <div class="stat-card"><div class="label">완료</div><div class="value">${doneCount}건</div></div>
+    <div class="stat-card"><div class="label">마감 지남(미완료)</div><div class="value" style="${overdueCount ? "color:#C0392B;" : ""}">${overdueCount}건</div></div>
+  </div>`;
+}
+
+function renderPersonalTDLBody(section, docs) {
+  const wrap = document.getElementById("taskGridWrap");
+  const sortState = getTaskSortState(section.key);
+  const { column, dir } = sortState;
+  const factor = dir === "desc" ? -1 : 1;
+  const tasks = [...docs].sort((a, b) => {
+    let cmp = 0;
+    if (column === "title") cmp = (a.title || "").localeCompare(b.title || "", "ko");
+    else if (column === "done") cmp = (a.done ? 1 : 0) - (b.done ? 1 : 0);
+    else {
+      if (a.dueDate && b.dueDate) cmp = a.dueDate < b.dueDate ? -1 : (a.dueDate > b.dueDate ? 1 : 0);
+      else if (a.dueDate) cmp = -1;
+      else if (b.dueDate) cmp = 1;
+    }
+    if (cmp === 0) cmp = (b.createdAt || "").localeCompare(a.createdAt || "");
+    return cmp * factor;
+  });
+  renderPersonalTDLStats(tasks);
+
+  if (!tasks.length) { wrap.innerHTML = `<div class="empty-state">아직 등록된 할 일이 없습니다.${canWriteSection(section) ? " 위에서 새로 등록해보세요." : ""}</div>`; return; }
+
+  const editable = canWriteSection(section);
+  const sortableTh = (col, label, extraStyle) => `<th data-sort-col="${col}" style="cursor:pointer;user-select:none;${extraStyle || ""}">${label} <span style="font-size:11px;">${sortArrow(section.key, col)}</span></th>`;
+
+  let html = `<table><thead><tr>
+    ${sortableTh("title", "업무명", "min-width:220px;")}
+    ${sortableTh("dueDate", "마감기한", "min-width:130px;")}
+    ${sortableTh("done", "완료", "text-align:center;min-width:70px;")}
+    ${editable ? `<th style="min-width:80px;">관리</th>` : ""}
+  </tr></thead><tbody>`;
+
+  tasks.forEach(task => {
+    const dday = taskDdayInfo(task.dueDate);
+    const rowTone = (!task.done && dday?.tone === "overdue") ? "background:#FFFBF8;" : "";
+    html += `<tr style="${rowTone}">
+      <td>
+        <div style="font-weight:700;${task.done ? "text-decoration:line-through;color:var(--text-muted);" : ""}">${escapeHtml(task.title || "")}</div>
+        ${task.note ? `<div style="font-size:12px;color:var(--text-muted);margin-top:2px;white-space:pre-wrap;">${escapeHtml(task.note)}</div>` : ""}
+      </td>
+      <td style="white-space:nowrap;">
+        ${task.dueDate ? `<div class="mono" style="font-size:12.5px;">${escapeHtml(task.dueDate)}</div>` : ""}
+        ${!task.done && dday ? `<span class="pill" style="display:inline-block;margin-top:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;${TASK_TONE_STYLE[dday.tone]}">${dday.label}</span>` : (task.done ? `<span class="pill" style="display:inline-block;margin-top:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;background:#EAF3E3;color:var(--green-deep);">완료</span>` : "")}
+      </td>
+      <td style="text-align:center;">
+        <input type="checkbox" data-task-toggle="${task.id}" ${task.done ? "checked" : ""} ${editable ? "" : "disabled"} style="width:18px;height:18px;cursor:${editable ? "pointer" : "default"};">
+      </td>
+      ${editable ? `<td style="white-space:nowrap;">
+        <button class="icon-btn" data-edit-task="${task.id}">수정</button>
+        <button class="icon-btn danger" data-del-task="${task.id}">삭제</button>
+      </td>` : ""}
+    </tr>`;
+  });
+  html += `</tbody></table>`;
+  wrap.innerHTML = html;
+
+  wrap.querySelectorAll("[data-sort-col]").forEach(th => {
+    th.onclick = () => {
+      const col = th.dataset.sortCol;
+      const cur = getTaskSortState(section.key);
+      taskSortState[section.key] = cur.column === col
+        ? { column: col, dir: cur.dir === "asc" ? "desc" : "asc" }
+        : { column: col, dir: "asc" };
+      renderPersonalTDLBody(section, tasks);
+    };
+  });
+  wrap.querySelectorAll("[data-task-toggle]").forEach(chk => {
+    chk.onchange = async () => {
+      const taskId = chk.dataset.taskToggle;
+      const wasChecked = chk.checked;
+      chk.disabled = true;
+      try {
+        await updateDoc(doc(db, section.collectionName, taskId), { done: wasChecked });
+        const task = tasks.find(t => t.id === taskId);
+        if (task) task.done = wasChecked;
+        renderPersonalTDLBody(section, tasks);
+      } catch (err) {
+        chk.checked = !wasChecked;
+        chk.disabled = false;
+        alert("저장 중 오류가 발생했습니다: " + err.message);
+      }
+    };
+  });
+  wrap.querySelectorAll("[data-edit-task]").forEach(btn => {
+    btn.onclick = () => openPersonalTaskModal(section, tasks.find(t => t.id === btn.dataset.editTask));
+  });
+  wrap.querySelectorAll("[data-del-task]").forEach(btn => {
+    btn.onclick = async () => {
+      if (!confirm("이 할 일을 삭제할까요?")) return;
+      await deleteDoc(doc(db, section.collectionName, btn.dataset.delTask));
+      showToast("삭제되었습니다.");
+      renderSection(section.key);
+    };
+  });
+}
+
+function openPersonalTaskModal(section, existing) {
+  const root = document.getElementById("modalRoot");
+  root.innerHTML = `<div class="modal-bg" id="modalBg">
+    <div class="modal">
+      <h3>${existing ? "할 일 수정" : "새 할 일 등록"}</h3>
+      <form id="personalTaskForm">
+        <div class="field"><label>업무명</label><input type="text" id="pTaskTitle" value="${escapeHtml(existing?.title || "")}" placeholder="예: 8월 상담일지 작성" required></div>
+        <div class="field"><label>마감기한</label><input type="date" id="pTaskDueDate" value="${escapeHtml(existing?.dueDate || "")}"></div>
+        <div class="field"><label>메모(선택)</label><textarea id="pTaskNote" rows="3">${escapeHtml(existing?.note || "")}</textarea></div>
+        <div class="grid-2" style="margin-top:10px;">
+          <button type="button" class="btn secondary" id="cancelBtn">취소</button>
+          <button type="submit" class="btn" id="savePTaskBtn">저장</button>
+        </div>
+      </form>
+    </div></div>`;
+  document.getElementById("cancelBtn").onclick = () => root.innerHTML = "";
+  document.getElementById("modalBg").addEventListener("click", (e) => { if (e.target.id === "modalBg") root.innerHTML = ""; });
+  document.getElementById("personalTaskForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const title = document.getElementById("pTaskTitle").value.trim();
+    if (!title) return;
+    const dueDate = document.getElementById("pTaskDueDate").value;
+    const note = document.getElementById("pTaskNote").value.trim();
+    const saveBtn = document.getElementById("savePTaskBtn");
+    saveBtn.disabled = true;
+    try {
+      if (existing) {
+        await updateDoc(doc(db, section.collectionName, existing.id), { title, dueDate, note });
+      } else {
+        await addDoc(collection(db, section.collectionName), {
+          title, dueDate, note, done: false,
+          createdAt: new Date().toISOString(), createdBy: state.profile.name
+        });
+      }
+      root.innerHTML = "";
+      showToast("저장되었습니다.");
+      renderSection(section.key);
+    } catch (err) {
+      saveBtn.disabled = false;
+      alert("저장 중 오류가 발생했습니다: " + err.message);
+    }
+  });
 }
 
 async function renderTaskTracking(section) {
