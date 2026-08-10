@@ -233,7 +233,8 @@ function generateTimeSlots() {
 }
 const SCHEDULE_TIME_SLOTS = generateTimeSlots();
 const SCHEDULE_NOTE_ROWS = [];
-const SCHEDULE_ROW_ORDER = [...SCHEDULE_TIME_SLOTS.map(s => "time_" + s)];
+const SCHEDULE_EXTRA_ROWS = ["구성원 연차", "본사 일정"];
+const SCHEDULE_ROW_ORDER = [...SCHEDULE_EXTRA_ROWS.map(l => "extra_" + l), ...SCHEDULE_TIME_SLOTS.map(s => "time_" + s)];
 
 const scheduleViewState = { year: new Date().getFullYear(), month: new Date().getMonth() + 1 };
 
@@ -387,19 +388,8 @@ async function renderMonthlySchedule(section) {
         <button class="icon-btn" id="nextMonthBtn" style="font-size:18px;">›</button>
       </div>
     </div>
-    ${canEdit ? `<div class="card" style="padding:14px 20px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <h2 style="margin:0;font-size:14px;">이번 달 등록된 일정</h2>
-        <button class="btn small" id="addScheduleBlockBtn" type="button">+ 일정 등록</button>
-      </div>
-      <div id="scheduleBlockList">불러오는 중...</div>
-    </div>` : ""}
-    ${canEdit ? `<div class="card" style="padding:12px 20px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
-      <span style="font-size:12px;font-weight:700;color:var(--text-muted);">칸을 직접 클릭해서 고칠 때 서식:</span>
-      <label style="display:flex;align-items:center;gap:6px;font-size:12px;">배경색 <input type="color" id="cellBgPicker" value="#ffffff"></label>
-      <label style="display:flex;align-items:center;gap:6px;font-size:12px;">글자색 <input type="color" id="cellTextPicker" value="#000000"></label>
-      <button class="btn small secondary" id="cellClearFormatBtn" type="button">자동 서식으로 되돌리기</button>
-      <span id="activeCellHint" style="font-size:11px;color:var(--text-muted);">먼저 표에서 칸을 클릭한 뒤 색을 골라주세요.</span>
+    ${canEdit ? `<div class="card" style="padding:12px 20px;display:flex;justify-content:flex-end;">
+      <button class="btn small" id="addScheduleBlockBtn" type="button">+ 일정 등록</button>
     </div>` : ""}
     <div id="scheduleTopScroll" style="overflow-x:auto;overflow-y:hidden;height:16px;margin-bottom:4px;"><div id="scheduleTopScrollInner" style="height:1px;"></div></div>
     <div class="card" id="scheduleScrollCard" style="overflow:auto;max-height:calc(100vh - 190px);"><div id="scheduleCalendar">불러오는 중...</div></div>`;
@@ -427,47 +417,6 @@ async function renderMonthlySchedule(section) {
   const snap = await getDocs(q);
   const byDate = {};
   snap.docs.forEach(d => { byDate[d.id] = d.data(); });
-
-  if (canEdit) {
-    const blockQ = query(collection(db, "scheduleBlocks"), where("date", ">=", start), where("date", "<=", end));
-    const blockSnap = await getDocs(blockQ);
-    const blocks = blockSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => {
-      if (a.date !== b.date) return a.date < b.date ? -1 : 1;
-      return (a.startTime || "").localeCompare(b.startTime || "");
-    });
-    const listWrap = document.getElementById("scheduleBlockList");
-    if (listWrap) {
-      if (!blocks.length) {
-        listWrap.innerHTML = `<div class="empty-state" style="padding:16px;">아직 등록된 일정이 없어요. "+ 일정 등록"으로 추가해보세요.</div>`;
-      } else {
-        listWrap.innerHTML = blocks.map(b => `<div class="ledger-row" style="padding:8px 0;">
-          <div style="flex:1;display:flex;align-items:center;gap:10px;">
-            <span style="width:14px;height:14px;border-radius:4px;background:${escapeHtml(b.color || "#EAF3E3")};flex-shrink:0;"></span>
-            <span class="mono" style="font-size:12.5px;color:var(--text-muted);white-space:nowrap;">${escapeHtml(b.date)} ${escapeHtml(b.startTime)}~${escapeHtml(b.endTime)}</span>
-            <span style="font-weight:700;font-size:13.5px;">${escapeHtml(b.label)}</span>
-          </div>
-          <div style="display:flex;gap:8px;">
-            <button class="icon-btn" data-block-edit="${b.id}">수정</button>
-            <button class="icon-btn danger" data-block-del="${b.id}">삭제</button>
-          </div>
-        </div>`).join("");
-        listWrap.querySelectorAll("[data-block-edit]").forEach(btn => {
-          btn.onclick = () => openScheduleBlockModal(section, blocks.find(b => b.id === btn.dataset.blockEdit));
-        });
-        listWrap.querySelectorAll("[data-block-del]").forEach(btn => {
-          btn.onclick = async () => {
-            const block = blocks.find(b => b.id === btn.dataset.blockDel);
-            if (!block) return;
-            if (!confirm(`"${block.label}" 일정을 삭제할까요? (달력 칸도 함께 지워집니다)`)) return;
-            await clearScheduleRangeCells(block.date, timeStrToMinutes(block.startTime), timeStrToMinutes(block.endTime));
-            await deleteDoc(doc(db, "scheduleBlocks", block.id));
-            showToast("삭제되었습니다.");
-            renderMonthlySchedule(section);
-          };
-        });
-      }
-    }
-  }
 
   const nDays = daysInMonth(year, month);
   const dates = [];
@@ -513,6 +462,13 @@ async function renderMonthlySchedule(section) {
       }).join("")}
     </tr>
   </thead><tbody>`;
+
+  // 구성원 연차 / 본사 일정 행 (시간과 무관하게 자유롭게 적는 칸)
+  SCHEDULE_EXTRA_ROWS.forEach(rowLabel => {
+    html += `<tr><td style="${leftLabelStyle}background:#F0F5EA;">${escapeHtml(rowLabel)}</td>`;
+    dates.forEach(d => { html += cellHtml(ymd(year, month, d), "extra_" + rowLabel); });
+    html += `</tr>`;
+  });
 
   // 30분 단위 시간표 행
   SCHEDULE_TIME_SLOTS.forEach((slot, si) => {
@@ -581,7 +537,6 @@ async function renderMonthlySchedule(section) {
     document.querySelectorAll(".sched-cell").forEach(input => {
       input.addEventListener("focus", () => {
         activeCellInput = input;
-        document.getElementById("activeCellHint").textContent = `${input.dataset.date} 칸 선택됨`;
         document.querySelectorAll("#scheduleCalendar td.sched-row-active").forEach(td => td.classList.remove("sched-row-active"));
         const rowLabelTd = input.closest("tr")?.querySelector("td:first-child");
         if (rowLabelTd) rowLabelTd.classList.add("sched-row-active");
@@ -701,21 +656,6 @@ async function renderMonthlySchedule(section) {
       }
     }
 
-    const bgPicker = document.getElementById("cellBgPicker");
-    const textPicker = document.getElementById("cellTextPicker");
-    bgPicker.addEventListener("change", () => {
-      const dateStr = activeCellInput?.dataset.date;
-      const rowKey = activeCellInput?.dataset.row;
-      const existingTextColor = (dateStr && byDate[dateStr]?.cells?.[rowKey]?.textColor) || textPicker.value;
-      applyCellFormat(bgPicker.value, existingTextColor);
-    });
-    textPicker.addEventListener("change", () => {
-      const dateStr = activeCellInput?.dataset.date;
-      const rowKey = activeCellInput?.dataset.row;
-      const existingBg = (dateStr && byDate[dateStr]?.cells?.[rowKey]?.color) || bgPicker.value;
-      applyCellFormat(existingBg, textPicker.value);
-    });
-    document.getElementById("cellClearFormatBtn").onclick = () => applyCellFormat(null, null);
   }
 }
 
