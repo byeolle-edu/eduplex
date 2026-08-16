@@ -99,12 +99,35 @@ function personSections(p) {
       collectionName:`reg_${p.key}`, scope:"team", writable:"all",
       desc:"등록 상담 내용을 기록합니다. 기존 시트는 위 버튼으로 확인하세요.",
       extraLink:{ label:"기존 등록 상담 시트 열기", url:REG_CONSULT_LINKS[p.key] },
-      cardView:true, headerFields:["title","date"],
+      // 서지은은 팀 전체 학생을 봐야 해서, 다른 3명의 등록상담 내용도 함께(읽기 전용) 보여줍니다.
+      aggregateFrom: p.key === "seo" ? ["kim", "yj", "jh"] : [],
+      cardView:true, headerFields:["title","school","grade","program"],
       fields:[
-        { key:"title", label:"제목 (예: 학생 이름)", type:"text" },
-        { key:"date", label:"날짜", type:"date" },
+        { key:"title", label:"학생 이름", type:"text" },
+        { key:"school", label:"학교", type:"text" },
+        { key:"grade", label:"학년", type:"text" },
+        { key:"mbti", label:"MBTI", type:"text" },
+        { key:"type", label:"TYPE", type:"text" },
+        { key:"studentPhone", label:"학생 번호", type:"text" },
+        { key:"parentPhone", label:"학부모 번호", type:"text" },
+        { key:"program", label:"상담/관리 프로그램", type:"select", options:["상담","주3회","주4회","주5회"] },
+        { key:"individualProgram", label:"개별지도 프로그램", type:"text" },
+        { key:"weekdayTime", label:"월~금 등하원 시간", type:"text" },
+        { key:"weekendTime", label:"주말 등하원 시간", type:"text" },
+        { key:"date", label:"상담 날짜", type:"date" },
         { key:"recordingLink", label:"녹음 파일 링크 (선택, 구글 드라이브 등)", type:"link" },
-        { key:"content", label:"상담 내용", type:"richtext", tall:true },
+        { key:"cognitivePath", label:"인지 경로", type:"textarea" },
+        { key:"studentTendency", label:"학생 성향 주의 포인트", type:"textarea" },
+        { key:"parentTendency", label:"학부모 성향 주의 포인트", type:"textarea" },
+        { key:"needs", label:"니즈", type:"textarea" },
+        { key:"currentGradeLevel", label:"현재 성적대", type:"textarea" },
+        { key:"pastStudyMethod", label:"기존 학습법", type:"textarea" },
+        { key:"eduStudyMethod", label:"에듀에서 익혀야 하는 학습법", type:"textarea" },
+        { key:"privateEduStatus", label:"사교육 현황", type:"textarea" },
+        { key:"desiredManagerStyle", label:"원하는 매니저 성향", type:"textarea" },
+        { key:"currentBooks", label:"현재 가지고 있는 교재", type:"textarea" },
+        { key:"neededBooks", label:"구입 필요한 교재", type:"textarea" },
+        { key:"content", label:"기타 메모 (선택)", type:"richtext" },
         { key:"images", label:"첨부파일 (이미지·PDF·PPT)", type:"imageUpload" }
       ], columns:["date","title"] },
 
@@ -1097,6 +1120,7 @@ function canWriteSection(section) {
   return false;
 }
 function canEditDoc(section, data) {
+  if (data && data._readOnly) return false;
   if (state.profile.role === "viewer") return false;
   if (state.profile.role === "leader") return true;
   if (section.writable === "all") return true;
@@ -1172,6 +1196,18 @@ async function fetchDocs(section) {
   const q = clauses.length ? query(colRef, ...clauses) : colRef;
   const snap = await getDocs(q);
   const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  // 서지은의 등록상담처럼, 다른 사람 컬렉션 내용도 함께(읽기 전용) 보여줘야 하는 경우
+  if (section.aggregateFrom && section.aggregateFrom.length) {
+    for (const key of section.aggregateFrom) {
+      const person = PEOPLE.find(p => p.key === key);
+      const extraSnap = await getDocs(collection(db, `reg_${key}`));
+      extraSnap.docs.forEach(d => {
+        docs.push({ id: d.id, ...d.data(), _readOnly: true, _ownerLabel: person ? person.name : key });
+      });
+    }
+  }
+
   docs.sort((a, b) => (b.date || b.createdAt || "").localeCompare(a.date || a.createdAt || ""));
   return docs;
 }
@@ -1270,6 +1306,7 @@ async function renderLogCards(section) {
     const editable = canEditDoc(section, d);
     const metaKeys = section.headerFields.filter(k => k !== "title");
     const metaParts = metaKeys.map(k => d[k]).filter(Boolean).map(escapeHtml);
+    if (d._ownerLabel) metaParts.unshift(`<span class="tag" style="background:var(--blue-soft,#E5EEFB);color:var(--blue-deep);">담당: ${escapeHtml(d._ownerLabel)}</span>`);
     if (d.branchName && !metaKeys.includes("branchName")) metaParts.unshift(escapeHtml(d.branchName));
     if (d.createdAt) metaParts.push("업로드: " + escapeHtml(String(d.createdAt).slice(0, 10)));
     const metaText = metaParts.join(" · ");
@@ -4335,6 +4372,10 @@ function fieldInput(field, value) {
       <option value="no" ${v === "no" || !v ? "selected" : ""}>일반</option>
       <option value="yes" ${v === "yes" ? "selected" : ""}>중요</option>
     </select>`;
+  }
+  if (field.type === "select") {
+    const opts = (field.options || []).map(o => `<option value="${escapeHtml(o)}" ${o === v ? "selected" : ""}>${escapeHtml(o)}</option>`).join("");
+    return `<select id="f_${field.key}"><option value="">선택하세요</option>${opts}</select>`;
   }
   return `<input type="${field.type}" id="f_${field.key}" value="${escapeHtml(String(v))}">`;
 }
