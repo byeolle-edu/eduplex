@@ -1,7 +1,7 @@
 import {
   auth, db,
   onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  updateProfile, doc, setDoc
+  updateProfile, doc, setDoc, sendPasswordResetEmail
 } from "./firebase-init.js";
 
 // 단일 지점 운영이므로 지점 정보를 고정값으로 사용합니다.
@@ -18,6 +18,24 @@ const tabLogin = document.getElementById("tabLogin");
 const tabSignup = document.getElementById("tabSignup");
 const loginForm = document.getElementById("loginForm");
 const signupForm = document.getElementById("signupForm");
+const forgotPwLink = document.getElementById("forgotPwLink");
+
+forgotPwLink.addEventListener("click", async (e) => {
+  e.preventDefault();
+  const emailInput = document.getElementById("loginEmail");
+  const email = emailInput.value.trim() || prompt("가입할 때 사용한 이메일을 입력해주세요:");
+  if (!email) return;
+  try {
+    await sendPasswordResetEmail(auth, email);
+    alert(`${email} 로 비밀번호 재설정 이메일을 보냈어요. 메일함(스팸함도 확인)에서 링크를 눌러 새 비밀번호를 설정해주세요.`);
+  } catch (err) {
+    if (err.code === "auth/user-not-found") {
+      alert("가입된 이메일을 찾을 수 없어요. 이메일 주소를 다시 확인해주세요.");
+    } else {
+      alert("재설정 이메일 전송 중 오류가 발생했어요: " + err.message);
+    }
+  }
+});
 
 tabLogin.onclick = () => {
   tabLogin.classList.add("active");
