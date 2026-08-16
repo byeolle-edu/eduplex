@@ -3009,13 +3009,26 @@ function renderPerfBody(section, docs, metrics, isSeo) {
   } else {
     halfWrap.innerHTML = `<h2 style="font-size:14px;margin:0 0 10px;">인사평가 반기별 평균</h2>
       <table class="mono"><thead><tr><th style="font-family:var(--font-display);">지표</th>${halfList.map(h => `<th style="font-family:var(--font-display);">${h.label}</th>`).join("")}</tr></thead><tbody>
-        ${metrics.map(m => `<tr><td style="font-family:var(--font-display);font-weight:700;white-space:nowrap;">${m.label}</td>
-          ${halfList.map(h => {
+        ${metrics.map(m => {
+          const avgs = halfList.map(h => {
             const nums = h.docs.map(d => parseFloat(d[m.key])).filter(n => !isNaN(n));
-            const avg = nums.length ? Math.round((nums.reduce((a, b) => a + b, 0) / nums.length) * 100) / 100 : null;
-            return `<td>${avg !== null ? avg + (m.unit || "") : "-"}</td>`;
+            return nums.length ? Math.round((nums.reduce((a, b) => a + b, 0) / nums.length) * 100) / 100 : null;
+          });
+          return `<tr><td style="font-family:var(--font-display);font-weight:700;white-space:nowrap;">${m.label}</td>
+          ${avgs.map((avg, i) => {
+            if (avg === null) return `<td>-</td>`;
+            let diffHtml = "";
+            const prevAvg = i > 0 ? avgs[i - 1] : null;
+            if (prevAvg !== null) {
+              const diff = Math.round((avg - prevAvg) * 100) / 100;
+              const color = diff > 0 ? "var(--green-deep)" : diff < 0 ? "var(--danger)" : "var(--text-muted)";
+              const arrow = diff > 0 ? "▲" : diff < 0 ? "▼" : "-";
+              diffHtml = `<div style="font-size:11px;font-weight:700;color:${color};margin-top:2px;">${arrow} ${Math.abs(diff)}${m.unit || ""}</div>`;
+            }
+            return `<td>${avg}${m.unit || ""}${diffHtml}</td>`;
           }).join("")}
-        </tr>`).join("")}
+        </tr>`;
+        }).join("")}
       </tbody></table>`;
   }
 
