@@ -147,22 +147,22 @@ service cloud.firestore {
 
     // 개인 미팅(성과/전략 · 원장 미팅 · TDL) - 팀장은 전체, 본인은 자기 것만 쓸 수 있음
     match /reg_seo/{id} { allow read: if isSignedIn(); allow write: if isSignedIn() && (isLeader() || request.auth.token.email == 'souji4614@gmail.com'); }
-    match /perf_seo/{id} { allow read: if isSignedIn(); allow write: if isSignedIn() && (isLeader() || request.auth.token.email == 'souji4614@gmail.com'); }
+    match /perf_seo/{id} { allow read: if isSignedIn(); allow write: if isSignedIn() && (isLeader() || request.auth.token.email == 'souji4614@gmail.com' || request.auth.token.email == 'sangsangplexhq1@sangsangplex.com'); }
     match /dm_seo/{id}   { allow read: if isSignedIn(); allow write: if isSignedIn() && (isLeader() || request.auth.token.email == 'souji4614@gmail.com'); }
     match /tdl_seo/{id}  { allow read: if isSignedIn(); allow create: if isSignedIn(); allow update, delete: if isSignedIn() && (isLeader() || request.auth.token.email == 'souji4614@gmail.com'); }
 
     match /reg_kim/{id} { allow read: if isSignedIn(); allow write: if isSignedIn() && (isLeader() || request.auth.token.email == 'ender5032@gmail.com'); }
-    match /perf_kim/{id} { allow read: if isSignedIn(); allow write: if isSignedIn() && (isLeader() || request.auth.token.email == 'ender5032@gmail.com'); }
+    match /perf_kim/{id} { allow read: if isSignedIn(); allow write: if isSignedIn() && (isLeader() || request.auth.token.email == 'ender5032@gmail.com' || request.auth.token.email == 'sangsangplexhq1@sangsangplex.com'); }
     match /dm_kim/{id}   { allow read: if isSignedIn(); allow write: if isSignedIn() && (isLeader() || request.auth.token.email == 'ender5032@gmail.com'); }
     match /tdl_kim/{id}  { allow read: if isSignedIn(); allow create: if isSignedIn(); allow update, delete: if isSignedIn() && (isLeader() || request.auth.token.email == 'ender5032@gmail.com'); }
 
     match /reg_yj/{id}  { allow read: if isSignedIn(); allow write: if isSignedIn() && (isLeader() || request.auth.token.email == 'lyj826089@gmail.com'); }
-    match /perf_yj/{id}  { allow read: if isSignedIn(); allow write: if isSignedIn() && (isLeader() || request.auth.token.email == 'lyj826089@gmail.com'); }
+    match /perf_yj/{id}  { allow read: if isSignedIn(); allow write: if isSignedIn() && (isLeader() || request.auth.token.email == 'lyj826089@gmail.com' || request.auth.token.email == 'sangsangplexhq1@sangsangplex.com'); }
     match /dm_yj/{id}    { allow read: if isSignedIn(); allow write: if isSignedIn() && (isLeader() || request.auth.token.email == 'lyj826089@gmail.com'); }
     match /tdl_yj/{id}   { allow read: if isSignedIn(); allow create: if isSignedIn(); allow update, delete: if isSignedIn() && (isLeader() || request.auth.token.email == 'lyj826089@gmail.com'); }
 
     match /reg_jh/{id}  { allow read: if isSignedIn(); allow write: if isSignedIn() && (isLeader() || request.auth.token.email == 'nym143019@gmail.com'); }
-    match /perf_jh/{id}  { allow read: if isSignedIn(); allow write: if isSignedIn() && (isLeader() || request.auth.token.email == 'nym143019@gmail.com'); }
+    match /perf_jh/{id}  { allow read: if isSignedIn(); allow write: if isSignedIn() && (isLeader() || request.auth.token.email == 'nym143019@gmail.com' || request.auth.token.email == 'sangsangplexhq1@sangsangplex.com'); }
     match /dm_jh/{id}    { allow read: if isSignedIn(); allow write: if isSignedIn() && (isLeader() || request.auth.token.email == 'nym143019@gmail.com'); }
     match /tdl_jh/{id}   { allow read: if isSignedIn(); allow create: if isSignedIn(); allow update, delete: if isSignedIn() && (isLeader() || request.auth.token.email == 'nym143019@gmail.com'); }
   }
