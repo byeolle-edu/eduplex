@@ -34,7 +34,29 @@
       <button class="btn" type="submit">로그인</button>
       <p class="error-msg" id="loginError"></p>
       <p style="text-align:center;margin-top:10px;">
-        <a href="#" id="forgotPwLink" style="font-size:12.5px;">비밀번호를 잊으셨나요?</a>
+        <a href="#" id="forgotPwLink" style="font-size:12.5px;">비밀번호 변경하기</a>
+      </p>
+    </form>
+
+    <!-- 비밀번호 변경 폼 -->
+    <form id="pwChangeForm" style="display:none;">
+      <p style="font-size:12.5px;color:var(--text-muted);margin:0 0 14px;">현재 이메일과 비밀번호를 입력하면 바로 새 비밀번호로 바꿀 수 있어요.</p>
+      <div class="field">
+        <label>이메일</label>
+        <input type="email" id="pwChangeEmail" required>
+      </div>
+      <div class="field">
+        <label>현재 비밀번호</label>
+        <input type="password" id="pwChangeCurrent" required>
+      </div>
+      <div class="field">
+        <label>새 비밀번호 (6자 이상)</label>
+        <input type="password" id="pwChangeNew" required minlength="6">
+      </div>
+      <button class="btn" type="submit">비밀번호 변경</button>
+      <p class="error-msg" id="pwChangeError"></p>
+      <p style="text-align:center;margin-top:10px;">
+        <a href="#" id="backToLoginLink" style="font-size:12.5px;">로그인으로 돌아가기</a>
       </p>
     </form>
 
