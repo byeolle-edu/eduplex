@@ -3006,8 +3006,8 @@ function renderPerfBody(section, docs, metrics, isSeo) {
     const y = parseInt(yStr, 10), m = parseInt(mStr, 10);
     let key, label;
     if (m >= 6 && m <= 11) { key = `${y}-H2`; label = `${y}년 하반기 (6~11월)`; }
-    else if (m === 12) { key = `${y}-${y + 1}-H1`; label = `${y}~${y + 1}년 상반기 (12~5월)`; }
-    else { key = `${y - 1}-${y}-H1`; label = `${y - 1}~${y}년 상반기 (12~5월)`; }
+    else if (m === 12) { key = `${y}-${y + 1}-H1`; label = `${y + 1}년 상반기 (12~5월)`; }
+    else { key = `${y - 1}-${y}-H1`; label = `${y}년 상반기 (12~5월)`; }
     if (!halfGroups[key]) halfGroups[key] = { key, label, sortKey: y * 12 + m, docs: [] };
     halfGroups[key].docs.push(d);
   });
