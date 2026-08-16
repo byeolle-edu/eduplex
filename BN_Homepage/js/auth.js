@@ -1,16 +1,19 @@
 import {
   auth, db,
   onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword,
-  updateProfile, doc, setDoc, sendPasswordResetEmail
+  updateProfile, doc, setDoc, updatePassword
 } from "./firebase-init.js";
 
 // 단일 지점 운영이므로 지점 정보를 고정값으로 사용합니다.
 const BRANCH_ID = "byeollae";
 const BRANCH_NAME = "별내점";
 
+// 비밀번호 변경 화면으로 전환할 때는 로그인 성공해도 자동으로 대시보드로 넘어가지 않게 막습니다.
+let skipAutoRedirect = false;
+
 // 이미 로그인되어 있으면 대시보드로 이동
 onAuthStateChanged(auth, (user) => {
-  if (user) window.location.href = "dashboard.html";
+  if (user && !skipAutoRedirect) window.location.href = "dashboard.html";
 });
 
 // 탭 전환
@@ -19,20 +22,51 @@ const tabSignup = document.getElementById("tabSignup");
 const loginForm = document.getElementById("loginForm");
 const signupForm = document.getElementById("signupForm");
 const forgotPwLink = document.getElementById("forgotPwLink");
+const pwChangeForm = document.getElementById("pwChangeForm");
+const backToLoginLink = document.getElementById("backToLoginLink");
 
-forgotPwLink.addEventListener("click", async (e) => {
+function showOnly(formToShow) {
+  [loginForm, signupForm, pwChangeForm].forEach(f => { f.style.display = f === formToShow ? "block" : "none"; });
+}
+
+forgotPwLink.addEventListener("click", (e) => {
   e.preventDefault();
-  const emailInput = document.getElementById("loginEmail");
-  const email = emailInput.value.trim() || prompt("가입할 때 사용한 이메일을 입력해주세요:");
-  if (!email) return;
+  document.getElementById("pwChangeEmail").value = document.getElementById("loginEmail").value.trim();
+  showOnly(pwChangeForm);
+  tabLogin.classList.remove("active");
+  tabSignup.classList.remove("active");
+});
+
+backToLoginLink.addEventListener("click", (e) => {
+  e.preventDefault();
+  showOnly(loginForm);
+  tabLogin.classList.add("active");
+});
+
+pwChangeForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("pwChangeEmail").value.trim();
+  const currentPassword = document.getElementById("pwChangeCurrent").value;
+  const newPassword = document.getElementById("pwChangeNew").value;
+  const errEl = document.getElementById("pwChangeError");
+  errEl.textContent = "";
+  skipAutoRedirect = true;
   try {
-    await sendPasswordResetEmail(auth, email);
-    alert(`${email} 로 비밀번호 재설정 이메일을 보냈어요. 메일함(스팸함도 확인)에서 링크를 눌러 새 비밀번호를 설정해주세요.`);
+    const cred = await signInWithEmailAndPassword(auth, email, currentPassword);
+    await updatePassword(cred.user, newPassword);
+    alert("비밀번호가 변경되었어요. 이제 대시보드로 이동할게요.");
+    skipAutoRedirect = false;
+    window.location.href = "dashboard.html";
   } catch (err) {
-    if (err.code === "auth/user-not-found") {
-      alert("가입된 이메일을 찾을 수 없어요. 이메일 주소를 다시 확인해주세요.");
+    skipAutoRedirect = false;
+    if (err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
+      errEl.textContent = "이메일 또는 현재 비밀번호가 올바르지 않습니다.";
+    } else if (err.code === "auth/user-not-found") {
+      errEl.textContent = "가입된 이메일을 찾을 수 없어요.";
+    } else if (err.code === "auth/weak-password") {
+      errEl.textContent = "새 비밀번호는 6자 이상이어야 합니다.";
     } else {
-      alert("재설정 이메일 전송 중 오류가 발생했어요: " + err.message);
+      errEl.textContent = "변경 중 오류가 발생했어요: " + err.message;
     }
   }
 });
@@ -40,14 +74,12 @@ forgotPwLink.addEventListener("click", async (e) => {
 tabLogin.onclick = () => {
   tabLogin.classList.add("active");
   tabSignup.classList.remove("active");
-  loginForm.style.display = "block";
-  signupForm.style.display = "none";
+  showOnly(loginForm);
 };
 tabSignup.onclick = () => {
   tabSignup.classList.add("active");
   tabLogin.classList.remove("active");
-  signupForm.style.display = "block";
-  loginForm.style.display = "none";
+  showOnly(signupForm);
 };
 
 // 로그인
