@@ -718,6 +718,25 @@ function expandMergedGrid(rowEls) {
 
 
 /* ===================== 전역 상태 ===================== */
+// Firebase Storage 대신 Cloudinary(무료, 카드 등록 불필요)로 이미지·파일을 업로드합니다.
+const CLOUDINARY_CLOUD_NAME = "gsct357s";
+const CLOUDINARY_UPLOAD_PRESET = "byeollae_unsigned";
+async function uploadToCloudinary(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`, {
+    method: "POST",
+    body: formData
+  });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    throw new Error("이미지 업로드 실패: " + errText);
+  }
+  const json = await res.json();
+  return json.secure_url;
+}
+
 const state = { user:null, profile:null, branches:[], customFolders:[], menuOverrides:{}, currentSection:"schedule", branchFilter:{}, navExpanded:{}, openTabs:[] };
 
 function tabStorageKey() {
@@ -932,32 +951,9 @@ function tabMeta(key) {
   return s ? { label: s.label, color: COLOR_HEX[s.color] || "#9CA88F" } : null;
 }
 function renderTabBar() {
+  // 상단에 열린 메뉴들이 쭉 나열되는 게 헷갈린다는 요청으로 표시를 껐습니다.
   const bar = document.getElementById("tabBar");
-  if (!bar) return;
-  // 더 이상 존재하지 않는(삭제된 폴더 등) 탭은 자동으로 정리합니다.
-  const before = state.openTabs.length;
-  state.openTabs = state.openTabs.filter(k => tabMeta(k));
-  if (state.openTabs.length !== before) saveOpenTabs();
-
-  if (!state.openTabs.length) { bar.innerHTML = ""; bar.style.display = "none"; return; }
-  bar.style.display = "flex";
-  bar.innerHTML = state.openTabs.map(key => {
-    const meta = tabMeta(key);
-    const active = key === state.currentSection;
-    return `<div class="tab-item ${active ? "active" : ""}" data-tab-key="${key}" style="--tab-color:${meta.color}">
-      <span class="dot" style="background:${meta.color};"></span>
-      <span>${escapeHtml(meta.label)}</span>
-      <span class="tab-close" data-close-key="${key}">×</span>
-    </div>`;
-  }).join("");
-  bar.querySelectorAll("[data-tab-key]").forEach(el => {
-    el.onclick = () => goToSection(el.dataset.tabKey);
-  });
-  bar.querySelectorAll("[data-close-key]").forEach(el => {
-    el.onclick = (e) => { e.stopPropagation(); closeTab(el.dataset.closeKey); };
-  });
-  const activeEl = bar.querySelector(".tab-item.active");
-  if (activeEl) activeEl.scrollIntoView({ block: "nearest", inline: "nearest" });
+  if (bar) { bar.innerHTML = ""; bar.style.display = "none"; }
 }
 function goToSection(key, branchId) {
   state.currentSection = key;
@@ -4411,10 +4407,7 @@ function openModal(section, existing, prefill) {
         const st = imageState[f.key];
         const uploadedUrls = [];
         for (const file of st.files) {
-          const path = `${section.collectionName}/${Date.now()}_${Math.random().toString(36).slice(2)}_${file.name}`;
-          const fileRef = ref(storage, path);
-          await uploadBytes(fileRef, file);
-          uploadedUrls.push(await getDownloadURL(fileRef));
+          uploadedUrls.push(await uploadToCloudinary(file));
         }
         data[f.key] = [...st.urls, ...uploadedUrls];
         st.urls = data[f.key];
