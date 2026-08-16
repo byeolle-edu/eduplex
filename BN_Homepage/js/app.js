@@ -2901,10 +2901,17 @@ async function renderPersonalPerf(section) {
     <div class="card" id="perfCompareWrap"></div>
     <div class="card" id="perfHalfWrap" style="overflow:auto;"></div>
     ${isSeo ? `<div class="card" id="perfBreakdownWrap"></div>` : ""}
-    <div class="card"><h2 style="font-size:14px;margin:0 0 10px;">월별 분석 (잘한 점 / 다음 달 목표)</h2><div id="perfReflectionWrap"></div></div>`;
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <h2 style="margin:0;font-size:14px;">월별 분석 (잘한 점 / 다음 달 목표)</h2>
+        ${canWriteSection(section) ? `<button class="btn small" id="addReflectionBtn">+ 월별 분석 작성</button>` : ""}
+      </div>
+      <div id="perfReflectionWrap"></div>
+    </div>`;
 
   if (canWriteSection(section)) {
     document.getElementById("addPerfBtn").onclick = () => openPersonalPerfModal(section, null, () => renderPersonalPerf(section));
+    document.getElementById("addReflectionBtn").onclick = () => openPersonalReflectionModal(section, null, () => renderPersonalPerf(section));
   }
 
   const snap = await getDocs(collection(db, section.collectionName));
@@ -2927,9 +2934,9 @@ function renderPerfBody(section, docs, metrics, isSeo) {
   const byYm = Object.fromEntries(docs.map(d => [d.yearMonth, d]));
 
   const tableWrap = document.getElementById("perfTableWrap");
-  let html = `<table class="mono"><thead><tr><th style="font-family:inherit;">지표</th>${months.map(ym => `<th>${parseInt(ym.slice(5), 10)}월</th>`).join("")}</tr></thead><tbody>`;
+  let html = `<table class="mono"><thead><tr><th style="font-family:var(--font-display);">지표</th>${months.map(ym => `<th style="font-family:var(--font-display);">${parseInt(ym.slice(5), 10)}월</th>`).join("")}</tr></thead><tbody>`;
   metrics.forEach(m => {
-    html += `<tr><td style="font-family:inherit;font-weight:700;white-space:nowrap;">${m.label}</td>`;
+    html += `<tr><td style="font-family:var(--font-display);font-weight:700;white-space:nowrap;">${m.label}</td>`;
     months.forEach(ym => {
       const d = byYm[ym];
       const v = d ? d[m.key] : "";
@@ -3001,8 +3008,8 @@ function renderPerfBody(section, docs, metrics, isSeo) {
     halfWrap.innerHTML = "";
   } else {
     halfWrap.innerHTML = `<h2 style="font-size:14px;margin:0 0 10px;">인사평가 반기별 평균</h2>
-      <table class="mono"><thead><tr><th style="font-family:inherit;">지표</th>${halfList.map(h => `<th>${h.label}</th>`).join("")}</tr></thead><tbody>
-        ${metrics.map(m => `<tr><td style="font-family:inherit;font-weight:700;white-space:nowrap;">${m.label}</td>
+      <table class="mono"><thead><tr><th style="font-family:var(--font-display);">지표</th>${halfList.map(h => `<th style="font-family:var(--font-display);">${h.label}</th>`).join("")}</tr></thead><tbody>
+        ${metrics.map(m => `<tr><td style="font-family:var(--font-display);font-weight:700;white-space:nowrap;">${m.label}</td>
           ${halfList.map(h => {
             const nums = h.docs.map(d => parseFloat(d[m.key])).filter(n => !isNaN(n));
             const avg = nums.length ? Math.round((nums.reduce((a, b) => a + b, 0) / nums.length) * 100) / 100 : null;
@@ -3039,12 +3046,63 @@ function renderPerfBody(section, docs, metrics, isSeo) {
         ${d.goodPoints ? `<div class="rbody"><b>잘한 점</b><br>${escapeHtml(d.goodPoints)}</div>` : ""}
         ${d.nextGoal ? `<div class="rbody" style="margin-top:6px;"><b>다음 달 목표</b><br>${escapeHtml(d.nextGoal)}</div>` : ""}
       </div>
-      ${canWriteSection(section) ? `<button class="icon-btn" data-perf-edit="${d.yearMonth}">수정</button>` : ""}
+      ${canWriteSection(section) ? `<span style="white-space:nowrap;"><button class="icon-btn" data-perf-edit="${d.yearMonth}">수정</button><button class="icon-btn danger" data-perf-del="${d.yearMonth}">삭제</button></span>` : ""}
     </div>`).join("");
     reflectionWrap.querySelectorAll("[data-perf-edit]").forEach(btn => {
-      btn.onclick = () => openPersonalPerfModal(section, docs.find(d => d.yearMonth === btn.dataset.perfEdit), () => renderPersonalPerf(section));
+      btn.onclick = () => openPersonalReflectionModal(section, docs.find(d => d.yearMonth === btn.dataset.perfEdit), () => renderPersonalPerf(section));
+    });
+    reflectionWrap.querySelectorAll("[data-perf-del]").forEach(btn => {
+      btn.onclick = async () => {
+        if (!confirm(`${btn.dataset.perfDel} 월별 분석을 삭제할까요? (지표 기록은 그대로 남고, 잘한 점/다음 달 목표만 지워져요)`)) return;
+        await updateDoc(doc(db, section.collectionName, btn.dataset.perfDel), { goodPoints: "", nextGoal: "" });
+        showToast("삭제되었습니다.");
+        renderPersonalPerf(section);
+      };
     });
   }
+}
+
+function openPersonalReflectionModal(section, existing, onSaved) {
+  const root = document.getElementById("modalRoot");
+  const defaultYm = existing ? existing.yearMonth : new Date().toISOString().slice(0, 7);
+  root.innerHTML = `<div class="modal-bg" id="modalBg">
+    <div class="modal">
+      <h3>월별 분석 ${existing ? "수정" : "작성"}</h3>
+      <form id="reflectionForm">
+        <div class="field"><label>기록 월</label><input type="month" id="reflYm" value="${escapeHtml(defaultYm)}" min="${PERF_START_YEAR_MONTH}" required></div>
+        <div class="field"><label>잘한 점</label><textarea id="reflGood" rows="4">${escapeHtml(existing?.goodPoints || "")}</textarea></div>
+        <div class="field"><label>다음 달 목표</label><textarea id="reflGoal" rows="4">${escapeHtml(existing?.nextGoal || "")}</textarea></div>
+        <div class="grid-2" style="margin-top:10px;">
+          <button type="button" class="btn secondary" id="cancelBtn">취소</button>
+          <button type="submit" class="btn" id="saveReflBtn">저장</button>
+        </div>
+      </form>
+    </div></div>`;
+  document.getElementById("cancelBtn").onclick = () => root.innerHTML = "";
+  document.getElementById("modalBg").addEventListener("click", (e) => { if (e.target.id === "modalBg") root.innerHTML = ""; });
+  document.getElementById("reflectionForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const yearMonth = document.getElementById("reflYm").value;
+    if (!yearMonth) return;
+    const btn = document.getElementById("saveReflBtn");
+    btn.disabled = true;
+    try {
+      // 지표 기록이 이미 있어도 지우지 않도록 merge로 저장합니다.
+      await setDoc(doc(db, section.collectionName, yearMonth), {
+        yearMonth,
+        goodPoints: document.getElementById("reflGood").value.trim(),
+        nextGoal: document.getElementById("reflGoal").value.trim(),
+        updatedAt: new Date().toISOString(),
+        updatedBy: state.profile.name
+      }, { merge: true });
+      root.innerHTML = "";
+      showToast("저장되었습니다.");
+      if (onSaved) onSaved();
+    } catch (err) {
+      btn.disabled = false;
+      alert("저장 중 오류가 발생했습니다: " + err.message);
+    }
+  });
 }
 
 function openPersonalPerfModal(section, existing, onSaved) {
