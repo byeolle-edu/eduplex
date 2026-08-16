@@ -35,7 +35,7 @@ const SECTIONS = [
       { key:"images", label:"회의 슬라이드 이미지", type:"imageUpload" }
     ], columns:["date","attendees","agenda"] },
 
-  { key:"operation", label:"지점 운영 자료", group:"자료실", color:"neutral",
+  { key:"operation", label:"링크 모음", group:"자료실", color:"neutral",
     collectionName:"operationLinks", scope:"team", writable:"all",
     desc:"별내점에서 사용하는 구글 링크 등을 제목과 함께 등록합니다.",
     isLinkPills:true,
@@ -45,37 +45,35 @@ const SECTIONS = [
       { key:"content", label:"설명 (선택)", type:"textarea" }
     ], columns:["title"] },
 
-  { key:"leadership", label:"별내점 자료", group:"자료실", color:"neutral",
-    collectionName:"leadership", scope:"team", writable:"all",
-    desc:"시험지 분석 등 별내점 자료입니다.",
-    cardView:true, headerFields:["title"],
+  { key:"examAnalysis", label:"시험지 분석", group:"자료실", color:"neutral",
+    desc:"시험지 분석 사이트로 바로 이동합니다.",
+    isExternalLink:true, externalUrl:"https://neon-cupcake-376372.netlify.app/" },
+
+  { key:"eduStudy", label:"교육 스터디", group:"자료실", color:"neutral",
+    collectionName:"eduStudy", scope:"team", writable:"all",
+    desc:"교육 스터디 내용을 함께 공유합니다.",
+    cardView:true, headerFields:["title","category"],
     fields:[
       { key:"title", label:"제목", type:"text" },
+      { key:"category", label:"구분 (예: 발행호, 주제 등)", type:"text" },
       { key:"content", label:"내용", type:"textarea" },
       { key:"fileLink", label:"첨부 링크(URL)", type:"link" },
-      { key:"images", label:"첨부파일 (이미지·PDF·PPT)", type:"imageUpload" }
+      { key:"images", label:"첨부 이미지·파일", type:"imageUpload" }
     ], columns:["title"] },
 
-  { key:"study25", label:"25 스터디", group:"자료실", color:"neutral",
-    collectionName:"study25", scope:"team", writable:"all",
-    desc:"2025년 스터디 자료를 함께 공유합니다.",
-    cardView:true, headerFields:["title"],
-    fields:[
-      { key:"title", label:"제목", type:"text" },
-      { key:"content", label:"내용", type:"textarea" },
-      { key:"fileLink", label:"첨부 링크(URL)", type:"link" },
-      { key:"images", label:"첨부파일 (이미지·PDF·PPT)", type:"imageUpload" }
-    ], columns:["title"] },
+  { key:"gradeManagement", label:"성적관리", group:"자료실", color:"neutral",
+    desc:"성적관리 사이트로 바로 이동합니다.",
+    isExternalLink:true, externalUrl:"https://managementhighschool.vercel.app/#/login" },
 
-  { key:"study26", label:"26 스터디", group:"자료실", color:"neutral",
-    collectionName:"study26", scope:"team", writable:"all",
-    desc:"2026년 스터디 자료를 함께 공유합니다.",
+  { key:"branchStudy", label:"지점 스터디", group:"자료실", color:"neutral",
+    collectionName:"branchStudy", scope:"team", writable:"all",
+    desc:"별내점 스터디 진행 내용을 기록·보관합니다.",
     cardView:true, headerFields:["title"],
     fields:[
       { key:"title", label:"제목", type:"text" },
       { key:"content", label:"내용", type:"textarea" },
       { key:"fileLink", label:"첨부 링크(URL)", type:"link" },
-      { key:"images", label:"첨부파일 (이미지·PDF·PPT)", type:"imageUpload" }
+      { key:"images", label:"첨부 이미지·파일", type:"imageUpload" }
     ], columns:["title"] }
 ];
 const GROUP_ORDER = ["일정/회의", "개인 미팅", "자료실"];
@@ -1170,6 +1168,7 @@ async function renderSection(key) {
   if (!section) { main.innerHTML = `<div class="empty-state">찾을 수 없는 메뉴입니다.</div>`; return; }
   if (section.hidden && state.profile.role !== "leader") { main.innerHTML = `<div class="empty-state">삭제된 메뉴입니다.</div>`; return; }
   if (section.isLinkPills) { renderLinkPills(section); return; }
+  if (section.isExternalLink) { renderExternalLink(section); return; }
   if (section.isPersonalTDL) { renderPersonalTDL(section); return; }
   if (section.isPersonalPerf) { renderPersonalPerf(section); return; }
   if (section.isMonthlySchedule) { renderMonthlySchedule(section); return; }
@@ -1424,6 +1423,20 @@ function renderAttachmentGallery(urls) {
 }
 
 /* ===================== 사용자 정의 폴더 - 4칸 그리드 보기 (순서는 ▲▼로 직접 조정) ===================== */
+function renderExternalLink(section) {
+  const main = document.getElementById("mainContent");
+  main.innerHTML = `<div class="page-header">
+      <div>
+        <h1><span class="badge" style="background:${COLOR_HEX[section.color]}"></span>${section.label}</h1>
+        <p>${section.desc}</p>
+      </div>
+    </div>
+    <div class="card" style="text-align:center;padding:48px 24px;">
+      <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px;">아래 버튼을 누르면 새 탭에서 ${escapeHtml(section.label)} 사이트가 열려요.</p>
+      <a href="${escapeHtml(section.externalUrl)}" target="_blank" rel="noopener" class="btn" style="display:inline-block;width:auto;padding:14px 32px;text-decoration:none;font-size:15px;">${escapeHtml(section.label)} 열기 ↗</a>
+    </div>`;
+}
+
 async function renderLinkPills(section) {
   const main = document.getElementById("mainContent");
   main.innerHTML = `<div class="page-header">
@@ -1782,12 +1795,11 @@ async function renderMeetingGrid(section) {
     branchesSorted.forEach(b => {
       const cell = row.cells[b.id];
       if (cell) {
-        const preview = stripHtml(cell.content);
         const imgField = section.fields.find(f => f.type === "imageUpload");
         const hasAttachments = imgField && (cell[imgField.key] || []).length > 0;
         html += `<td style="padding:0;">
           <div class="meeting-grid-card" data-cell-row="${ri}" data-cell-branch="${b.id}">
-            <div style="font-size:14px;color:var(--text-main);line-height:1.5;">${escapeHtml(preview.slice(0, 40))}${preview.length > 40 ? "…" : (preview ? "" : "(내용 없음)")}</div>
+            <div style="font-size:14px;color:var(--text-main);line-height:1.5;font-weight:700;">${cell.title ? escapeHtml(cell.title) : "작성됨"}</div>
             <div style="font-size:12.5px;color:var(--text-muted);margin-top:4px;">${escapeHtml(cell.date || "")}${extraKey && cell[extraKey] ? " · " + escapeHtml(cell[extraKey]) : ""}${hasAttachments ? " · 📎" : ""}</div>
           </div>
         </td>`;
