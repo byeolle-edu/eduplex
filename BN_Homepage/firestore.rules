@@ -141,6 +141,8 @@ service cloud.firestore {
 
     // 지점 운영 자료 - 링크 등록, 로그인한 누구나 열람/작성
     match /operationLinks/{id} { allow read: if isSignedIn(); allow write: if isSignedIn(); }
+    match /eduStudy/{id} { allow read: if isSignedIn(); allow write: if isSignedIn(); }
+    match /branchStudy/{id} { allow read: if isSignedIn(); allow write: if isSignedIn(); }
     // 25 / 26 스터디 - 로그인한 누구나 열람/작성
     match /study25/{id} { allow read: if isSignedIn(); allow write: if isSignedIn(); }
     match /study26/{id} { allow read: if isSignedIn(); allow write: if isSignedIn(); }
