@@ -30,6 +30,8 @@ const SECTIONS = [
       { key:"attendees", label:"참석자", type:"text" },
       { key:"agenda", label:"안건", type:"richtext", tall:true },
       { key:"followUp", label:"후속조치", type:"richtext" },
+      { key:"relatedLinks", label:"관련 링크·시트", type:"linkList" },
+      { key:"relatedTdl", label:"이 회의에서 나온 TDL", type:"tdlList" },
       { key:"images", label:"회의 슬라이드 이미지", type:"imageUpload" }
     ], columns:["date","attendees","agenda"] },
 
@@ -736,6 +738,14 @@ async function uploadToCloudinary(file) {
   const json = await res.json();
   return json.secure_url;
 }
+
+// 회의 일지 등 richtext 안의 체크박스(☐/☑)는 어디서 보든 클릭하면 바로 토글됩니다.
+document.addEventListener("click", (e) => {
+  const box = e.target.closest(".rt-checkbox");
+  if (!box) return;
+  const checked = box.classList.toggle("rt-checked");
+  box.textContent = checked ? "☑" : "☐";
+});
 
 const state = { user:null, profile:null, branches:[], customFolders:[], menuOverrides:{}, currentSection:"schedule", branchFilter:{}, navExpanded:{}, openTabs:[] };
 
@@ -1537,6 +1547,27 @@ function openFolderEntryDetailModal(section, entry) {
     const val = entry[f.key];
     if (f.type === "importanceSelect") {
       return val === "yes" ? `<p style="margin:0 0 12px;"><span class="pill important">중요</span></p>` : "";
+    }
+    if (f.type === "linkList") {
+      if (!val || !val.length) return "";
+      return `<div style="margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px;">${f.label}</div>
+        ${val.map(it => `<div style="margin-bottom:4px;"><a href="${escapeHtml(it.url)}" target="_blank" rel="noopener" style="color:var(--blue-deep);font-weight:700;">${escapeHtml(it.label || it.url)} ↗</a></div>`).join("")}
+      </div>`;
+    }
+    if (f.type === "tdlList") {
+      if (!val || !val.length) return "";
+      return `<div style="margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);margin-bottom:6px;">${f.label}</div>
+        ${val.map(it => {
+          const p = PEOPLE.find(pp => pp.key === it.assignee);
+          return `<div style="display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:4px;">
+            <span>☐ ${escapeHtml(it.task)}</span>
+            ${it.dueDate ? `<span class="mono" style="color:var(--text-muted);font-size:11.5px;">${escapeHtml(it.dueDate)}</span>` : ""}
+            ${p ? `<span class="pill" style="background:var(--blue-soft,#E5EEFB);color:var(--blue-deep);">${escapeHtml(p.name)}</span>` : ""}
+          </div>`;
+        }).join("")}
+      </div>`;
     }
     if (!val) return "";
     if (f.type === "link") {
@@ -4083,6 +4114,7 @@ function richtextToolbarHtml(key) {
   const colors = ["#22301A", "#E03C3C", "#2979FF", "#00C853", "#F5A623", "#8E1E5C"];
   return `<div class="rt-toolbar" data-for="${key}">
     <button type="button" class="rt-btn" data-cmd="bold" title="굵게"><b>B</b></button>
+    <button type="button" class="rt-btn" data-cmd="title" title="제목 (크게+굵게)" style="width:auto;padding:0 8px;font-size:11px;font-weight:800;">제목</button>
     <span class="rt-sep"></span>
     <button type="button" class="rt-btn rt-size" data-size="rt-small" title="작게">S</button>
     <button type="button" class="rt-btn rt-size" data-size="" title="보통">M</button>
@@ -4090,6 +4122,7 @@ function richtextToolbarHtml(key) {
     <span class="rt-sep"></span>
     ${colors.map(c => `<button type="button" class="rt-btn rt-color" data-color="${c}" style="background:${c};" title="글자색"></button>`).join("")}
     <span class="rt-sep"></span>
+    <button type="button" class="rt-btn" data-cmd="checklist" title="체크박스 줄 추가" style="width:auto;padding:0 8px;font-size:11px;">☑ 체크</button>
     <button type="button" class="rt-btn" data-cmd="removeFormat" title="서식 지우기" style="width:auto;padding:0 8px;font-size:11px;">지우기</button>
   </div>`;
 }
@@ -4217,6 +4250,10 @@ function wireRichtextToolbarFor(editEl, toolbar) {
       // 항상 style 속성이 붙은 <span>으로 직접 감싸서 어디서나 똑같이 저장·표시되게 합니다.
       if (btn.dataset.cmd === "bold") {
         wrapSelectionWithStyle(editEl, "font-weight:700");
+      } else if (btn.dataset.cmd === "title") {
+        wrapSelectionWithStyle(editEl, "font-weight:800;font-size:19px");
+      } else if (btn.dataset.cmd === "checklist") {
+        document.execCommand("insertHTML", false, '<br><span class="rt-checkbox">☐</span>&nbsp;');
       } else if (btn.dataset.cmd === "removeFormat") {
         clearSelectionFormatting(editEl);
       } else if (btn.dataset.color) {
@@ -4242,7 +4279,7 @@ const RICHTEXT_ALLOWED_TAGS = new Set([
   "SPAN","DIV","A","H1","H2","H3","H4","BLOCKQUOTE","CODE","PRE","HR"
 ]);
 const RICHTEXT_ALLOWED_ATTRS = new Set(["style","href","target","colspan","rowspan","class"]);
-const RICHTEXT_ALLOWED_CLASSES = new Set(["rt-small","rt-large"]);
+const RICHTEXT_ALLOWED_CLASSES = new Set(["rt-small","rt-large","rt-checkbox","rt-checked"]);
 
 function sanitizeRichHtml(html) {
   const doc = new DOMParser().parseFromString(String(html || ""), "text/html");
@@ -4305,6 +4342,8 @@ function fieldInput(field, value) {
 function openModal(section, existing, prefill) {
   const root = document.getElementById("modalRoot");
   const imageState = {}; // key -> { urls: [...기존 URL], files: [새로 추가한 File] }
+  const linkListState = {}; // key -> [{label,url}, ...]
+  const tdlListState = {}; // key -> [{task,dueDate,assignee}, ...]
 
   // "팀장은 전체 / 팀원은 자기 지점만 열람"으로 설정된 메뉴인데 원래 지점 필드가 없다면(팀 회의 일지, 공지사항, 사용자 정의 폴더 등)
   // 등록/수정 폼에 지점 선택 필드를 자동으로 추가합니다.
@@ -4331,6 +4370,23 @@ function openModal(section, existing, prefill) {
         ${richtextToolbarHtml(f.key)}
         <div class="richtext-edit has-toolbar" id="f_${f.key}" contenteditable="true" style="${heightStyle}">${initial}</div>
         <p style="font-size:11px;color:var(--text-muted);margin-top:4px;">위 도구모음으로 글자 굵기·색·크기를 바꿀 수 있고, Tiro 등에서 복사한 내용을 표까지 그대로 붙여넣기(Ctrl+V) 하실 수 있어요.</p>
+      </div>`;
+    }
+    if (f.type === "linkList") {
+      linkListState[f.key] = (existing && existing[f.key] ? [...existing[f.key]] : []);
+      return `<div class="field">
+        <label>${f.label}</label>
+        <div id="linklist_${f.key}"></div>
+        <button type="button" class="btn small secondary" id="addlink_${f.key}">+ 링크 추가</button>
+      </div>`;
+    }
+    if (f.type === "tdlList") {
+      tdlListState[f.key] = (existing && existing[f.key] ? [...existing[f.key]] : []);
+      return `<div class="field">
+        <label>${f.label}</label>
+        <p style="font-size:11px;color:var(--text-muted);margin:0 0 6px;">담당자를 지정하면 그 사람의 개인 미팅 &gt; TDL에도 자동으로 등록돼요.</p>
+        <div id="tdllist_${f.key}"></div>
+        <button type="button" class="btn small secondary" id="addtdl_${f.key}">+ TDL 추가</button>
       </div>`;
     }
     const currentVal = existing ? existing[f.key] : (prefill && prefill[f.key] !== undefined ? prefill[f.key] : "");
@@ -4384,6 +4440,50 @@ function openModal(section, existing, prefill) {
     });
   });
 
+  function renderLinkListRows(key) {
+    const wrap = document.getElementById(`linklist_${key}`);
+    if (!wrap) return;
+    const items = linkListState[key];
+    wrap.innerHTML = items.length ? items.map((it, i) => `<div style="display:flex;gap:6px;margin-bottom:6px;">
+      <input type="text" data-ll-label="${i}" data-ll-key="${key}" placeholder="예: 상담일지 시트" value="${escapeHtml(it.label || "")}" style="flex:1;">
+      <input type="url" data-ll-url="${i}" data-ll-key="${key}" placeholder="https://..." value="${escapeHtml(it.url || "")}" style="flex:2;">
+      <button type="button" class="icon-btn danger" data-ll-del="${i}" data-ll-key="${key}">삭제</button>
+    </div>`).join("") : `<p style="font-size:12px;color:var(--text-muted);margin:0 0 6px;">등록된 링크가 없습니다.</p>`;
+    wrap.querySelectorAll("[data-ll-label]").forEach(el => el.oninput = () => { items[+el.dataset.llLabel].label = el.value; });
+    wrap.querySelectorAll("[data-ll-url]").forEach(el => el.oninput = () => { items[+el.dataset.llUrl].url = el.value; });
+    wrap.querySelectorAll("[data-ll-del]").forEach(el => el.onclick = () => { items.splice(+el.dataset.llDel, 1); renderLinkListRows(key); });
+  }
+  formFields.filter(f => f.type === "linkList").forEach(f => {
+    renderLinkListRows(f.key);
+    document.getElementById(`addlink_${f.key}`).onclick = () => { linkListState[f.key].push({ label: "", url: "" }); renderLinkListRows(f.key); };
+  });
+
+  function renderTdlListRows(key) {
+    const wrap = document.getElementById(`tdllist_${key}`);
+    if (!wrap) return;
+    const items = tdlListState[key];
+    const peopleOpts = PEOPLE.map(p => `<option value="${p.key}">${escapeHtml(p.name)}</option>`).join("");
+    wrap.innerHTML = items.length ? items.map((it, i) => `<div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap;">
+      <input type="text" data-tl-task="${i}" data-tl-key="${key}" placeholder="할 일" value="${escapeHtml(it.task || "")}" style="flex:2;min-width:140px;">
+      <input type="date" data-tl-due="${i}" data-tl-key="${key}" value="${escapeHtml(it.dueDate || "")}" style="flex:1;min-width:130px;">
+      <select data-tl-assignee="${i}" data-tl-key="${key}" style="flex:1;min-width:100px;">
+        <option value="">담당자 선택</option>${peopleOpts}
+      </select>
+      <button type="button" class="icon-btn danger" data-tl-del="${i}" data-tl-key="${key}">삭제</button>
+    </div>`).join("") : `<p style="font-size:12px;color:var(--text-muted);margin:0 0 6px;">등록된 TDL이 없습니다.</p>`;
+    wrap.querySelectorAll("[data-tl-task]").forEach(el => el.oninput = () => { items[+el.dataset.tlTask].task = el.value; });
+    wrap.querySelectorAll("[data-tl-due]").forEach(el => el.oninput = () => { items[+el.dataset.tlDue].dueDate = el.value; });
+    wrap.querySelectorAll("[data-tl-assignee]").forEach(el => {
+      el.value = items[+el.dataset.tlAssignee].assignee || "";
+      el.onchange = () => { items[+el.dataset.tlAssignee].assignee = el.value; };
+    });
+    wrap.querySelectorAll("[data-tl-del]").forEach(el => el.onclick = () => { items.splice(+el.dataset.tlDel, 1); renderTdlListRows(key); });
+  }
+  formFields.filter(f => f.type === "tdlList").forEach(f => {
+    renderTdlListRows(f.key);
+    document.getElementById(`addtdl_${f.key}`).onclick = () => { tdlListState[f.key].push({ task: "", dueDate: "", assignee: "" }); renderTdlListRows(f.key); };
+  });
+
   wireRichtextToolbars(formFields);
 
   document.getElementById("entryForm").addEventListener("submit", async (e) => {
@@ -4394,13 +4494,21 @@ function openModal(section, existing, prefill) {
     try {
       const data = {};
       for (const f of formFields) {
-        if (f.type === "imageUpload") continue;
+        if (f.type === "imageUpload" || f.type === "linkList" || f.type === "tdlList") continue;
         const el = document.getElementById(`f_${f.key}`);
         if (f.type === "richtext") {
           data[f.key] = el ? sanitizeRichHtml(el.innerHTML) : "";
         } else {
           data[f.key] = el ? el.value : "";
         }
+      }
+      for (const f of formFields) {
+        if (f.type !== "linkList") continue;
+        data[f.key] = linkListState[f.key].filter(it => it.url && it.url.trim());
+      }
+      for (const f of formFields) {
+        if (f.type !== "tdlList") continue;
+        data[f.key] = tdlListState[f.key].filter(it => it.task && it.task.trim());
       }
       for (const f of formFields) {
         if (f.type !== "imageUpload") continue;
@@ -4440,6 +4548,24 @@ function openModal(section, existing, prefill) {
         existing = { id: newRef.id, ...data };
         const titleEl = root.querySelector(".modal h3");
         if (titleEl) titleEl.textContent = `수정 · ${section.label}`;
+
+        // 새로 등록된 회의일 때만: TDL 항목 중 담당자가 지정된 것을 그 사람의 개인 TDL로 자동 등록합니다.
+        const tdlField = formFields.find(f => f.type === "tdlList");
+        if (tdlField && data[tdlField.key] && data[tdlField.key].length) {
+          for (const item of data[tdlField.key]) {
+            if (!item.assignee) continue;
+            try {
+              await addDoc(collection(db, `tdl_${item.assignee}`), {
+                title: item.task,
+                dueDate: item.dueDate || "",
+                note: `"${data.title || section.label}" 회의에서 등록됨`,
+                progress: "none",
+                createdAt: new Date().toISOString(),
+                createdBy: state.profile.name
+              });
+            } catch (syncErr) { /* TDL 자동 등록 실패는 회의 저장 자체를 막지 않습니다. */ }
+          }
+        }
       }
       savedOnce = true;
       showToast("저장되었습니다.");
