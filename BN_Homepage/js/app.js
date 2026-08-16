@@ -103,17 +103,17 @@ function personSections(p) {
       aggregateFrom: p.key === "seo" ? ["kim", "yj", "jh"] : [],
       cardView:true, headerFields:["title","school","grade","program"],
       fields:[
-        { key:"title", label:"학생 이름", type:"text" },
-        { key:"school", label:"학교", type:"text" },
-        { key:"grade", label:"학년", type:"text" },
-        { key:"mbti", label:"MBTI", type:"text" },
-        { key:"type", label:"TYPE", type:"text" },
-        { key:"studentPhone", label:"학생 번호", type:"text" },
-        { key:"parentPhone", label:"학부모 번호", type:"text" },
-        { key:"program", label:"상담/관리 프로그램", type:"select", options:["상담","주3회","주4회","주5회"] },
-        { key:"individualProgram", label:"개별지도 프로그램", type:"text" },
-        { key:"weekdayTime", label:"월~금 등하원 시간", type:"text" },
-        { key:"weekendTime", label:"주말 등하원 시간", type:"text" },
+        { key:"title", label:"학생 이름", type:"text", compact:true },
+        { key:"school", label:"학교", type:"text", compact:true },
+        { key:"grade", label:"학년", type:"text", compact:true },
+        { key:"mbti", label:"MBTI", type:"text", compact:true },
+        { key:"type", label:"TYPE", type:"text", compact:true },
+        { key:"studentPhone", label:"학생 번호", type:"text", compact:true },
+        { key:"parentPhone", label:"학부모 번호", type:"text", compact:true },
+        { key:"program", label:"상담/관리 프로그램", type:"select", options:["상담","주3회","주4회","주5회"], compact:true },
+        { key:"individualProgram", label:"개별지도 프로그램", type:"text", compact:true },
+        { key:"weekdayTime", label:"월~금 등하원 시간", type:"text", compact:true },
+        { key:"weekendTime", label:"주말 등하원 시간", type:"text", compact:true },
         { key:"date", label:"상담 날짜", type:"date" },
         { key:"recordingLink", label:"녹음 파일 링크 (선택, 구글 드라이브 등)", type:"link" },
         { key:"cognitivePath", label:"인지 경로", type:"textarea" },
@@ -1579,8 +1579,17 @@ function openFolderEntryDetailModal(section, entry) {
   const staticFields = section.fields.filter(f =>
     f.key !== "title" && f.type !== "imageUpload" && f.type !== "branchSelect" && !annotatableFields.includes(f)
   );
+  const compactStaticFields = staticFields.filter(f => f.compact && entry[f.key]);
+  const restStaticFields = staticFields.filter(f => !f.compact);
 
-  const staticHtml = staticFields.map(f => {
+  const compactHtml = compactStaticFields.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px 20px;background:var(--bg-page);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:16px;">
+    ${compactStaticFields.map(f => `<div>
+      <div style="font-size:.85rem;font-weight:700;color:var(--text-muted);margin-bottom:2px;">${f.label}</div>
+      <div style="font-size:1.2rem;font-weight:700;">${escapeHtml(String(entry[f.key]))}</div>
+    </div>`).join("")}
+  </div>` : "";
+
+  const staticHtml = compactHtml + restStaticFields.map(f => {
     const val = entry[f.key];
     if (f.type === "importanceSelect") {
       return val === "yes" ? `<p style="margin:0 0 12px;"><span class="pill important">중요</span></p>` : "";
@@ -4393,7 +4402,7 @@ function openModal(section, existing, prefill) {
     ? [{ key: "branchId", label: "지점", type: "branchSelect" }, ...section.fields]
     : section.fields;
 
-  const fieldsHtml = formFields.map(f => {
+  function singleFieldHtml(f) {
     if (f.type === "imageUpload") {
       imageState[f.key] = { urls: [...((existing && existing[f.key]) || [])], files: [] };
       return `<div class="field">
@@ -4431,8 +4440,31 @@ function openModal(section, existing, prefill) {
       </div>`;
     }
     const currentVal = existing ? existing[f.key] : (prefill && prefill[f.key] !== undefined ? prefill[f.key] : "");
+    if (f.compact) {
+      return `<div class="field" style="margin-bottom:0;">
+        <label style="font-size:.92rem;">${f.label}</label>
+        <div style="font-size:1.15rem;">${fieldInput(f, currentVal)}</div>
+      </div>`;
+    }
     return `<div class="field"><label>${f.label}</label>${fieldInput(f, currentVal)}</div>`;
-  }).join("");
+  }
+
+  // compact 표시된 필드(학생 기본정보 등)는 연달아 나오면 한 줄에 가로로 묶어서 보여줍니다.
+  let fieldsHtml = "";
+  let compactBuffer = [];
+  const flushCompact = () => {
+    if (!compactBuffer.length) return;
+    fieldsHtml += `<div class="field" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:14px 16px;background:var(--bg-page);border:1px solid var(--border);border-radius:10px;padding:14px 16px;">
+      ${compactBuffer.map(f => singleFieldHtml(f)).join("")}
+    </div>`;
+    compactBuffer = [];
+  };
+  formFields.forEach(f => {
+    if (f.compact) { compactBuffer.push(f); return; }
+    flushCompact();
+    fieldsHtml += singleFieldHtml(f);
+  });
+  flushCompact();
 
   root.innerHTML = `<div class="modal-bg" id="modalBg">
     <div class="modal" style="max-width:1440px;">
