@@ -1345,7 +1345,7 @@ async function renderLogCards(section) {
       if (f.type === "link") {
         return `<div style="margin:12px 0 4px;"><a href="${escapeHtml(String(val))}" target="_blank" rel="noopener" class="ops-open-btn" style="background:var(--blue-deep);">🔗 ${escapeHtml(f.label)} 열기</a></div>`;
       }
-      const rendered = f.type === "richtext"
+      const rendered = (f.type === "richtext" || f.type === "textarea")
         ? sanitizeRichHtml(String(val))
         : escapeHtml(String(val)).replace(/\n/g, "<br>");
       return `<div style="margin:12px 0 4px;"><strong>${escapeHtml(f.label)}</strong><div class="rich-content">${rendered}</div></div>`;
@@ -1519,15 +1519,12 @@ async function renderFolderGrid(section) {
     return;
   }
 
-  const stripHtml = (html) => (html || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
-  const previewField = section.fields.find(f => f.type === "richtext" || f.type === "textarea");
   const imageField = section.fields.find(f => f.type === "imageUpload");
   const fieldMap = Object.fromEntries(section.fields.map(f => [f.key, f]));
   const metaKeys = (section.headerFields || []).filter(k => k !== "title");
 
   wrap.innerHTML = `<div class="folder-grid">${docs.map((d, i) => {
     const editable = canEditDoc(section, d);
-    const preview = previewField ? stripHtml(d[previewField.key]) : "";
     const attachments = imageField ? (d[imageField.key] || []).filter(Boolean) : [];
     const thumbUrl = attachments[0] || "";
     const thumbIsImage = thumbUrl && isImageFile(thumbUrl);
@@ -1550,7 +1547,6 @@ async function renderFolderGrid(section) {
       ${thumbIsImage
         ? `<img src="${thumbUrl}" style="width:100%;height:110px;object-fit:cover;border-radius:8px;margin-bottom:8px;cursor:pointer;" data-view="${d.id}">`
         : (thumbUrl ? `<div style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:#F4FAEF;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;cursor:pointer;font-size:12px;color:var(--blue-deep);font-weight:700;" data-view="${d.id}"><span style="font-size:16px;">${fileIconFor(thumbUrl)}</span><span>첨부파일 ${attachments.length}개</span></div>` : "")}
-      ${preview ? `<div style="font-size:12.5px;color:var(--text-main);cursor:pointer;line-height:1.5;min-height:20px;" data-view="${d.id}">${escapeHtml(preview.slice(0, 60))}${preview.length > 60 ? "…" : ""}</div>` : ""}
       ${editable ? `<div style="margin-top:10px;display:flex;gap:10px;justify-content:flex-end;">
         <button class="icon-btn" data-act="edit" data-id="${d.id}">수정</button>
         <button class="icon-btn danger" data-act="del" data-id="${d.id}">삭제</button>
@@ -1651,7 +1647,7 @@ function openFolderEntryDetailModal(section, entry) {
   const annotatableHtml = annotatableFields.map(f => {
     const val = entry[f.key];
     if (!val && !canAnnotate) return "";
-    const display = f.type === "richtext" ? sanitizeRichHtml(val || "") : escapeHtml(val || "").replace(/\n/g, "<br>");
+    const display = (f.type === "richtext" || f.type === "textarea") ? sanitizeRichHtml(val || "") : escapeHtml(val || "").replace(/\n/g, "<br>");
     if (canAnnotate) {
       return `<div style="margin-bottom:20px;">
         <div style="font-size:13px;font-weight:700;color:var(--text-muted);margin-bottom:6px;">${f.label}</div>
@@ -1889,7 +1885,7 @@ function openMeetingDetailModal(section, entry) {
     .map(f => {
       const val = entry[f.key];
       if (!val && !canAnnotate) return "";
-      const display = f.type === "richtext" ? sanitizeRichHtml(val || "") : escapeHtml(val || "").replace(/\n/g, "<br>");
+      const display = (f.type === "richtext" || f.type === "textarea") ? sanitizeRichHtml(val || "") : escapeHtml(val || "").replace(/\n/g, "<br>");
       if (canAnnotate) {
         return `<div style="margin-bottom:20px;">
           <div style="font-size:22px;font-weight:700;color:var(--text-muted);margin-bottom:6px;">${f.label}</div>
@@ -4664,7 +4660,7 @@ function wireRichtextToolbarFor(editEl, toolbar) {
   });
 }
 function wireRichtextToolbars(formFields) {
-  formFields.filter(f => f.type === "richtext").forEach(f => {
+  formFields.filter(f => f.type === "richtext" || f.type === "textarea").forEach(f => {
     wireRichtextToolbarFor(document.getElementById(`f_${f.key}`), document.querySelector(`.rt-toolbar[data-for="${f.key}"]`));
   });
 }
@@ -4779,9 +4775,9 @@ function openModal(section, existing, prefill) {
         <p style="font-size:12px;color:var(--text-muted);margin-top:4px;">이미지, PDF, PPT 파일을 여러 개 한 번에 올릴 수 있어요.</p>
       </div>`;
     }
-    if (f.type === "richtext") {
+    if (f.type === "richtext" || f.type === "textarea") {
       const initial = sanitizeRichHtml(initialValues[f.key] || "");
-      const heightStyle = f.tall ? "min-height:480px;" : "";
+      const heightStyle = f.tall ? "min-height:480px;" : "min-height:110px;";
       return `<div class="field">
         <label>${f.label}</label>
         ${richtextToolbarHtml(f.key)}
@@ -4937,7 +4933,7 @@ function openModal(section, existing, prefill) {
         if (f.type === "tdlList") { snapshot[f.key] = tdlListState[f.key]; return; }
         const el = document.getElementById(`f_${f.key}`);
         if (!el) return;
-        snapshot[f.key] = f.type === "richtext" ? el.innerHTML : el.value;
+        snapshot[f.key] = (f.type === "richtext" || f.type === "textarea") ? el.innerHTML : el.value;
       });
       localStorage.setItem(draftKey, JSON.stringify(snapshot));
       const hint = document.getElementById("draftSavedHint");
@@ -4964,7 +4960,7 @@ function openModal(section, existing, prefill) {
       for (const f of formFields) {
         if (f.type === "imageUpload" || f.type === "linkList" || f.type === "tdlList") continue;
         const el = document.getElementById(`f_${f.key}`);
-        if (f.type === "richtext") {
+        if (f.type === "richtext" || f.type === "textarea") {
           data[f.key] = el ? sanitizeRichHtml(el.innerHTML) : "";
         } else {
           data[f.key] = el ? el.value : "";
