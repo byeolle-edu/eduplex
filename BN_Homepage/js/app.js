@@ -103,7 +103,8 @@ function personSections(p) {
       aggregateFrom: p.key === "seo" ? ["kim", "yj", "jh"] : [],
       cardView:true, headerFields:["title","school","grade","program"],
       fields:[
-        { key:"title", label:"학생 이름", type:"text", compact:true },
+        { key:"studentName", label:"학생 이름", type:"text", compact:true },
+        { key:"firstAttendanceDate", label:"첫 등원일", type:"date", compact:true },
         { key:"school", label:"학교", type:"text", compact:true },
         { key:"grade", label:"학년", type:"text", compact:true },
         { key:"mbti", label:"MBTI", type:"text", compact:true },
@@ -112,8 +113,8 @@ function personSections(p) {
         { key:"parentPhone", label:"학부모 번호", type:"text", compact:true },
         { key:"program", label:"상담/관리 프로그램", type:"select", options:["상담","주3회","주4회","주5회"], compact:true },
         { key:"individualProgram", label:"개별지도 프로그램", type:"text", compact:true },
-        { key:"weekdayTime", label:"월~금 등하원 시간", type:"text", compact:true },
-        { key:"weekendTime", label:"주말 등하원 시간", type:"text", compact:true },
+        { key:"weekdayTime", label:"월~금 등하원 시간 (요일별로 줄바꿈)", type:"textarea" },
+        { key:"weekendTime", label:"주말 등하원 시간 (요일별로 줄바꿈)", type:"textarea" },
         { key:"date", label:"상담 날짜", type:"date" },
         { key:"recordingLink", label:"녹음 파일 링크 (선택, 구글 드라이브 등)", type:"link" },
         { key:"cognitivePath", label:"인지 경로", type:"textarea" },
@@ -4582,6 +4583,16 @@ function openModal(section, existing, prefill) {
       for (const f of formFields) {
         if (f.type !== "tdlList") continue;
         data[f.key] = tdlListState[f.key].filter(it => it.task && it.task.trim());
+      }
+      // 등록상담처럼 "학생 이름 + 첫 등원일" 필드가 있는 폼은, 카드/상세보기 제목을 "8/16 김에듀" 형식으로 자동 생성합니다.
+      if (formFields.some(f => f.key === "studentName")) {
+        const dt = data.firstAttendanceDate;
+        if (dt) {
+          const [y, m, d] = dt.split("-").map(Number);
+          data.title = `${m}/${d} ${data.studentName || ""}`.trim();
+        } else {
+          data.title = data.studentName || "";
+        }
       }
       for (const f of formFields) {
         if (f.type !== "imageUpload") continue;
