@@ -75,8 +75,11 @@ const SECTIONS = [
       { key:"fileLink", label:"첨부 링크(URL)", type:"link" },
       { key:"images", label:"첨부 이미지·파일", type:"imageUpload" }
     ], columns:["title"] }
+  { key:"teamMembers", label:"팀 구성원", group:"팀별내 구성원", color:"blue",
+    desc:"별내점 구성원들의 자기소개입니다.",
+    isTeamRoster:true }
 ];
-const GROUP_ORDER = ["일정/회의", "개인 미팅", "자료실"];
+const GROUP_ORDER = ["팀별내 구성원", "일정/회의", "개인 미팅", "자료실"];
 const TEAM_LEADER_EMAIL = "sangsangplexhq1@sangsangplex.com";
 const PEOPLE = [
   { key:"seo", name:"서지은", email:"souji4614@gmail.com" },
@@ -1170,6 +1173,7 @@ async function renderSection(key) {
   if (section.isLinkPills) { renderLinkPills(section); return; }
   if (section.isExternalLink) { renderExternalLink(section); return; }
   if (section.isPersonalTDL) { renderPersonalTDL(section); return; }
+  if (section.isTeamRoster) { renderTeamRoster(section); return; }
   if (section.isPersonalPerf) { renderPersonalPerf(section); return; }
   if (section.isMonthlySchedule) { renderMonthlySchedule(section); return; }
   if (section.isEvalSheet) { renderEvalSheet(section); return; }
@@ -2685,6 +2689,183 @@ function sortArrow(sectionKey, column) {
   const s = getTaskSortState(sectionKey);
   if (s.column !== column) return `<span style="opacity:.25;">↕</span>`;
   return s.dir === "asc" ? "↑" : "↓";
+}
+
+/* ===================== 팀 구성원 자기소개 ===================== */
+const TEAM_ROSTER = [
+  { key:"eun", name:"\uBC15\uC740\uBCC4", suffix:"P", roleTag:"\uC6D0\uC7A5", email:"epx.015.eunbyul.park@gmail.com",
+    joinDate:"2019-05-03", phone:"010-9213-2024", birthday:"1994-04-30", mbti:"ENTJ", enneagram:"8W7",
+    strength:"\uC808\uCE5C, \uC2B9\uBD80, \uCD5C\uC0C1\uD654, \uC804\uB7B5, \uC9C0\uC801\uC0AC\uACE0",
+    likeFood:"\uD68C, \uACF1\uCC3D, \uB2ED\uBC1C", likeDrink:"\uC544\uBC14\uB77C, \uACFC\uC790\uB294 \uD50C\uB791!",
+    dislikeFood:"\uC0D0\uB7EC\uB4DC!!!!!!", stress:"\uBB34\uC870\uAC74 \uC5EC\uD589! \uC77C\uC0C1\uC5D0\uC120 \uB9CC\uD654, \uACF5\uC5F0!",
+    tmi:"\uBC24 9\uC2DC\uBD80\uD130 \uB108\uBB34 \uC878\uB824\uC11C \uBA38\uB9AC\uAC00 \uC798 \uC548 \uB3CC\uC544\uAC00\uC694.............(\u02CA\u3172\u314D\u3141\u3172\u314D)\u3172)",
+    bucketList:"", collabTip:"1) \uCE74\uD1A1\uC73C\uB85C \uC18C\uD1B5\uD55C \uB0B4\uC6A9\uC740 \uAFC5 \uCCB4\uD06C \uD45C\uC2DC > \uAC80\uC0C9 \uAE30\uB2A5 \uD65C\uC6A9\uD574\uC11C \uB193\uCE58\uC9C0 \uC54A\uB3C4\uB85D \uAD00\uB9AC\uD558\uB294 \uAC83!\n2) \uBA54\uBAA8 \uC77C\uC0C1!! : \uB178\uC158, \uC6D0\uB178\uD2B8, \uB2E4\uC774\uC5B4\uB9AC, \uD328\uB4DC \uB4F1 \uAC1C\uC778\uC774 \uD3B8\uD55C \uBC29\uC2DD\uC73C\uB85C \uBA54\uBAA8 \uD544\uC218!\n3) \uBD80\uD0C1\uC774\uB098 \uC5C5\uBB34 \uC804\uB2EC\uC5D0\uC11C \uC911\uC694\uD55C \uBD80\uBD84 : \uD654\uBC95 > \uB0B4\uC6A9",
+    desiredVibe:"\uC9C0\uC810, \uAC1C\uC778 \uBAA9\uD45C \uD655\uC2E4 / \uC774\uBC88 \uC8FC \uC5C5\uBB34 \uC6B0\uC120 \uC21C\uC704 \uC778\uC2DD \uD655\uC2E4\uD55C \uC0C1\uD0DC / \uC815\uD574\uC9C4 \uC5C5\uBB34 \uC2DC\uAC04\uC5D0 FULL \uC9D1\uC911\uD558\uB294 \uC0C1\uD0DC = \uC77C\uD560 \uB584 \uC77C\uD558\uACE0 \uC26C\uB294 \uC81C\uB300\uB85C \uC26C\uAE30 / \uC11C\uB85C \uC2E4\uC218\uB098 \uCDE8\uC57D\uC810\uC744 \uC624\uD508\uD558\uAE30 \uD3B8\uD55C \uC9C0\uC810 \uBD84\uC704\uAE30",
+    wordToTeam:"\uC9C0\uC810\uC5D0\uC11C \uBCF4\uB0B4\uB294 \uC2DC\uAC04\uC774 \uD5DB\uB418\uC9C0 \uC54A\uB3C4\uB85D, \uD568\uAED8 \uC131\uC7A5\uD558\uBA70 \uC5F4\uC2EC\uD788 \uB2EC\uB824\uAC11\uC2DC\uB2E4-\u02D9(\u3161\u25CF\u02D8\u25E1\u02D8\u25CF\u3161)",
+    encourage:"\uAC19\uC774 \uD798\uB4E0 \uC77C \uACF5\uC720\uD558\uAE30!" },
+
+  { key:"seo", name:"\uC11C\uC9C0\uC740", suffix:"\uAD50", roleTag:"TM", email:"souji4614@gmail.com",
+    joinDate:"2024-11-04", phone:"010-5443-4663", birthday:"2002-05-10", mbti:"ISTP", enneagram:"3W4",
+    strength:"\uACF5\uC815\uC131, \uD654\uD569, \uC808\uCE5C, \uC801\uC751, \uD589\uB3D9",
+    likeFood:"\uC0E4\uBE0C\uC0E4\uBE0C, \uCE7C\uAD6D\uC218, \uB9C8\uB77C\uD0D5, \uACF1\uCC3D, \uC721\uD68C", likeDrink:"\uAFC0\uC544\uBA54\uB9AC\uCE74\uB178, \uC5F0\uC720\uB77C\uB5FC",
+    dislikeFood:"\uBC84\uC12F, \uD638\uBC15, \uAC00\uC9C0, \uD68C, \uC0DD\uC120\uD0D5", stress:"\uD734\uC2DD",
+    tmi:"\uC67C\uC190\uC7A1\uC774", bucketList:"\uD06C\uB8E8\uC988 \uC138\uACC4\uC77C\uC8FC",
+    collabTip:"\uBAA8\uB4E0 \uC815\uBCF4\uB294 \uBC14\uB85C \uBC14\uB85C \uACF5\uC720", desiredVibe:"\uAC01\uC790 \uB9E1\uC740 \uC77C \uC5F4\uC2EC\uD788 \uD558\uBA74\uC11C, \uD544\uC694\uD558\uB2E4\uBA74 \uC11C\uB85C \uB3C4\uC6C0\uC744 \uC8FC\uACE0 \uBC1B\uB294 \uAD00\uACC4 \uBC0F \uBD84\uC704\uAE30",
+    wordToTeam:"\uD654\uC774\uD305", encourage:"\uD654\uC774\uD305" },
+
+  { key:"kim", name:"\uAE40\uC601\uC0C1", suffix:"M", roleTag:"CM", email:"ender5032@gmail.com",
+    joinDate:"2025-03-31", phone:"010-3973-9070", birthday:"1999-03-24", mbti:"ESFJ", enneagram:"2W1",
+    strength:"\uD559\uC2B5\uC790, \uCEE4\uBBA4\uB2C8\uCF00\uC774\uC158, \uADDC\uC728, \uC9D1\uC911, \uC874\uC7AC\uAC10",
+    likeFood:"\uACE0\uAE30\uB958(\uB4F1\uD478\uB978 \uC0DD\uC120, \uCE58\uD0A8)", likeDrink:"\uCE74\uCE74\uC624 \uD568\uB7C9 \uB192\uC740 \uCD08\uCF5C\uB9BF(70% \uC774\uC0C1 \uC120\uD638), \uAC01\uC885 \uCC28(\uBA54\uB9AC\uACE8\uB4DC \uCC28 \uB4F1)",
+    dislikeFood:"\uACE0\uC218, \uB0B4\uC7A5(\uAE30\uB984\uAE30 \uB9CE\uC740 \uAC83), \uB9E4\uC6B4 \uAC83(\uD575\uBD88\uB2ED \uC774\uC0C1)", stress:"\uC0B0\uCC45, \uC6B4\uB3D9, \uC2A4\uD2B8\uB808\uCE6D, \uC74C\uC8FC\uB2F4\uD654",
+    tmi:"\uC9D1\uC5D0 \uAC15\uC544\uC9C0\uAC00 \uB450\uB9C8\uB9AC \uC788\uC2B5\uB2C8\uB2E4.\n\uD558\uB791 - \uD1A0\uC774 \uD478\uB4E4\n\uB450\uB9AC - \uB9D0\uD2F0\uC988",
+    bucketList:"\uC138 \uC790\uB9BF\uC218 \uADDC\uBAA8 \uCE84\uD504 \uD504\uB85C\uADF8\uB7A8 \uC6B4\uC601\uD574\uBCF4\uAE30",
+    collabTip:"\uC6B0\uC120\uC21C\uC704 \uAE30\uBC18 \uB110\uBC84\uB9C1(1, 2, 3)\n\uCE74\uD1A1\uC73C\uB85C \uD544\uC694 \uB0B4\uC6A9 \uB0A8\uACA8\uC8FC\uC2DC\uBA74 \uC88B\uC2B5\uB2C8\uB2E4.",
+    desiredVibe:"\uC11C\uB85C \uB3C4\uC640\uC8FC\uACE0 \uC131\uC7A5\uD558\uB294 \uBD84\uC704\uAE30", wordToTeam:"", encourage:"\uC798 \uD558\uACE0 \uC788\uB294 \uBD80\uBD84 \uC7AC\uC0C1\uAE30, \uC9C4\uC2EC\uC744 \uB2F4\uC740 \uB9D0" },
+
+  { key:"yj", name:"\uC774\uC720\uC9C4", suffix:"M", roleTag:"CM", email:"lyj826089@gmail.com",
+    joinDate:"2025-10-13", phone:"010-8952-5181", birthday:"2001-04-21", mbti:"ESFJ", enneagram:"2W1",
+    strength:"", likeFood:"\uACF1\uCC3D!, \uACC4\uB780 \uC694\uB9AC", likeDrink:"\uC544\uC774\uC2A4 \uC544\uBA54\uB9AC\uCE74\uB178!",
+    dislikeFood:"\uACE0\uC218, \uC0C8\uC6B0, \uB9E4\uC6B4 \uC74C\uC2DD, \uD31A \uB4E4\uC5B4\uAC04 \uC74C\uC2DD", stress:"\uCE5C\uAD6C\uB4E4 \uB9CC\uB098\uAE30, \uB178\uB798 \uB4E3\uACE0 \uBD80\uB974\uAE30, \uC560\uB2C8\uBA54\uC774\uC158 \uBCF4\uAE30, \uC57C\uAD6C \uBCF4\uB7EC \uAC00\uAE30!\u26BE",
+    tmi:"\uC57C\uAD6C \uBCF4\uB824\uACE0 \uD2F0\uBE59 \uACB0\uC81C\uD588\uC2B5\uB2C8\uB2F9...\u314E\u314E (\u30FB\u03C9<)\u2606",
+    bucketList:"\uC57C\uAD6C \uACBD\uAE30 20\uBC88 \uC774\uC0C1 \uBCF4\uB7EC \uAC00\uAE30", collabTip:"\uC774\uC57C\uAE30 \uD588\uB358 \uB0B4\uC6A9\uB4E4 \uCE74\uD1A1\uC73C\uB85C \uAFC5 \uB0A8\uACA8\uB193\uAE30!",
+    desiredVibe:"\uD654\uAE30\uC560\uC560\uD558\uACE0, \uD798\uB4E0 \uC77C \uC788\uC73C\uBA74 \uC11C\uB85C \uB3C4\uC640\uC8FC\uAE30", wordToTeam:"", encourage:"\uC774\uC57C\uAE30 \uACBD\uCCAD\uD558\uACE0 \uACF5\uAC10 \uB9CE\uC774 \uD574\uC8FC\uAE30!" },
+
+  { key:"jh", name:"\uC774\uC900\uD76C", suffix:"M", roleTag:"CM", email:"nym143019@gmail.com",
+    joinDate:"2026-01-26", phone:"010-2620-1100", birthday:"2000-01-02", mbti:"ISTJ", enneagram:"",
+    strength:"", likeFood:"\uC0BC\uACB9\uC0B4, \uB77C\uBA58", likeDrink:"\uCD08\uCF5C\uB9BF, \uCFE0\uD06C\uB2E4\uC2A4 \uCF00\uC774\uD06C, \uBAAD\uC169 \uB538\uAE30\uB9DB",
+    dislikeFood:"\uB9E4\uC6B4 \uC74C\uC2DD", stress:"\uCC45 \uC77D\uAE30, \uC88B\uC544\uD558\uB294 \uC6F9\uD230 \uBCF4\uAE30",
+    tmi:"\uACE0\uC591\uC774\uB97C \uB9E4\uC6B0\uB9E4\uC6B0 \uC88B\uC544\uD568", bucketList:"\uC77C\uBCF8\uC758 \uBAA8\uB4E0 \uC9C0\uC5ED \uD55C\uBC88\uC529 \uAC00\uBCF4\uAE30",
+    collabTip:"\uC584\uAE30\uD55C \uB0B4\uC6A9 \uAFC5 \uAE30\uB85D\uD574\uC11C \uB0A8\uAE30\uAE30", desiredVibe:"\uC11C\uB85C \uD798\uB4E0 \uC77C\uC740 \uB3C4\uC640\uC8FC\uAE30",
+    wordToTeam:"\uC544\uC9C1 \uBAA8\uB974\uB294 \uBD80\uBD84\uC774 \uB9CE\uAE30\uC5D0 \uB9CE\uC774 \uC54C\uB824\uC8FC\uC2DC\uBA74 \uAC10\uC0AC\uD560 \uAC83 \uAC19\uC2B5\uB2C8\uB2E4!", encourage:"\uC544\uC774\uC758 \uAC15\uC810\uC744 \uD1B5\uD574 \uC798\uD558\uACE0 \uC788\uB294 \uBD80\uBD84 \uC54C\uB824\uC8FC\uAE30" }
+];
+const TEAM_PROFILE_TEXT_FIELDS = [
+  { key:"likeFood", label:"\uC88B\uC544\uD558\uB294 \uC74C\uC2DD" },
+  { key:"likeDrink", label:"\uC88B\uC544\uD558\uB294 \uC74C\uB8CC/\uAC04\uC2DD" },
+  { key:"dislikeFood", label:"\uC2EB\uC5B4\uD558\uB294 \uC74C\uC2DD" },
+  { key:"stress", label:"\uC2A4\uD2B8\uB808\uC2A4 \uD574\uC18C\uBC95" },
+  { key:"tmi", label:"\uC18C\uC18C\uD55C TMI" },
+  { key:"bucketList", label:"\uBC84\uD0B7\uB9AC\uC2A4\uD2B8 \uD55C \uC904" },
+  { key:"collabTip", label:"\uD611\uC5C5 \uAFC0\uD301" },
+  { key:"desiredVibe", label:"\uC6D0\uD558\uB294 \uC9C0\uC810 \uBD84\uC704\uAE30" },
+  { key:"wordToTeam", label:"\uD300\uC6D0\uB4E4\uC5D0\uAC8C \uBC14\uB77C\uB294 \uD55C\uB9C8\uB514" },
+  { key:"encourage", label:"\uACA9\uB824 \uBC29\uBC95" }
+];
+const TEAM_PROFILE_INFO_FIELDS = [
+  { key:"joinDate", label:"\uC785\uC0AC\uC77C" },
+  { key:"phone", label:"\uC804\uD654\uBC88\uD638" },
+  { key:"birthday", label:"\uC0DD\uC77C" },
+  { key:"mbti", label:"MBTI" },
+  { key:"enneagram", label:"\uC560\uB2C8\uC5B4\uADF8\uB7A8" },
+  { key:"strength", label:"\uAC15\uC810 \uAC80\uC0AC" }
+];
+
+function canEditTeamProfile(person) {
+  if (!state.user) return false;
+  return state.user.email === person.email || canViewAllRole() || state.user.email === TEAM_LEADER_EMAIL;
+}
+
+async function renderTeamRoster(section) {
+  const main = document.getElementById("mainContent");
+  main.innerHTML = `<div class="page-header">
+      <div>
+        <h1><span class="badge" style="background:${COLOR_HEX[section.color]}"></span>${section.label}</h1>
+        <p>${section.desc}</p>
+      </div>
+    </div>
+    <div id="rosterGrid" class="folder-grid">\uBD88\uB7EC\uC624\uB294 \uC911...</div>`;
+
+  const snap = await getDocs(collection(db, "teamProfiles"));
+  const overrides = {};
+  snap.docs.forEach(d => { overrides[d.id] = d.data(); });
+
+  const profiles = TEAM_ROSTER.map(p => ({ ...p, ...(overrides[p.key] || {}) }));
+
+  const grid = document.getElementById("rosterGrid");
+  grid.innerHTML = profiles.map(p => `<div class="card folder-grid-card" data-roster-view="${p.key}" style="cursor:pointer;">
+    <div style="font-weight:800;font-size:16px;margin-bottom:6px;">${escapeHtml(p.name)}<span style="font-weight:400;">${escapeHtml(p.suffix || "")}</span></div>
+    <span class="tag" style="background:var(--blue-soft,#E5EEFB);color:var(--blue-deep);display:inline-block;margin-bottom:8px;">${escapeHtml(p.roleTag || "")}</span>
+    <div style="font-size:12.5px;color:var(--text-main);line-height:1.9;">
+      <div>${escapeHtml(p.email || "")}</div>
+      <div>${escapeHtml(p.joinDate || "")}</div>
+      <div>${escapeHtml(p.mbti || "")}</div>
+      <div>${escapeHtml(p.birthday || "")}</div>
+      <div>${escapeHtml(p.phone || "")}</div>
+    </div>
+  </div>`).join("");
+
+  grid.querySelectorAll("[data-roster-view]").forEach(el => {
+    el.onclick = () => openTeamProfileDetail(profiles.find(p => p.key === el.dataset.rosterView));
+  });
+}
+
+function openTeamProfileDetail(person) {
+  const root = document.getElementById("modalRoot");
+  const canEdit = canEditTeamProfile(person);
+  root.innerHTML = `<div class="modal-bg" id="modalBg">
+    <div class="modal" style="max-width:640px;">
+      <h3 style="font-size:26px;">${escapeHtml(person.name)}${escapeHtml(person.suffix || "")}</h3>
+      <div style="margin:14px 0 20px;">
+        <div style="display:flex;gap:8px;align-items:center;font-size:14px;margin-bottom:8px;"><b style="width:90px;color:var(--text-muted);">\uC9C1\uBB34</b><span class="tag" style="background:var(--blue-soft,#E5EEFB);color:var(--blue-deep);">${escapeHtml(person.roleTag || "")}</span></div>
+        <div style="display:flex;gap:8px;align-items:center;font-size:14px;margin-bottom:8px;"><b style="width:90px;color:var(--text-muted);">\uC774\uBA54\uC77C</b><span>${escapeHtml(person.email || "")}</span></div>
+        ${TEAM_PROFILE_INFO_FIELDS.map(f => `<div style="display:flex;gap:8px;align-items:center;font-size:14px;margin-bottom:8px;"><b style="width:90px;color:var(--text-muted);">${f.label}</b><span>${escapeHtml(person[f.key] || "")}</span></div>`).join("")}
+      </div>
+      ${TEAM_PROFILE_TEXT_FIELDS.map(f => person[f.key] ? `<div style="margin-bottom:16px;">
+        <div style="font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:4px;">${f.label}</div>
+        <div style="font-size:14px;white-space:pre-wrap;line-height:1.6;">${escapeHtml(person[f.key])}</div>
+      </div>` : "").join("")}
+      <div class="grid-2" style="margin-top:10px;">
+        <button type="button" class="btn secondary" id="closeRosterBtn">\uB2EB\uAE30</button>
+        ${canEdit ? `<button type="button" class="btn" id="editRosterBtn">\uC218\uC815</button>` : ""}
+      </div>
+    </div></div>`;
+  document.getElementById("closeRosterBtn").onclick = () => root.innerHTML = "";
+  document.getElementById("modalBg").addEventListener("click", (e) => { if (e.target.id === "modalBg") root.innerHTML = ""; });
+  if (canEdit) {
+    document.getElementById("editRosterBtn").onclick = () => openTeamProfileEditModal(person);
+  }
+}
+
+function openTeamProfileEditModal(person) {
+  const root = document.getElementById("modalRoot");
+  root.innerHTML = `<div class="modal-bg" id="modalBg">
+    <div class="modal" style="max-width:640px;">
+      <h3>${escapeHtml(person.name)}${escapeHtml(person.suffix || "")} \uC790\uAE30\uC18C\uAC1C \uC218\uC815</h3>
+      <form id="rosterForm">
+        <div class="field" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;background:var(--bg-page);border:1px solid var(--border);border-radius:10px;padding:14px;">
+          ${TEAM_PROFILE_INFO_FIELDS.map(f => `<div>
+            <label style="font-size:.85rem;">${f.label}</label>
+            <input type="text" id="rf_${f.key}" value="${escapeHtml(person[f.key] || "")}">
+          </div>`).join("")}
+        </div>
+        ${TEAM_PROFILE_TEXT_FIELDS.map(f => `<div class="field"><label>${f.label}</label><textarea id="rf_${f.key}" rows="2">${escapeHtml(person[f.key] || "")}</textarea></div>`).join("")}
+        <div class="grid-2" style="margin-top:10px;">
+          <button type="button" class="btn secondary" id="cancelBtn">\uCDE8\uC18C</button>
+          <button type="submit" class="btn" id="saveRosterBtn">\uC800\uC7A5</button>
+        </div>
+      </form>
+    </div></div>`;
+  document.getElementById("cancelBtn").onclick = () => root.innerHTML = "";
+  document.getElementById("modalBg").addEventListener("click", (e) => { if (e.target.id === "modalBg") root.innerHTML = ""; });
+  document.getElementById("rosterForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById("saveRosterBtn");
+    btn.disabled = true;
+    try {
+      const data = {};
+      [...TEAM_PROFILE_INFO_FIELDS, ...TEAM_PROFILE_TEXT_FIELDS].forEach(f => {
+        const el = document.getElementById(`rf_${f.key}`);
+        data[f.key] = el ? el.value : "";
+      });
+      await setDoc(doc(db, "teamProfiles", person.key), data, { merge: true });
+      root.innerHTML = "";
+      showToast("\uC800\uC7A5\uB418\uC5C8\uC2B5\uB2C8\uB2E4.");
+      renderSection("teamMembers");
+    } catch (err) {
+      btn.disabled = false;
+      alert("\uC800\uC7A5 \uC911 \uC624\uB958\uAC00 \uBC1C\uC0DD\uD588\uC2B5\uB2C8\uB2E4: " + err.message);
+    }
+  });
 }
 
 async function renderPersonalTDL(section) {
