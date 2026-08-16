@@ -2899,6 +2899,7 @@ async function renderPersonalPerf(section) {
     </div>
     <div class="card" style="overflow:auto;"><div id="perfTableWrap">불러오는 중...</div></div>
     <div class="card" id="perfCompareWrap"></div>
+    <div class="card" id="perfHalfWrap" style="overflow:auto;"></div>
     ${isSeo ? `<div class="card" id="perfBreakdownWrap"></div>` : ""}
     <div class="card"><h2 style="font-size:14px;margin:0 0 10px;">월별 분석 (잘한 점 / 다음 달 목표)</h2><div id="perfReflectionWrap"></div></div>`;
 
@@ -2939,17 +2940,32 @@ function renderPerfBody(section, docs, metrics, isSeo) {
   html += `</tbody></table>`;
   tableWrap.innerHTML = html;
 
+  // ---------- 비교하고 싶은 두 달을 직접 골라서 비교 ----------
   const compareWrap = document.getElementById("perfCompareWrap");
-  const filledThisYear = months.filter(ym => byYm[ym]);
-  const latestYm = filledThisYear[filledThisYear.length - 1];
-  if (latestYm) {
-    const prevYm = `${view.year - 1}-${latestYm.slice(5)}`;
-    const prevDoc = byYm[prevYm] || docs.find(d => d.yearMonth === prevYm);
-    compareWrap.innerHTML = `<h2 style="font-size:14px;margin:0 0 10px;">전년 동월(${prevYm}) 대비 · 최근 입력월 ${latestYm}</h2>
-      ${prevDoc ? `<table><thead><tr><th>지표</th><th>${prevYm}</th><th>${latestYm}</th><th>증감</th></tr></thead><tbody>
+  const allYms = docs.map(d => d.yearMonth).filter(Boolean);
+  if (allYms.length < 1) {
+    compareWrap.innerHTML = `<p class="empty-state">비교할 기록이 아직 없어요.</p>`;
+  } else {
+    const defaultB = allYms[allYms.length - 1];
+    const defaultA = allYms[allYms.length - 2] || allYms[allYms.length - 1];
+    compareWrap.innerHTML = `<h2 style="font-size:14px;margin:0 0 10px;">원하는 두 달 비교</h2>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+        <select id="cmpMonthA">${allYms.map(ym => `<option value="${ym}" ${ym === defaultA ? "selected" : ""}>${ym}</option>`).join("")}</select>
+        <span style="color:var(--text-muted);">vs</span>
+        <select id="cmpMonthB">${allYms.map(ym => `<option value="${ym}" ${ym === defaultB ? "selected" : ""}>${ym}</option>`).join("")}</select>
+      </div>
+      <div id="cmpTableWrap"></div>`;
+    const renderCmpTable = () => {
+      const ymA = document.getElementById("cmpMonthA").value;
+      const ymB = document.getElementById("cmpMonthB").value;
+      const docA = docs.find(d => d.yearMonth === ymA);
+      const docB = docs.find(d => d.yearMonth === ymB);
+      const cmpWrap = document.getElementById("cmpTableWrap");
+      if (!docA || !docB) { cmpWrap.innerHTML = ""; return; }
+      cmpWrap.innerHTML = `<table><thead><tr><th>지표</th><th>${ymA}</th><th>${ymB}</th><th>증감</th></tr></thead><tbody>
         ${metrics.map(m => {
-          const before = parseFloat(prevDoc[m.key]);
-          const after = parseFloat(byYm[latestYm][m.key]);
+          const before = parseFloat(docA[m.key]);
+          const after = parseFloat(docB[m.key]);
           let diffHtml = `<span style="color:var(--text-muted);">-</span>`;
           if (!isNaN(before) && !isNaN(after)) {
             const diff = Math.round((after - before) * 100) / 100;
@@ -2957,16 +2973,50 @@ function renderPerfBody(section, docs, metrics, isSeo) {
             const arrow = diff > 0 ? "▲" : diff < 0 ? "▼" : "-";
             diffHtml = `<span style="color:${color};font-weight:700;">${arrow} ${Math.abs(diff)}${m.unit || ""}</span>`;
           }
-          return `<tr><td>${m.label}</td><td class="mono">${prevDoc[m.key] ?? "-"}${prevDoc[m.key] ? (m.unit || "") : ""}</td><td class="mono">${byYm[latestYm][m.key] ?? "-"}${byYm[latestYm][m.key] ? (m.unit || "") : ""}</td><td>${diffHtml}</td></tr>`;
+          return `<tr><td>${m.label}</td><td class="mono">${docA[m.key] ?? "-"}${docA[m.key] !== undefined && docA[m.key] !== "" ? (m.unit || "") : ""}</td><td class="mono">${docB[m.key] ?? "-"}${docB[m.key] !== undefined && docB[m.key] !== "" ? (m.unit || "") : ""}</td><td>${diffHtml}</td></tr>`;
         }).join("")}
-      </tbody></table>` : `<p class="empty-state">작년 같은 달(${prevYm}) 기록이 없어서 비교할 수 없어요.</p>`}`;
+      </tbody></table>`;
+    };
+    document.getElementById("cmpMonthA").onchange = renderCmpTable;
+    document.getElementById("cmpMonthB").onchange = renderCmpTable;
+    renderCmpTable();
+  }
+
+  // ---------- 인사평가 반기(12~5월 상반기 / 6~11월 하반기) 평균 ----------
+  const halfWrap = document.getElementById("perfHalfWrap");
+  const halfGroups = {};
+  docs.forEach(d => {
+    if (!d.yearMonth) return;
+    const [yStr, mStr] = d.yearMonth.split("-");
+    const y = parseInt(yStr, 10), m = parseInt(mStr, 10);
+    let key, label;
+    if (m >= 6 && m <= 11) { key = `${y}-H2`; label = `${y}년 하반기 (6~11월)`; }
+    else if (m === 12) { key = `${y}-${y + 1}-H1`; label = `${y}~${y + 1}년 상반기 (12~5월)`; }
+    else { key = `${y - 1}-${y}-H1`; label = `${y - 1}~${y}년 상반기 (12~5월)`; }
+    if (!halfGroups[key]) halfGroups[key] = { label, sortKey: y * 12 + m, docs: [] };
+    halfGroups[key].docs.push(d);
+  });
+  const halfList = Object.values(halfGroups).sort((a, b) => a.sortKey - b.sortKey);
+  if (!halfList.length) {
+    halfWrap.innerHTML = "";
   } else {
-    compareWrap.innerHTML = "";
+    halfWrap.innerHTML = `<h2 style="font-size:14px;margin:0 0 10px;">인사평가 반기별 평균</h2>
+      <table class="mono"><thead><tr><th style="font-family:inherit;">지표</th>${halfList.map(h => `<th>${h.label}</th>`).join("")}</tr></thead><tbody>
+        ${metrics.map(m => `<tr><td style="font-family:inherit;font-weight:700;white-space:nowrap;">${m.label}</td>
+          ${halfList.map(h => {
+            const nums = h.docs.map(d => parseFloat(d[m.key])).filter(n => !isNaN(n));
+            const avg = nums.length ? Math.round((nums.reduce((a, b) => a + b, 0) / nums.length) * 100) / 100 : null;
+            return `<td>${avg !== null ? avg + (m.unit || "") : "-"}</td>`;
+          }).join("")}
+        </tr>`).join("")}
+      </tbody></table>`;
   }
 
   const breakdownWrap = document.getElementById("perfBreakdownWrap");
   if (isSeo && breakdownWrap) {
-    const latestDoc = latestYm ? byYm[latestYm] : null;
+    const allYmsForBreakdown = docs.map(d => d.yearMonth).filter(Boolean).sort();
+    const latestYm = allYmsForBreakdown[allYmsForBreakdown.length - 1];
+    const latestDoc = latestYm ? byYm[latestYm] || docs.find(d => d.yearMonth === latestYm) : null;
     const breakdown = (latestDoc && latestDoc.breakdown) || {};
     const managers = PEOPLE.filter(p => p.key !== "seo");
     breakdownWrap.innerHTML = `<h2 style="font-size:14px;margin:0 0 10px;">매니저별 개별지도 현황 (${latestYm || "기록 없음"})</h2>
