@@ -74,7 +74,7 @@ const SECTIONS = [
       { key:"content", label:"내용", type:"textarea" },
       { key:"fileLink", label:"첨부 링크(URL)", type:"link" },
       { key:"images", label:"첨부 이미지·파일", type:"imageUpload" }
-    ], columns:["title"] }
+    ], columns:["title"] },
   { key:"teamMembers", label:"팀 구성원", group:"팀별내 구성원", color:"blue",
     desc:"별내점 구성원들의 자기소개입니다.",
     isTeamRoster:true }
