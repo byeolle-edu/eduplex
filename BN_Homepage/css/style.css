@@ -25,6 +25,10 @@
 }
 
 * { box-sizing: border-box; }
+/* 어디에 있든(표 안, 팝업 안 등) 모든 입력창/버튼 글씨체를 본문과 동일하게 통일합니다. */
+input, select, textarea, button {
+  font-family: var(--font-display);
+}
 
 body {
   margin: 0;
