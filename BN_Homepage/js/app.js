@@ -92,6 +92,40 @@ const REG_CONSULT_LINKS = {
   yj:  "https://docs.google.com/spreadsheets/d/1aWSqEUPGCRu6tQSP-s4MNOEZgCUhtubj_mKMpaaMIR4/edit?gid=1649087173#gid=1649087173",
   jh:  "https://docs.google.com/spreadsheets/d/1wX4ttZE5wF90AKZqBD-2ivZpNwYfeS3vp61jrkLHqPQ/edit?gid=1629041033#gid=1629041033"
 };
+
+// 성과/전략 지표 항목 정의 (매니저 3명 공통 / 서지은 전용)
+const PERF_METRICS_MANAGER = [
+  { key:"students", label:"담당 학생 인원", unit:"명" },
+  { key:"newStudents", label:"신규 학생", unit:"명" },
+  { key:"endStudents", label:"종료 학생 인원", unit:"명" },
+  { key:"churnRate", label:"이탈률", unit:"%" },
+  { key:"ratio5", label:"주5회 비율", unit:"%" },
+  { key:"ratio4", label:"주4회 비율", unit:"%" },
+  { key:"ratio3", label:"주3회 비율", unit:"%" },
+  { key:"ratioConsult", label:"상담 비율", unit:"%" },
+  { key:"individualStudents", label:"개별지도 학생 수", unit:"명" },
+  { key:"promotionRate", label:"프미율", unit:"%" },
+  { key:"individualEndRate", label:"개별지도 종료율", unit:"%" },
+  { key:"commaTotal", label:"콤마 수", unit:"개" },
+  { key:"commaPerWeek", label:"인당 주 콤마 수", unit:"개" }
+];
+const PERF_METRICS_SEO = [
+  { key:"onlyStudents", label:"온리 학생 인원", unit:"명" },
+  { key:"onlyEndStudents", label:"온리 학생 종료 인원", unit:"명" },
+  { key:"onlyEndRate", label:"온리 학생 종료율", unit:"%" },
+  { key:"onlyComma", label:"온리 학생 콤마 수", unit:"개" },
+  { key:"onlyCommaPerWeek", label:"온리 학생 주 콤마 수", unit:"개" },
+  { key:"promotionRate", label:"프미율", unit:"%" }
+];
+const PERF_BREAKDOWN_METRICS = [
+  { key:"individualStudents", label:"개별지도 학생 수" },
+  { key:"promotionRate", label:"프미율(%)" },
+  { key:"endRate", label:"종료율(%)" },
+  { key:"comma", label:"콤마 수" },
+  { key:"commaPerWeek", label:"인당 주 콤마 수" }
+];
+const PERF_START_YEAR_MONTH = "2025-03";
+
 function personSections(p) {
   return [
     { key:`reg_${p.key}`, label:`${p.name} · 등록 상담`, group:"개인 미팅", color:"blue",
@@ -135,18 +169,8 @@ function personSections(p) {
     { key:`perf_${p.key}`, label:`${p.name} · 성과/전략`, group:"개인 미팅", color:"blue",
       personEmail:p.email, personGroupLabel:p.name, personSub:"성과/전략",
       collectionName:`perf_${p.key}`, scope:"team", writable:"all",
-      desc:"1년 단위 성과 지표입니다.",
-      fields:[
-        { key:"year", label:"연도", type:"text" },
-        { key:"students", label:"학생 수", type:"number" },
-        { key:"promotionRate", label:"프미율(%)", type:"text" },
-        { key:"churnRate", label:"이탈률(%)", type:"text" },
-        { key:"commaTotal", label:"전체 콤마 수", type:"number" },
-        { key:"commaPerStudent", label:"1인당 콤마 수", type:"text" },
-        { key:"shortTermRate", label:"단기(3개월) 비율(%)", type:"text" },
-        { key:"midTermRate", label:"중기(6개월) 비율(%)", type:"text" },
-        { key:"longTermRate", label:"장기(9개월) 비율(%)", type:"text" }
-      ], columns:["year","students","promotionRate","churnRate"] },
+      desc:"매달 지표를 기록하고, 1년 단위로 비교·분석합니다. (2025년 3월부터 누적)",
+      isPersonalPerf:true, personKey:p.key },
 
     { key:`dm_${p.key}`, label:`${p.name} · 원장 미팅`, group:"개인 미팅", color:"blue",
       personEmail:p.email, personGroupLabel:p.name, personSub:"원장 미팅",
@@ -1147,6 +1171,7 @@ async function renderSection(key) {
   if (section.hidden && state.profile.role !== "leader") { main.innerHTML = `<div class="empty-state">삭제된 메뉴입니다.</div>`; return; }
   if (section.isLinkPills) { renderLinkPills(section); return; }
   if (section.isPersonalTDL) { renderPersonalTDL(section); return; }
+  if (section.isPersonalPerf) { renderPersonalPerf(section); return; }
   if (section.isMonthlySchedule) { renderMonthlySchedule(section); return; }
   if (section.isEvalSheet) { renderEvalSheet(section); return; }
   if (section.isOpsGrid) { renderOpsGrid(section); return; }
@@ -2843,6 +2868,210 @@ function openPersonalTaskReportModal(section, task, onSaved) {
       }
     };
   }
+}
+
+/* ===================== 개인 성과/전략 분석 ===================== */
+const perfViewState = {}; // sectionKey -> { year }
+function getPerfViewState(section, docs) {
+  if (!perfViewState[section.key]) {
+    const years = docs.map(d => parseInt((d.yearMonth || "").slice(0, 4), 10)).filter(Boolean);
+    const latestYear = years.length ? Math.max(...years) : new Date().getFullYear();
+    perfViewState[section.key] = { year: latestYear };
+  }
+  return perfViewState[section.key];
+}
+
+async function renderPersonalPerf(section) {
+  const main = document.getElementById("mainContent");
+  const isSeo = section.personKey === "seo";
+  const metrics = isSeo ? PERF_METRICS_SEO : PERF_METRICS_MANAGER;
+  main.innerHTML = `<div class="page-header">
+      <div>
+        <h1><span class="badge" style="background:${COLOR_HEX[section.color]}"></span>${section.label}</h1>
+        <p>${section.desc}</p>
+      </div>
+      ${canWriteSection(section) ? `<button class="btn small" id="addPerfBtn">+ 이번 달 기록 등록/수정</button>` : ""}
+    </div>
+    <div id="perfYearNav" style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
+      <button class="icon-btn" id="perfPrevYear" style="font-size:18px;">‹</button>
+      <span id="perfYearLabel" style="font-weight:800;font-size:15px;min-width:70px;text-align:center;"></span>
+      <button class="icon-btn" id="perfNextYear" style="font-size:18px;">›</button>
+    </div>
+    <div class="card" style="overflow:auto;"><div id="perfTableWrap">불러오는 중...</div></div>
+    <div class="card" id="perfCompareWrap"></div>
+    ${isSeo ? `<div class="card" id="perfBreakdownWrap"></div>` : ""}
+    <div class="card"><h2 style="font-size:14px;margin:0 0 10px;">월별 분석 (잘한 점 / 다음 달 목표)</h2><div id="perfReflectionWrap"></div></div>`;
+
+  if (canWriteSection(section)) {
+    document.getElementById("addPerfBtn").onclick = () => openPersonalPerfModal(section, null, () => renderPersonalPerf(section));
+  }
+
+  const snap = await getDocs(collection(db, section.collectionName));
+  const docs = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (a.yearMonth || "").localeCompare(b.yearMonth || ""));
+  const view = getPerfViewState(section, docs);
+
+  document.getElementById("perfPrevYear").onclick = () => { view.year--; renderPerfBody(section, docs, metrics, isSeo); };
+  document.getElementById("perfNextYear").onclick = () => { view.year++; renderPerfBody(section, docs, metrics, isSeo); };
+
+  renderPerfBody(section, docs, metrics, isSeo);
+}
+
+function renderPerfBody(section, docs, metrics, isSeo) {
+  const view = getPerfViewState(section, docs);
+  document.getElementById("perfYearLabel").textContent = `${view.year}년`;
+
+  const startYm = view.year === 2025 ? PERF_START_YEAR_MONTH : `${view.year}-01`;
+  const months = [];
+  for (let m = parseInt(startYm.slice(5, 7), 10); m <= 12; m++) months.push(`${view.year}-${String(m).padStart(2, "0")}`);
+  const byYm = Object.fromEntries(docs.map(d => [d.yearMonth, d]));
+
+  const tableWrap = document.getElementById("perfTableWrap");
+  let html = `<table class="mono"><thead><tr><th style="font-family:inherit;">지표</th>${months.map(ym => `<th>${parseInt(ym.slice(5), 10)}월</th>`).join("")}</tr></thead><tbody>`;
+  metrics.forEach(m => {
+    html += `<tr><td style="font-family:inherit;font-weight:700;white-space:nowrap;">${m.label}</td>`;
+    months.forEach(ym => {
+      const d = byYm[ym];
+      const v = d ? d[m.key] : "";
+      html += `<td>${v !== undefined && v !== "" ? escapeHtml(String(v)) + (m.unit || "") : "-"}</td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</tbody></table>`;
+  tableWrap.innerHTML = html;
+
+  const compareWrap = document.getElementById("perfCompareWrap");
+  const filledThisYear = months.filter(ym => byYm[ym]);
+  const latestYm = filledThisYear[filledThisYear.length - 1];
+  if (latestYm) {
+    const prevYm = `${view.year - 1}-${latestYm.slice(5)}`;
+    const prevDoc = byYm[prevYm] || docs.find(d => d.yearMonth === prevYm);
+    compareWrap.innerHTML = `<h2 style="font-size:14px;margin:0 0 10px;">전년 동월(${prevYm}) 대비 · 최근 입력월 ${latestYm}</h2>
+      ${prevDoc ? `<table><thead><tr><th>지표</th><th>${prevYm}</th><th>${latestYm}</th><th>증감</th></tr></thead><tbody>
+        ${metrics.map(m => {
+          const before = parseFloat(prevDoc[m.key]);
+          const after = parseFloat(byYm[latestYm][m.key]);
+          let diffHtml = `<span style="color:var(--text-muted);">-</span>`;
+          if (!isNaN(before) && !isNaN(after)) {
+            const diff = Math.round((after - before) * 100) / 100;
+            const color = diff > 0 ? "var(--green-deep)" : diff < 0 ? "var(--danger)" : "var(--text-muted)";
+            const arrow = diff > 0 ? "▲" : diff < 0 ? "▼" : "-";
+            diffHtml = `<span style="color:${color};font-weight:700;">${arrow} ${Math.abs(diff)}${m.unit || ""}</span>`;
+          }
+          return `<tr><td>${m.label}</td><td class="mono">${prevDoc[m.key] ?? "-"}${prevDoc[m.key] ? (m.unit || "") : ""}</td><td class="mono">${byYm[latestYm][m.key] ?? "-"}${byYm[latestYm][m.key] ? (m.unit || "") : ""}</td><td>${diffHtml}</td></tr>`;
+        }).join("")}
+      </tbody></table>` : `<p class="empty-state">작년 같은 달(${prevYm}) 기록이 없어서 비교할 수 없어요.</p>`}`;
+  } else {
+    compareWrap.innerHTML = "";
+  }
+
+  const breakdownWrap = document.getElementById("perfBreakdownWrap");
+  if (isSeo && breakdownWrap) {
+    const latestDoc = latestYm ? byYm[latestYm] : null;
+    const breakdown = (latestDoc && latestDoc.breakdown) || {};
+    const managers = PEOPLE.filter(p => p.key !== "seo");
+    breakdownWrap.innerHTML = `<h2 style="font-size:14px;margin:0 0 10px;">매니저별 개별지도 현황 (${latestYm || "기록 없음"})</h2>
+      ${latestDoc ? `<table><thead><tr><th>매니저</th>${PERF_BREAKDOWN_METRICS.map(m => `<th>${m.label}</th>`).join("")}</tr></thead><tbody>
+        ${managers.map(mgr => {
+          const row = breakdown[mgr.key] || {};
+          return `<tr><td style="font-weight:700;">${escapeHtml(mgr.name)}</td>${PERF_BREAKDOWN_METRICS.map(m => `<td class="mono">${row[m.key] ?? "-"}</td>`).join("")}</tr>`;
+        }).join("")}
+      </tbody></table>` : `<p class="empty-state">이번 연도 기록이 아직 없어요.</p>`}`;
+  }
+
+  const reflectionWrap = document.getElementById("perfReflectionWrap");
+  const withReflection = [...docs].reverse().filter(d => d.goodPoints || d.nextGoal);
+  if (!withReflection.length) {
+    reflectionWrap.innerHTML = `<div class="empty-state">아직 작성된 월별 분석이 없어요.</div>`;
+  } else {
+    reflectionWrap.innerHTML = withReflection.map(d => `<div class="ledger-row">
+      <div style="flex:1;">
+        <div class="rtitle">${escapeHtml(d.yearMonth)}</div>
+        ${d.goodPoints ? `<div class="rbody"><b>잘한 점</b><br>${escapeHtml(d.goodPoints)}</div>` : ""}
+        ${d.nextGoal ? `<div class="rbody" style="margin-top:6px;"><b>다음 달 목표</b><br>${escapeHtml(d.nextGoal)}</div>` : ""}
+      </div>
+      ${canWriteSection(section) ? `<button class="icon-btn" data-perf-edit="${d.yearMonth}">수정</button>` : ""}
+    </div>`).join("");
+    reflectionWrap.querySelectorAll("[data-perf-edit]").forEach(btn => {
+      btn.onclick = () => openPersonalPerfModal(section, docs.find(d => d.yearMonth === btn.dataset.perfEdit), () => renderPersonalPerf(section));
+    });
+  }
+}
+
+function openPersonalPerfModal(section, existing, onSaved) {
+  const root = document.getElementById("modalRoot");
+  const isSeo = section.personKey === "seo";
+  const metrics = isSeo ? PERF_METRICS_SEO : PERF_METRICS_MANAGER;
+  const managers = PEOPLE.filter(p => p.key !== "seo");
+  const defaultYm = existing ? existing.yearMonth : new Date().toISOString().slice(0, 7);
+  const breakdown = (existing && existing.breakdown) || {};
+
+  root.innerHTML = `<div class="modal-bg" id="modalBg">
+    <div class="modal" style="max-width:820px;">
+      <h3>${existing ? "월별 기록 수정" : "이번 달 기록 등록"}</h3>
+      <form id="perfForm">
+        <div class="field"><label>기록 월</label><input type="month" id="perfYm" value="${escapeHtml(defaultYm)}" min="${PERF_START_YEAR_MONTH}" required></div>
+        <div class="field" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;background:var(--bg-page);border:1px solid var(--border);border-radius:10px;padding:14px;">
+          ${metrics.map(m => `<div>
+            <label style="font-size:.85rem;">${m.label}${m.unit ? ` (${m.unit})` : ""}</label>
+            <input type="number" step="any" id="perf_${m.key}" value="${escapeHtml(String((existing && existing[m.key]) ?? ""))}">
+          </div>`).join("")}
+        </div>
+        ${isSeo ? `<div class="field">
+          <label>매니저별 개별지도 현황</label>
+          <table><thead><tr><th>매니저</th>${PERF_BREAKDOWN_METRICS.map(m => `<th style="font-size:11px;">${m.label}</th>`).join("")}</tr></thead><tbody>
+            ${managers.map(mgr => `<tr><td style="font-weight:700;">${escapeHtml(mgr.name)}</td>
+              ${PERF_BREAKDOWN_METRICS.map(m => `<td><input type="number" step="any" id="bd_${mgr.key}_${m.key}" value="${escapeHtml(String((breakdown[mgr.key] && breakdown[mgr.key][m.key]) ?? ""))}" style="width:80px;"></td>`).join("")}
+            </tr>`).join("")}
+          </tbody></table>
+        </div>` : ""}
+        <div class="field"><label>잘한 점</label><textarea id="perfGood" rows="3">${escapeHtml(existing?.goodPoints || "")}</textarea></div>
+        <div class="field"><label>다음 달 목표</label><textarea id="perfGoal" rows="3">${escapeHtml(existing?.nextGoal || "")}</textarea></div>
+        <div class="grid-2" style="margin-top:10px;">
+          <button type="button" class="btn secondary" id="cancelBtn">취소</button>
+          <button type="submit" class="btn" id="savePerfBtn">저장</button>
+        </div>
+      </form>
+    </div></div>`;
+  document.getElementById("cancelBtn").onclick = () => root.innerHTML = "";
+  document.getElementById("modalBg").addEventListener("click", (e) => { if (e.target.id === "modalBg") root.innerHTML = ""; });
+
+  document.getElementById("perfForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const yearMonth = document.getElementById("perfYm").value;
+    if (!yearMonth) return;
+    const saveBtn = document.getElementById("savePerfBtn");
+    saveBtn.disabled = true;
+    try {
+      const data = { yearMonth };
+      metrics.forEach(m => {
+        const el = document.getElementById(`perf_${m.key}`);
+        data[m.key] = el.value === "" ? "" : Number(el.value);
+      });
+      if (isSeo) {
+        const bd = {};
+        managers.forEach(mgr => {
+          bd[mgr.key] = {};
+          PERF_BREAKDOWN_METRICS.forEach(m => {
+            const el = document.getElementById(`bd_${mgr.key}_${m.key}`);
+            bd[mgr.key][m.key] = el.value === "" ? "" : Number(el.value);
+          });
+        });
+        data.breakdown = bd;
+      }
+      data.goodPoints = document.getElementById("perfGood").value.trim();
+      data.nextGoal = document.getElementById("perfGoal").value.trim();
+      data.updatedAt = new Date().toISOString();
+      data.updatedBy = state.profile.name;
+
+      await setDoc(doc(db, section.collectionName, yearMonth), data);
+      root.innerHTML = "";
+      showToast("저장되었습니다.");
+      if (onSaved) onSaved();
+    } catch (err) {
+      saveBtn.disabled = false;
+      alert("저장 중 오류가 발생했습니다: " + err.message);
+    }
+  });
 }
 
 function openPersonalTaskModal(section, existing) {
