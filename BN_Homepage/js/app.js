@@ -4740,6 +4740,22 @@ function openModal(section, existing, prefill) {
     ? [{ key: "branchId", label: "지점", type: "branchSelect" }, ...section.fields]
     : section.fields;
 
+  // 작성 중 내용이 갑자기 사라지지 않도록, 입력할 때마다 브라우저에 임시 저장해뒀다가
+  // 같은 항목을 다시 열면 이어서 쓸 수 있게 해줍니다. 저장에 성공하면 임시 저장은 지워집니다.
+  const draftKey = `formDraft_${section.collectionName}_${existing ? existing.id : "new"}`;
+  let initialValues = existing ? { ...existing } : (prefill ? { ...prefill } : {});
+  try {
+    const raw = localStorage.getItem(draftKey);
+    if (raw) {
+      const draft = JSON.parse(raw);
+      if (confirm("작성하다 만 임시 저장 내용이 있어요. 이어서 작성할까요? (취소하면 임시 저장 내용을 지워요)")) {
+        initialValues = { ...initialValues, ...draft };
+      } else {
+        localStorage.removeItem(draftKey);
+      }
+    }
+  } catch (err) { /* 브라우저 저장공간 문제 등은 무시하고 그냥 진행합니다 */ }
+
   function singleFieldHtml(f) {
     if (f.type === "imageUpload") {
       imageState[f.key] = { urls: [...((existing && existing[f.key]) || [])], files: [] };
@@ -4751,7 +4767,7 @@ function openModal(section, existing, prefill) {
       </div>`;
     }
     if (f.type === "richtext") {
-      const initial = sanitizeRichHtml(existing ? existing[f.key] : "");
+      const initial = sanitizeRichHtml(initialValues[f.key] || "");
       const heightStyle = f.tall ? "min-height:480px;" : "";
       return `<div class="field">
         <label>${f.label}</label>
@@ -4761,7 +4777,7 @@ function openModal(section, existing, prefill) {
       </div>`;
     }
     if (f.type === "linkList") {
-      linkListState[f.key] = (existing && existing[f.key] ? [...existing[f.key]] : []);
+      linkListState[f.key] = (initialValues[f.key] ? [...initialValues[f.key]] : []);
       return `<div class="field">
         <label>${f.label}</label>
         <div id="linklist_${f.key}"></div>
@@ -4769,7 +4785,7 @@ function openModal(section, existing, prefill) {
       </div>`;
     }
     if (f.type === "tdlList") {
-      tdlListState[f.key] = (existing && existing[f.key] ? [...existing[f.key]] : []);
+      tdlListState[f.key] = (initialValues[f.key] ? [...initialValues[f.key]] : []);
       return `<div class="field">
         <label>${f.label}</label>
         <p style="font-size:11px;color:var(--text-muted);margin:0 0 6px;">담당자를 지정하면 그 사람의 개인 미팅 &gt; TDL에도 자동으로 등록돼요.</p>
@@ -4777,7 +4793,7 @@ function openModal(section, existing, prefill) {
         <button type="button" class="btn small secondary" id="addtdl_${f.key}">+ TDL 추가</button>
       </div>`;
     }
-    const currentVal = existing ? existing[f.key] : (prefill && prefill[f.key] !== undefined ? prefill[f.key] : "");
+    const currentVal = initialValues[f.key] !== undefined ? initialValues[f.key] : "";
     if (f.compact) {
       return `<div class="field" style="margin-bottom:0;">
         <label style="font-size:.92rem;">${f.label}</label>
@@ -4806,7 +4822,7 @@ function openModal(section, existing, prefill) {
 
   root.innerHTML = `<div class="modal-bg" id="modalBg">
     <div class="modal" style="max-width:1440px;">
-      <h3>${existing ? "수정" : "새로 등록"} · ${section.label}</h3>
+      <h3>${existing ? "수정" : "새로 등록"} · ${section.label} <span id="draftSavedHint" style="font-size:11px;font-weight:600;color:var(--text-muted);opacity:0;transition:opacity .3s;margin-left:8px;"></span></h3>
       <form id="entryForm">${fieldsHtml}
         <div class="grid-2" style="margin-top:10px;">
           <button type="button" class="btn secondary" id="cancelBtn">취소</button>
@@ -4862,11 +4878,11 @@ function openModal(section, existing, prefill) {
     </div>`).join("") : `<p style="font-size:12px;color:var(--text-muted);margin:0 0 6px;">등록된 링크가 없습니다.</p>`;
     wrap.querySelectorAll("[data-ll-label]").forEach(el => el.oninput = () => { items[+el.dataset.llLabel].label = el.value; });
     wrap.querySelectorAll("[data-ll-url]").forEach(el => el.oninput = () => { items[+el.dataset.llUrl].url = el.value; });
-    wrap.querySelectorAll("[data-ll-del]").forEach(el => el.onclick = () => { items.splice(+el.dataset.llDel, 1); renderLinkListRows(key); });
+    wrap.querySelectorAll("[data-ll-del]").forEach(el => el.onclick = () => { items.splice(+el.dataset.llDel, 1); renderLinkListRows(key); scheduleAutosave(); });
   }
   formFields.filter(f => f.type === "linkList").forEach(f => {
     renderLinkListRows(f.key);
-    document.getElementById(`addlink_${f.key}`).onclick = () => { linkListState[f.key].push({ label: "", url: "" }); renderLinkListRows(f.key); };
+    document.getElementById(`addlink_${f.key}`).onclick = () => { linkListState[f.key].push({ label: "", url: "" }); renderLinkListRows(f.key); scheduleAutosave(); };
   });
 
   function renderTdlListRows(key) {
@@ -4888,14 +4904,42 @@ function openModal(section, existing, prefill) {
       el.value = items[+el.dataset.tlAssignee].assignee || "";
       el.onchange = () => { items[+el.dataset.tlAssignee].assignee = el.value; };
     });
-    wrap.querySelectorAll("[data-tl-del]").forEach(el => el.onclick = () => { items.splice(+el.dataset.tlDel, 1); renderTdlListRows(key); });
+    wrap.querySelectorAll("[data-tl-del]").forEach(el => el.onclick = () => { items.splice(+el.dataset.tlDel, 1); renderTdlListRows(key); scheduleAutosave(); });
   }
   formFields.filter(f => f.type === "tdlList").forEach(f => {
     renderTdlListRows(f.key);
-    document.getElementById(`addtdl_${f.key}`).onclick = () => { tdlListState[f.key].push({ task: "", dueDate: "", assignee: "" }); renderTdlListRows(f.key); };
+    document.getElementById(`addtdl_${f.key}`).onclick = () => { tdlListState[f.key].push({ task: "", dueDate: "", assignee: "" }); renderTdlListRows(f.key); scheduleAutosave(); };
   });
 
   wireRichtextToolbars(formFields);
+
+  // ---------- 작성 중 자동 임시저장 ----------
+  let autosaveTimer = null;
+  function saveDraftNow() {
+    try {
+      const snapshot = {};
+      formFields.forEach(f => {
+        if (f.type === "imageUpload") return; // 파일은 임시 저장 대상이 아니에요
+        if (f.type === "linkList") { snapshot[f.key] = linkListState[f.key]; return; }
+        if (f.type === "tdlList") { snapshot[f.key] = tdlListState[f.key]; return; }
+        const el = document.getElementById(`f_${f.key}`);
+        if (!el) return;
+        snapshot[f.key] = f.type === "richtext" ? el.innerHTML : el.value;
+      });
+      localStorage.setItem(draftKey, JSON.stringify(snapshot));
+      const hint = document.getElementById("draftSavedHint");
+      if (hint) {
+        hint.textContent = `임시 저장됨 · ${new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}`;
+        hint.style.opacity = "1";
+      }
+    } catch (err) { /* 저장공간이 꽉 찼거나 하는 경우는 조용히 무시합니다 */ }
+  }
+  function scheduleAutosave() {
+    clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(saveDraftNow, 1200);
+  }
+  document.getElementById("entryForm").addEventListener("input", scheduleAutosave);
+  document.getElementById("entryForm").addEventListener("change", scheduleAutosave);
 
   document.getElementById("entryForm").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -4989,6 +5033,7 @@ function openModal(section, existing, prefill) {
         }
       }
       savedOnce = true;
+      try { localStorage.removeItem(draftKey); } catch (err) { /* 무시 */ }
       showToast("저장되었습니다.");
       saveBtn.disabled = false;
       saveBtn.textContent = "저장";
