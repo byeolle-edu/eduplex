@@ -2997,7 +2997,7 @@ function renderPerfBody(section, docs, metrics, isSeo) {
     renderCmpTable();
   }
 
-  // ---------- 인사평가 반기(12~5월 상반기 / 6~11월 하반기) 평균 ----------
+  // ---------- 인사평가 반기(12~5월 상반기 / 6~11월 하반기) 평균 · 원하는 두 반기 선택 비교 ----------
   const halfWrap = document.getElementById("perfHalfWrap");
   const halfGroups = {};
   docs.forEach(d => {
@@ -3008,36 +3008,49 @@ function renderPerfBody(section, docs, metrics, isSeo) {
     if (m >= 6 && m <= 11) { key = `${y}-H2`; label = `${y}년 하반기 (6~11월)`; }
     else if (m === 12) { key = `${y}-${y + 1}-H1`; label = `${y}~${y + 1}년 상반기 (12~5월)`; }
     else { key = `${y - 1}-${y}-H1`; label = `${y - 1}~${y}년 상반기 (12~5월)`; }
-    if (!halfGroups[key]) halfGroups[key] = { label, sortKey: y * 12 + m, docs: [] };
+    if (!halfGroups[key]) halfGroups[key] = { key, label, sortKey: y * 12 + m, docs: [] };
     halfGroups[key].docs.push(d);
   });
   const halfList = Object.values(halfGroups).sort((a, b) => a.sortKey - b.sortKey);
+  const halfAvg = (h, key) => {
+    const nums = h.docs.map(d => parseFloat(d[key])).filter(n => !isNaN(n));
+    return nums.length ? Math.round((nums.reduce((a, b) => a + b, 0) / nums.length) * 100) / 100 : null;
+  };
   if (!halfList.length) {
     halfWrap.innerHTML = "";
   } else {
-    halfWrap.innerHTML = `<h2 style="font-size:14px;margin:0 0 10px;">인사평가 반기별 평균</h2>
-      <table class="mono"><thead><tr><th style="font-family:var(--font-display);">지표</th>${halfList.map(h => `<th style="font-family:var(--font-display);">${h.label}</th>`).join("")}</tr></thead><tbody>
+    const defaultB = halfList[halfList.length - 1].key;
+    const defaultA = halfList.length > 1 ? halfList[halfList.length - 2].key : defaultB;
+    halfWrap.innerHTML = `<h2 style="font-size:14px;margin:0 0 10px;">인사평가 반기별 평균 · 원하는 두 반기 비교</h2>
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+        <select id="halfSelA">${halfList.map(h => `<option value="${h.key}" ${h.key === defaultA ? "selected" : ""}>${h.label}</option>`).join("")}</select>
+        <span style="color:var(--text-muted);">vs</span>
+        <select id="halfSelB">${halfList.map(h => `<option value="${h.key}" ${h.key === defaultB ? "selected" : ""}>${h.label}</option>`).join("")}</select>
+      </div>
+      <div id="halfTableWrap"></div>`;
+    const renderHalfTable = () => {
+      const hA = halfList.find(h => h.key === document.getElementById("halfSelA").value);
+      const hB = halfList.find(h => h.key === document.getElementById("halfSelB").value);
+      const wrap = document.getElementById("halfTableWrap");
+      if (!hA || !hB) { wrap.innerHTML = ""; return; }
+      wrap.innerHTML = `<table><thead><tr><th>지표</th><th>${hA.label}</th><th>${hB.label}</th><th>증감</th></tr></thead><tbody>
         ${metrics.map(m => {
-          const avgs = halfList.map(h => {
-            const nums = h.docs.map(d => parseFloat(d[m.key])).filter(n => !isNaN(n));
-            return nums.length ? Math.round((nums.reduce((a, b) => a + b, 0) / nums.length) * 100) / 100 : null;
-          });
-          return `<tr><td style="font-family:var(--font-display);font-weight:700;white-space:nowrap;">${m.label}</td>
-          ${avgs.map((avg, i) => {
-            if (avg === null) return `<td>-</td>`;
-            let diffHtml = "";
-            const prevAvg = i > 0 ? avgs[i - 1] : null;
-            if (prevAvg !== null) {
-              const diff = Math.round((avg - prevAvg) * 100) / 100;
-              const color = diff > 0 ? "var(--green-deep)" : diff < 0 ? "var(--danger)" : "var(--text-muted)";
-              const arrow = diff > 0 ? "▲" : diff < 0 ? "▼" : "-";
-              diffHtml = `<div style="font-size:11px;font-weight:700;color:${color};margin-top:2px;">${arrow} ${Math.abs(diff)}${m.unit || ""}</div>`;
-            }
-            return `<td>${avg}${m.unit || ""}${diffHtml}</td>`;
-          }).join("")}
-        </tr>`;
+          const avgA = halfAvg(hA, m.key);
+          const avgB = halfAvg(hB, m.key);
+          let diffHtml = `<span style="color:var(--text-muted);">-</span>`;
+          if (avgA !== null && avgB !== null) {
+            const diff = Math.round((avgB - avgA) * 100) / 100;
+            const color = diff > 0 ? "var(--green-deep)" : diff < 0 ? "var(--danger)" : "var(--text-muted)";
+            const arrow = diff > 0 ? "▲" : diff < 0 ? "▼" : "-";
+            diffHtml = `<span style="color:${color};font-weight:700;">${arrow} ${Math.abs(diff)}${m.unit || ""}</span>`;
+          }
+          return `<tr><td>${m.label}</td><td class="mono">${avgA !== null ? avgA + (m.unit || "") : "-"}</td><td class="mono">${avgB !== null ? avgB + (m.unit || "") : "-"}</td><td>${diffHtml}</td></tr>`;
         }).join("")}
       </tbody></table>`;
+    };
+    document.getElementById("halfSelA").onchange = renderHalfTable;
+    document.getElementById("halfSelB").onchange = renderHalfTable;
+    renderHalfTable();
   }
 
   const breakdownWrap = document.getElementById("perfBreakdownWrap");
@@ -4521,9 +4534,8 @@ function richtextToolbarHtml(key) {
     <button type="button" class="rt-btn" data-cmd="bold" title="굵게"><b>B</b></button>
     <button type="button" class="rt-btn" data-cmd="title" title="제목 (크게+굵게)" style="width:auto;padding:0 8px;font-size:11px;font-weight:800;">제목</button>
     <span class="rt-sep"></span>
-    <button type="button" class="rt-btn rt-size" data-size="rt-small" title="작게">S</button>
-    <button type="button" class="rt-btn rt-size" data-size="" title="보통">M</button>
-    <button type="button" class="rt-btn rt-size" data-size="rt-large" title="크게">L</button>
+    <input type="number" class="rt-pt-input" data-for-pt="${key}" placeholder="pt" min="6" max="72" step="1" title="글자 크기(포인트) 직접 입력" style="width:44px;height:24px;font-size:11px;padding:0 4px;border:1px solid var(--border);border-radius:6px;">
+    <button type="button" class="rt-btn" data-cmd="applyPt" data-for-pt-btn="${key}" title="입력한 포인트 크기 적용" style="width:auto;padding:0 8px;font-size:11px;">적용</button>
     <span class="rt-sep"></span>
     ${colors.map(c => `<button type="button" class="rt-btn rt-color" data-color="${c}" style="background:${c};" title="글자색"></button>`).join("")}
     <span class="rt-sep"></span>
@@ -4657,6 +4669,14 @@ function wireRichtextToolbarFor(editEl, toolbar) {
         wrapSelectionWithStyle(editEl, "font-weight:700");
       } else if (btn.dataset.cmd === "title") {
         wrapSelectionWithStyle(editEl, "font-weight:800;font-size:19px");
+      } else if (btn.dataset.cmd === "applyPt") {
+        const ptInput = toolbar.querySelector(".rt-pt-input");
+        const pt = ptInput && ptInput.value ? parseInt(ptInput.value, 10) : null;
+        if (pt && pt >= 6 && pt <= 72) {
+          wrapSelectionWithStyle(editEl, `font-size:${pt}pt`);
+        } else {
+          alert("6~72 사이의 숫자를 입력해주세요.");
+        }
       } else if (btn.dataset.cmd === "checklist") {
         document.execCommand("insertHTML", false, '<br><span class="rt-checkbox">☐</span>&nbsp;');
       } else if (btn.dataset.cmd === "removeFormat") {
