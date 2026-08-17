@@ -363,3 +363,16 @@ td.actions { white-space: nowrap; text-align: right; }
 .rt-checked {
   color: var(--green-deep, #2F6B14);
 }
+
+/* 회의 상세보기 인쇄 / PDF 저장 */
+@media print {
+  body * { visibility: hidden; }
+  #detailModalBox, #detailModalBox * { visibility: visible; }
+  #detailModalBox {
+    position: absolute; left: 0; top: 0; width: 100%; height: auto;
+    max-width: 100%; box-shadow: none; border: none; padding: 0;
+  }
+  .modal-bg { position: static; background: none; }
+  .no-print { display: none !important; }
+  .rich-content.meeting-detail-rich, .rich-content.meeting-detail-rich * { font-size: 15px !important; }
+}
