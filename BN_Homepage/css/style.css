@@ -123,6 +123,7 @@ a { color: inherit; }
 /* 도구모음에서 지정한 글자 크기는 .rich-content로 감싸지 않은 화면(예: OKR 그리드)에서도 적용됩니다. */
 .rt-small { font-size: 11px; }
 .rt-large { font-size: 17px; }
+.rt-title { font-weight: 800; font-size: 19px; }
 
 .rich-content { font-size: 13px; line-height: 1.6; overflow-x: auto; }
 /* 붙여넣기 한 글 안에 있던 인라인 font-size나 h1/h2 등 큰 제목 태그를 강제로 작게 눌러줍니다. */
@@ -134,9 +135,10 @@ a { color: inherit; }
 .rich-content .rt-small { font-size: 11px !important; }
 .rich-content .rt-large { font-size: 17px !important; }
 /* 원장 미팅 상세 보기 창은 다른 곳보다 두 배 크게 보여줍니다. */
-.rich-content.meeting-detail-rich, .rich-content.meeting-detail-rich * { font-size: 26px !important; line-height: 1.6 !important; }
-.rich-content.meeting-detail-rich .rt-small { font-size: 20px !important; }
-.rich-content.meeting-detail-rich .rt-large { font-size: 34px !important; }
+.rich-content.meeting-detail-rich, .rich-content.meeting-detail-rich * { font-size: 13px !important; line-height: 1.6 !important; }
+.rich-content.meeting-detail-rich .rt-title { font-size: 19px !important; font-weight: 800 !important; }
+.rich-content.meeting-detail-rich .rt-small { font-size: 11px !important; }
+.rich-content.meeting-detail-rich .rt-large { font-size: 17px !important; }
 .rich-content.meeting-detail-rich[contenteditable="true"] {
   border: 1.5px solid var(--border); border-top: none; border-radius: 0 0 10px 10px;
   padding: 14px; background: #FBFEFA; cursor: text;
@@ -369,8 +371,9 @@ td.actions { white-space: nowrap; text-align: right; }
   body * { visibility: hidden; }
   #detailModalBox, #detailModalBox * { visibility: visible; }
   #detailModalBox {
-    position: absolute; left: 0; top: 0; width: 100%; height: auto;
-    max-width: 100%; box-shadow: none; border: none; padding: 0;
+    position: absolute !important; left: 0; top: 0; width: 100% !important; height: auto !important;
+    max-width: 100% !important; max-height: none !important; overflow: visible !important;
+    box-shadow: none; border: none; padding: 0;
   }
   .modal-bg { position: static; background: none; }
   .no-print { display: none !important; }
