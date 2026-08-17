@@ -379,3 +379,7 @@ td.actions { white-space: nowrap; text-align: right; }
   .no-print { display: none !important; }
   .rich-content.meeting-detail-rich, .rich-content.meeting-detail-rich * { font-size: 15px !important; }
 }
+
+/* 회의 일지 체크박스: 체크하면 글자 위에 취소선만 켜집니다 */
+.rt-checkbox.rt-checked { text-decoration: line-through; opacity: .6; }
+.rt-check-strike { text-decoration: line-through; opacity: .6; }
