@@ -191,7 +191,46 @@ function personSections(p) {
       personEmail:p.email, personGroupLabel:p.name, personSub:"TDL",
       collectionName:`tdl_${p.key}`, scope:"team", writable:"all",
       desc:"해야 할 일을 등록하고, 마감기한과 완료 여부를 관리합니다.",
-      isPersonalTDL:true }
+      isPersonalTDL:true },
+
+    { key:`traffic_${p.key}`, label:`${p.name} · 신호등 점검`, group:"개인 미팅", color:"blue",
+      personEmail:p.email, personGroupLabel:p.name, personSub:"신호등 점검",
+      collectionName:`traffic_${p.key}`, scope:"team", writable:"all",
+      desc:"일일일정표 신호등 점검에서 빨간불 학생만 따로 기록해서 원장님과 면담합니다.",
+      cardView:true, headerFields:["title","school","grade","program"],
+      fields:[
+        { key:"title", label:"학생 이름", type:"text", compact:true },
+        { key:"school", label:"학교", type:"text", compact:true },
+        { key:"grade", label:"학년", type:"text", compact:true },
+        { key:"program", label:"현재 프로그램", type:"text", compact:true },
+        { key:"issue", label:"현재 학생 이슈", type:"textarea" },
+        { key:"expectedReason", label:"예상 종료 이유", type:"textarea" },
+        { key:"actionPlan", label:"액션 플랜", type:"textarea" }
+      ], columns:["title","school","grade"] },
+
+    { key:`termination_${p.key}`, label:`${p.name} · 종료 보고서`, group:"개인 미팅", color:"blue",
+      personEmail:p.email, personGroupLabel:p.name, personSub:"종료 보고서",
+      collectionName:`termination_${p.key}`, scope:"team", writable:"all",
+      desc:"전 월 종료 학생을 분석하고 기록합니다. 아래 통계는 등록된 내용을 바탕으로 자동 계산됩니다.",
+      cardView:true, showTerminationStats:true, headerFields:["title","endMonth","months","reason"],
+      fields:[
+        { key:"endMonth", label:"종료 월", type:"month", compact:true },
+        { key:"title", label:"학생명", type:"text", compact:true },
+        { key:"months", label:"개월 수", type:"number", compact:true },
+        { key:"mbti", label:"MBTI", type:"text", compact:true },
+        { key:"studentType", label:"TYPE", type:"text", compact:true },
+        { key:"school", label:"학교", type:"text", compact:true },
+        { key:"grade", label:"학년", type:"text", compact:true },
+        { key:"program", label:"프로그램", type:"text", compact:true },
+        { key:"reason", label:"종료 원인", type:"select", options:[
+          "학생 초기 장악 실패","학부모 초기 장악 실패","성적 불만족","라포형성 실패","관리 누수",
+          "사교육 정리 실패","학생 마인드 변화 실패","학부모 기대치 조정 실패","장기 전략 부족","보정 사유"
+        ] },
+        { key:"internalReason", label:"매니저가 생각하는 종료 원인 (내부 요인)", type:"textarea" },
+        { key:"effort", label:"노력했던 부분", type:"textarea" },
+        { key:"missed", label:"놓쳤던 부분", type:"textarea" },
+        { key:"nextChallenge", label:"앞으로 새로 도전할 부분", type:"textarea" }
+      ], columns:["title","endMonth","months","reason"] }
   ];
 }
 PEOPLE.forEach(p => SECTIONS.push(...personSections(p)));
@@ -1464,6 +1503,10 @@ async function renderLinkPills(section) {
     return (b.createdAt || "").localeCompare(a.createdAt || "");
   });
 
+  if (section.showTerminationStats) {
+    renderTerminationStats(section, docs);
+  }
+
   const wrap = document.getElementById("linkPillsWrap");
   if (!docs.length) {
     wrap.innerHTML = `<div class="card"><div class="empty-state"><div class="shape"></div>아직 등록된 링크가 없습니다.</div></div>`;
@@ -1497,6 +1540,75 @@ async function renderLinkPills(section) {
   });
 }
 
+function renderTerminationStats(section, docs) {
+  const wrap = document.getElementById("terminationStatsWrap");
+  if (!wrap) return;
+  if (!docs.length) { wrap.innerHTML = `<p class="empty-state">아직 등록된 종료 학생이 없어요.</p>`; return; }
+
+  const total = docs.length;
+  const pct = (n) => Math.round((n / total) * 1000) / 10;
+
+  // 종료 원인별 비율
+  const reasonField = section.fields.find(f => f.key === "reason");
+  const reasonCounts = {};
+  (reasonField.options || []).forEach(o => { reasonCounts[o] = 0; });
+  docs.forEach(d => { if (d.reason) reasonCounts[d.reason] = (reasonCounts[d.reason] || 0) + 1; });
+
+  // 개월 수 기준 초기/단기/중기/장기 비율
+  const buckets = { "초기 (3개월 이내)": 0, "단기 (4~9개월)": 0, "중기 (10~15개월)": 0, "장기 (16개월 이상)": 0 };
+  let bucketTotal = 0;
+  docs.forEach(d => {
+    const mo = parseFloat(d.months);
+    if (isNaN(mo)) return;
+    bucketTotal++;
+    if (mo <= 3) buckets["초기 (3개월 이내)"]++;
+    else if (mo <= 9) buckets["단기 (4~9개월)"]++;
+    else if (mo <= 15) buckets["중기 (10~15개월)"]++;
+    else buckets["장기 (16개월 이상)"]++;
+  });
+
+  // MBTI / TYPE 별 종료 건수
+  const mbtiCounts = {};
+  const typeCounts = {};
+  docs.forEach(d => {
+    if (d.mbti) mbtiCounts[d.mbti] = (mbtiCounts[d.mbti] || 0) + 1;
+    if (d.studentType) typeCounts[d.studentType] = (typeCounts[d.studentType] || 0) + 1;
+  });
+  const sortedEntries = (obj) => Object.entries(obj).sort((a, b) => b[1] - a[1]);
+
+  const barRow = (label, count, denom) => `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+    <div style="width:180px;font-size:12.5px;flex-shrink:0;">${escapeHtml(label)}</div>
+    <div style="flex:1;background:var(--paper-deep,#ECE8DC);border-radius:6px;overflow:hidden;height:16px;">
+      <div style="width:${denom ? (count / denom * 100) : 0}%;background:var(--blue-bright);height:100%;"></div>
+    </div>
+    <div style="width:70px;font-size:12px;color:var(--text-muted);text-align:right;flex-shrink:0;">${count}건 (${denom ? Math.round(count / denom * 1000) / 10 : 0}%)</div>
+  </div>`;
+
+  wrap.innerHTML = `
+    <h2 style="font-size:14px;margin:0 0 4px;">전체 종료 학생: ${total}명</h2>
+    <div class="grid-2" style="gap:24px;margin-top:14px;">
+      <div>
+        <h3 style="font-size:13px;margin:0 0 10px;">종료 원인별 비율</h3>
+        ${Object.entries(reasonCounts).map(([k, v]) => barRow(k, v, total)).join("")}
+      </div>
+      <div>
+        <h3 style="font-size:13px;margin:0 0 10px;">재원 기간별 비율 (초기·단기·중기·장기)</h3>
+        ${Object.entries(buckets).map(([k, v]) => barRow(k, v, bucketTotal)).join("")}
+        ${!bucketTotal ? `<p style="font-size:12px;color:var(--text-muted);">개월 수가 입력된 학생이 없어요.</p>` : ""}
+      </div>
+    </div>
+    <div class="grid-2" style="gap:24px;margin-top:20px;">
+      <div>
+        <h3 style="font-size:13px;margin:0 0 10px;">MBTI별 종료 건수</h3>
+        ${sortedEntries(mbtiCounts).length ? sortedEntries(mbtiCounts).map(([k, v]) => barRow(k, v, total)).join("") : `<p style="font-size:12px;color:var(--text-muted);">입력된 MBTI가 없어요.</p>`}
+      </div>
+      <div>
+        <h3 style="font-size:13px;margin:0 0 10px;">TYPE별 종료 건수</h3>
+        ${sortedEntries(typeCounts).length ? sortedEntries(typeCounts).map(([k, v]) => barRow(k, v, total)).join("") : `<p style="font-size:12px;color:var(--text-muted);">입력된 TYPE이 없어요.</p>`}
+      </div>
+    </div>`;
+}
+
 async function renderFolderGrid(section) {
   const main = document.getElementById("mainContent");
   const branchId = state.branchFilter[section.key];
@@ -1515,6 +1627,7 @@ async function renderFolderGrid(section) {
         ${canWriteSection(section) ? `<button class="btn small" id="addBtn">+ 새로 등록</button>` : ""}
       </div>
     </div>
+    ${section.showTerminationStats ? `<div class="card" id="terminationStatsWrap" style="overflow:auto;">불러오는 중...</div>` : ""}
     <div id="folderGridWrap">불러오는 중...</div>`;
 
   if (canWriteSection(section)) {
