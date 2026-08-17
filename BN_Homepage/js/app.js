@@ -197,8 +197,9 @@ function personSections(p) {
       personEmail:p.email, personGroupLabel:p.name, personSub:"신호등 점검",
       collectionName:`traffic_${p.key}`, scope:"team", writable:"all",
       desc:"일일일정표 신호등 점검에서 빨간불 학생만 따로 기록해서 원장님과 면담합니다.",
-      cardView:true, headerFields:["title","school","grade","program"],
+      cardView:true, monthFilterField:"checkMonth", headerFields:["title","school","grade","program"],
       fields:[
+        { key:"checkMonth", label:"점검 월", type:"month", compact:true },
         { key:"title", label:"학생 이름", type:"text", compact:true },
         { key:"school", label:"학교", type:"text", compact:true },
         { key:"grade", label:"학년", type:"text", compact:true },
@@ -211,8 +212,8 @@ function personSections(p) {
     { key:`termination_${p.key}`, label:`${p.name} · 종료 보고서`, group:"개인 미팅", color:"blue",
       personEmail:p.email, personGroupLabel:p.name, personSub:"종료 보고서",
       collectionName:`termination_${p.key}`, scope:"team", writable:"all",
-      desc:"전 월 종료 학생을 분석하고 기록합니다. 아래 통계는 등록된 내용을 바탕으로 자동 계산됩니다.",
-      cardView:true, showTerminationStats:true, headerFields:["title","endMonth","months","reason"],
+      desc:"전 월 종료 학생을 분석하고 기록합니다. 아래 통계는 선택한 월 기준으로 자동 계산됩니다.",
+      cardView:true, showTerminationStats:true, monthFilterField:"endMonth", headerFields:["title","endMonth","months","reason"],
       fields:[
         { key:"endMonth", label:"종료 월", type:"month", compact:true },
         { key:"title", label:"학생명", type:"text", compact:true },
@@ -1627,6 +1628,10 @@ async function renderFolderGrid(section) {
         ${canWriteSection(section) ? `<button class="btn small" id="addBtn">+ 새로 등록</button>` : ""}
       </div>
     </div>
+    ${section.monthFilterField ? `<div class="card" style="padding:12px 20px;display:flex;align-items:center;gap:10px;">
+      <span style="font-size:12.5px;font-weight:700;color:var(--text-muted);">월 선택</span>
+      <select id="monthFilterSel"><option value="">불러오는 중...</option></select>
+    </div>` : ""}
     ${section.showTerminationStats ? `<div class="card" id="terminationStatsWrap" style="overflow:auto;">불러오는 중...</div>` : ""}
     <div id="folderGridWrap">불러오는 중...</div>`;
 
@@ -1634,18 +1639,37 @@ async function renderFolderGrid(section) {
     document.getElementById("addBtn").onclick = () => openModal(section, null);
   }
 
-  const docs = await fetchDocs(section);
+  const allDocs = await fetchDocs(section);
   // order 값이 있으면 그 순서대로(작은 값이 먼저), 없는 예전 게시물은 뒤로 보내고 최신순으로 정렬합니다.
-  docs.sort((a, b) => {
+  allDocs.sort((a, b) => {
     const oa = a.order !== undefined ? a.order : Infinity;
     const ob = b.order !== undefined ? b.order : Infinity;
     if (oa !== ob) return oa - ob;
     return (b.createdAt || "").localeCompare(a.createdAt || "");
   });
 
+  if (section.monthFilterField) {
+    const monthSel = document.getElementById("monthFilterSel");
+    const months = [...new Set(allDocs.map(d => d[section.monthFilterField]).filter(Boolean))].sort().reverse();
+    const thisMonth = new Date().toISOString().slice(0, 7);
+    if (!months.includes(thisMonth)) months.unshift(thisMonth);
+    monthSel.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join("");
+    monthSel.value = months[0];
+    monthSel.onchange = () => renderFolderGridBody(section, allDocs.filter(d => d[section.monthFilterField] === monthSel.value));
+    renderFolderGridBody(section, allDocs.filter(d => d[section.monthFilterField] === monthSel.value));
+  } else {
+    renderFolderGridBody(section, allDocs);
+  }
+}
+
+function renderFolderGridBody(section, docs) {
+  if (section.showTerminationStats) {
+    renderTerminationStats(section, docs);
+  }
+
   const wrap = document.getElementById("folderGridWrap");
   if (!docs.length) {
-    wrap.innerHTML = `<div class="card"><div class="empty-state"><div class="shape"></div>아직 등록된 게시물이 없습니다.</div></div>`;
+    wrap.innerHTML = `<div class="card"><div class="empty-state"><div class="shape"></div>${section.monthFilterField ? "이 달에 등록된 게시물이 없습니다." : "아직 등록된 게시물이 없습니다."}</div></div>`;
     return;
   }
 
@@ -4971,7 +4995,7 @@ function wireRichtextToolbarFor(editEl, toolbar) {
       if (btn.dataset.cmd === "bold") {
         wrapSelectionWithStyle(editEl, "font-weight:700");
       } else if (btn.dataset.cmd === "title") {
-        wrapSelectionWithStyle(editEl, "font-weight:800;font-size:19px");
+        wrapSelectionWithClass(editEl, "rt-title");
       } else if (btn.dataset.cmd === "checklist") {
         document.execCommand("insertHTML", false, '<br><span class="rt-checkbox">☐</span>&nbsp;');
       } else if (btn.dataset.cmd === "removeFormat") {
@@ -4999,7 +5023,7 @@ const RICHTEXT_ALLOWED_TAGS = new Set([
   "SPAN","DIV","A","H1","H2","H3","H4","BLOCKQUOTE","CODE","PRE","HR"
 ]);
 const RICHTEXT_ALLOWED_ATTRS = new Set(["style","href","target","colspan","rowspan","class"]);
-const RICHTEXT_ALLOWED_CLASSES = new Set(["rt-small","rt-large","rt-checkbox","rt-checked"]);
+const RICHTEXT_ALLOWED_CLASSES = new Set(["rt-small","rt-large","rt-checkbox","rt-checked","rt-title"]);
 
 function sanitizeRichHtml(html) {
   const doc = new DOMParser().parseFromString(String(html || ""), "text/html");
