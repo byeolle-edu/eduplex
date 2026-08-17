@@ -828,12 +828,30 @@ async function uploadToCloudinary(file) {
   return json.secure_url;
 }
 
-// 회의 일지 등 richtext 안의 체크박스(☐/☑)는 어디서 보든 클릭하면 바로 토글됩니다.
+// 회의 일지 등 richtext 안의 체크박스는 어디서 보든 클릭하면 토글됩니다.
+// (예전엔 글자를 ☐↔☑로 바꿨는데, 그 과정에서 옆 내용이 지워지는 문제가 있어서
+//  이제는 글자를 건드리지 않고 취소선만 켜고 끕니다.)
 document.addEventListener("click", (e) => {
   const box = e.target.closest(".rt-checkbox");
   if (!box) return;
   const checked = box.classList.toggle("rt-checked");
-  box.textContent = checked ? "☑" : "☐";
+  // 같은 줄에서 체크박스 뒤에 오는 글자들에도 함께 취소선을 켜고 끕니다. (내용 자체는 건드리지 않아요)
+  let node = box.nextSibling;
+  while (node) {
+    if (node.nodeType === 1 && node.tagName === "BR") break;
+    const next = node.nextSibling;
+    if (node.nodeType === 3 && node.textContent.trim()) {
+      const span = document.createElement("span");
+      span.className = "rt-check-line";
+      node.parentNode.insertBefore(span, node);
+      span.appendChild(node);
+      node = span;
+    }
+    if (node.nodeType === 1) {
+      node.classList.toggle("rt-check-strike", checked);
+    }
+    node = next;
+  }
 });
 
 const state = { user:null, profile:null, branches:[], customFolders:[], menuOverrides:{}, currentSection:"schedule", branchFilter:{}, navExpanded:{}, openTabs:[] };
@@ -1586,7 +1604,7 @@ function renderTerminationStats(section, docs) {
   </div>`;
 
   wrap.innerHTML = `
-    <h2 style="font-size:14px;margin:0 0 4px;">전체 종료 학생: ${total}명</h2>
+    <h2 style="font-size:14px;margin:0 0 4px;">전체 기간 누적 종료 학생: ${total}명</h2>
     <div class="grid-2" style="gap:24px;margin-top:14px;">
       <div>
         <h3 style="font-size:13px;margin:0 0 10px;">종료 원인별 비율</h3>
@@ -1655,16 +1673,17 @@ async function renderFolderGrid(section) {
     if (!months.includes(thisMonth)) months.unshift(thisMonth);
     monthSel.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join("");
     monthSel.value = months[0];
-    monthSel.onchange = () => renderFolderGridBody(section, allDocs.filter(d => d[section.monthFilterField] === monthSel.value));
-    renderFolderGridBody(section, allDocs.filter(d => d[section.monthFilterField] === monthSel.value));
+    monthSel.onchange = () => renderFolderGridBody(section, allDocs.filter(d => d[section.monthFilterField] === monthSel.value), allDocs);
+    renderFolderGridBody(section, allDocs.filter(d => d[section.monthFilterField] === monthSel.value), allDocs);
   } else {
-    renderFolderGridBody(section, allDocs);
+    renderFolderGridBody(section, allDocs, allDocs);
   }
 }
 
-function renderFolderGridBody(section, docs) {
+function renderFolderGridBody(section, docs, allDocsForStats) {
   if (section.showTerminationStats) {
-    renderTerminationStats(section, docs);
+    // 목록은 선택한 달만 보여주지만, 통계는 매니저가 누적으로 볼 수 있도록 전체 기간을 기준으로 계산합니다.
+    renderTerminationStats(section, allDocsForStats || docs);
   }
 
   const wrap = document.getElementById("folderGridWrap");
@@ -5023,7 +5042,7 @@ const RICHTEXT_ALLOWED_TAGS = new Set([
   "SPAN","DIV","A","H1","H2","H3","H4","BLOCKQUOTE","CODE","PRE","HR"
 ]);
 const RICHTEXT_ALLOWED_ATTRS = new Set(["style","href","target","colspan","rowspan","class"]);
-const RICHTEXT_ALLOWED_CLASSES = new Set(["rt-small","rt-large","rt-checkbox","rt-checked","rt-title"]);
+const RICHTEXT_ALLOWED_CLASSES = new Set(["rt-small","rt-large","rt-checkbox","rt-checked","rt-title","rt-check-line","rt-check-strike"]);
 
 function sanitizeRichHtml(html) {
   const doc = new DOMParser().parseFromString(String(html || ""), "text/html");
