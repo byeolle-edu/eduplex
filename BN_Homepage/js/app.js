@@ -4715,9 +4715,6 @@ function richtextToolbarHtml(key) {
     <button type="button" class="rt-btn" data-cmd="bold" title="굵게"><b>B</b></button>
     <button type="button" class="rt-btn" data-cmd="title" title="제목 (크게+굵게)" style="width:auto;padding:0 8px;font-size:11px;font-weight:800;">제목</button>
     <span class="rt-sep"></span>
-    <input type="number" class="rt-pt-input" data-for-pt="${key}" placeholder="pt" min="6" max="72" step="1" title="글자 크기(포인트) 직접 입력" style="width:44px;height:24px;font-size:11px;padding:0 4px;border:1px solid var(--border);border-radius:6px;">
-    <button type="button" class="rt-btn" data-cmd="applyPt" data-for-pt-btn="${key}" title="입력한 포인트 크기 적용" style="width:auto;padding:0 8px;font-size:11px;">적용</button>
-    <span class="rt-sep"></span>
     ${colors.map(c => `<button type="button" class="rt-btn rt-color" data-color="${c}" style="background:${c};" title="글자색"></button>`).join("")}
     <span class="rt-sep"></span>
     <button type="button" class="rt-btn" data-cmd="checklist" title="체크박스 줄 추가" style="width:auto;padding:0 8px;font-size:11px;">☑ 체크</button>
@@ -4850,14 +4847,6 @@ function wireRichtextToolbarFor(editEl, toolbar) {
         wrapSelectionWithStyle(editEl, "font-weight:700");
       } else if (btn.dataset.cmd === "title") {
         wrapSelectionWithStyle(editEl, "font-weight:800;font-size:19px");
-      } else if (btn.dataset.cmd === "applyPt") {
-        const ptInput = toolbar.querySelector(".rt-pt-input");
-        const pt = ptInput && ptInput.value ? parseInt(ptInput.value, 10) : null;
-        if (pt && pt >= 6 && pt <= 72) {
-          wrapSelectionWithStyle(editEl, `font-size:${pt}pt`);
-        } else {
-          alert("6~72 사이의 숫자를 입력해주세요.");
-        }
       } else if (btn.dataset.cmd === "checklist") {
         document.execCommand("insertHTML", false, '<br><span class="rt-checkbox">☐</span>&nbsp;');
       } else if (btn.dataset.cmd === "removeFormat") {
@@ -4902,6 +4891,13 @@ function sanitizeRichHtml(html) {
           if (!RICHTEXT_ALLOWED_ATTRS.has(name)) { child.removeAttribute(attr.name); return; }
           if (name === "href" && !/^https?:/i.test(attr.value)) child.removeAttribute(attr.name);
           if (name === "style" && /expression|javascript:/i.test(attr.value)) child.removeAttribute(attr.name);
+          if (name === "style") {
+            // "제목" 버튼이 지정하는 19px만 남기고, 붙여넣기 등으로 딸려온 다른 글자 크기는 전부 지워서
+            // 본문은 항상 기본(TDL과 동일한) 크기로 통일되게 합니다.
+            let styleVal = child.getAttribute("style") || "";
+            styleVal = styleVal.replace(/font-size\s*:\s*[^;]+;?/gi, (m) => (/19px/.test(m) ? m : ""));
+            if (styleVal.trim()) child.setAttribute("style", styleVal); else child.removeAttribute("style");
+          }
           if (name === "class") {
             // 굵기/색/글자크기 도구모음에서 쓰는 클래스만 허용하고, 그 외 붙여넣기로 딸려온 class는 다 지웁니다.
             const kept = attr.value.split(/\s+/).filter(c => RICHTEXT_ALLOWED_CLASSES.has(c));
