@@ -1675,26 +1675,38 @@ function openFolderEntryDetailModal(section, entry) {
     return `<div style="margin-bottom:20px;"><div style="font-size:13px;font-weight:700;color:var(--text-muted);margin-bottom:6px;">${f.label}</div><div class="rich-content">${display}</div></div>`;
   }).join("");
 
+  const isFullScreen = section.key === "teamMeeting";
+  const modalStyle = isFullScreen
+    ? "max-width:1000px;width:96vw;height:92vh;overflow-y:auto;"
+    : "max-width:1280px;";
+
   root.innerHTML = `<div class="modal-bg" id="modalBg">
-    <div class="modal" style="max-width:1280px;">
+    <div class="modal" id="detailModalBox" style="${modalStyle}">
       <h3>${escapeHtml(entry.title || "")}</h3>
       ${uploadDate ? `<div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">업로드: ${escapeHtml(uploadDate)}</div>` : ""}
       ${canAnnotate ? `<p style="font-size:12px;color:var(--text-muted);margin:-6px 0 14px;">글자를 드래그해서 굵기·색·크기로 표시할 수 있어요. 표시한 내용은 "표시 저장"을 눌러야 남습니다.</p>` : ""}
       ${staticHtml}
       ${annotatableHtml || (staticHtml ? "" : `<p style="color:var(--text-muted);font-size:13px;">등록된 내용이 없습니다.</p>`)}
       ${renderAttachmentGallery(images)}
-      <div class="grid-2" style="margin-top:10px;">
+      <div class="grid-2 no-print" style="margin-top:10px;">
         <button type="button" class="btn secondary" id="closeDetailBtn">닫기</button>
         ${canAnnotate ? `<button type="button" class="btn" id="saveAnnotateBtn">표시 저장</button>` : ""}
       </div>
-      <div class="grid-2" style="margin-top:10px;">
+      <div class="grid-2 no-print" style="margin-top:10px;">
+        ${isFullScreen ? `<button type="button" class="btn secondary" id="printDetailBtn">🖨 인쇄 / PDF로 저장</button>` : "<span></span>"}
         ${canEdit ? `<button type="button" class="btn secondary" id="editFromDetailBtn">전체 수정</button>` : "<span></span>"}
-        ${canEdit ? `<button type="button" class="icon-btn danger" id="deleteFromDetailBtn" style="text-align:center;">삭제</button>` : ""}
       </div>
+      ${canEdit ? `<div class="grid-2 no-print" style="margin-top:10px;">
+        <span></span>
+        <button type="button" class="icon-btn danger" id="deleteFromDetailBtn" style="text-align:center;">삭제</button>
+      </div>` : ""}
     </div></div>`;
 
   document.getElementById("closeDetailBtn").onclick = () => root.innerHTML = "";
   document.getElementById("modalBg").addEventListener("click", (e) => { if (e.target.id === "modalBg") root.innerHTML = ""; });
+  if (isFullScreen) {
+    document.getElementById("printDetailBtn").onclick = () => window.print();
+  }
 
   if (canAnnotate) {
     annotatableFields.forEach(f => {
