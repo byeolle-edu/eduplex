@@ -47,7 +47,7 @@ const SECTIONS = [
 
   { key:"examAnalysis", label:"시험지 분석", group:"자료실", color:"neutral",
     desc:"시험지 분석 사이트로 바로 이동합니다.",
-    isExternalLink:true, externalUrl:"https://neon-cupcake-376372.netlify.app/" },
+    isExternalLink:true, externalUrl:"https://byeolle-edu.github.io/eduplex/Exam%20Analysis.html" },
 
   { key:"eduStudy", label:"교육 스터디", group:"자료실", color:"neutral",
     collectionName:"eduStudy", scope:"team", writable:"all",
