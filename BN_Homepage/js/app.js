@@ -116,7 +116,8 @@ const PERF_METRICS_SEO = [
   { key:"onlyEndRate", label:"온리 학생 종료율", unit:"%" },
   { key:"onlyComma", label:"온리 학생 콤마 수", unit:"개" },
   { key:"onlyCommaPerWeek", label:"온리 학생 주 콤마 수", unit:"개" },
-  { key:"promotionRate", label:"프미율", unit:"%" }
+  { key:"promotionRate", label:"프미율", unit:"%" },
+  { key:"branchTotalComma", label:"지점 전체 콤마 수", unit:"개" }
 ];
 const PERF_BREAKDOWN_METRICS = [
   { key:"individualStudents", label:"개별지도 학생 수" },
@@ -829,7 +830,7 @@ async function uploadToCloudinary(file) {
 }
 
 // 회의 일지 등 richtext 안의 체크박스는 어디서 보든 클릭하면 토글됩니다.
-// (예전엔 글자를 ☐↔☑로 바꿨는데, 그 과정에서 옆 내용이 지워지는 문제가 있어서
+// (예전엔 글자를 ☐↔☑로 바꿨는데, 그 과정에서 옆 내용까지 같이 지워지는 문제가 있어서
 //  이제는 글자를 건드리지 않고 취소선만 켜고 끕니다.)
 document.addEventListener("click", (e) => {
   const box = e.target.closest(".rt-checkbox");
@@ -3238,6 +3239,49 @@ function getPerfViewState(section, docs) {
   return perfViewState[section.key];
 }
 
+// 서지은 성과/전략 엑셀 자동 불러오기: "26년6월" 같은 탭 이름을 연·월로 바꾸고,
+// 지정된 셀(AG13/15/16/17)만 읽어서 해당 월 문서에 merge로 저장합니다.
+const SEO_IMPORT_CELLS = { onlyStudents: "AG15", onlyEndStudents: "AG13", onlyEndRate: "AG17", promotionRate: "AG16" };
+const SEO_IMPORT_PERCENT_KEYS = new Set(["onlyEndRate", "promotionRate"]);
+
+function parseYearMonthSheetName(name) {
+  const m = String(name || "").trim().match(/^(\d{2})년\s*(\d{1,2})월$/);
+  if (!m) return null;
+  const year = 2000 + parseInt(m[1], 10);
+  const month = parseInt(m[2], 10);
+  return `${year}-${String(month).padStart(2, "0")}`;
+}
+
+async function importSeoExcelFile(section, file) {
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, { type: "array" });
+  const touchedMonths = [];
+  for (const sheetName of wb.SheetNames) {
+    const yearMonth = parseYearMonthSheetName(sheetName);
+    if (!yearMonth) continue;
+    const sheet = wb.Sheets[sheetName];
+    const data = { yearMonth };
+    let hasAny = false;
+    for (const [key, cellRef] of Object.entries(SEO_IMPORT_CELLS)) {
+      const cell = sheet[cellRef];
+      let v = cell ? cell.v : "";
+      if (v === undefined || v === null || v === "") { data[key] = ""; continue; }
+      if (typeof v === "string") v = parseFloat(v.replace(/[^0-9.\-]/g, ""));
+      if (typeof v !== "number" || isNaN(v)) { data[key] = ""; continue; }
+      if (SEO_IMPORT_PERCENT_KEYS.has(key)) v = Math.round(v * 1000) / 10; // 0~1 비율 -> % (소수점 1자리)
+      data[key] = v;
+      hasAny = true;
+    }
+    if (!hasAny) continue;
+    data.updatedAt = new Date().toISOString();
+    data.updatedBy = state.profile.name;
+    data.importedFrom = file.name;
+    await setDoc(doc(db, section.collectionName, yearMonth), data, { merge: true });
+    touchedMonths.push(yearMonth);
+  }
+  return touchedMonths.sort();
+}
+
 async function renderPersonalPerf(section) {
   const main = document.getElementById("mainContent");
   const isSeo = section.personKey === "seo";
@@ -3247,7 +3291,11 @@ async function renderPersonalPerf(section) {
         <h1><span class="badge" style="background:${COLOR_HEX[section.color]}"></span>${section.label}</h1>
         <p>${section.desc}</p>
       </div>
-      ${canWriteSection(section) ? `<button class="btn small" id="addPerfBtn">+ 이번 달 기록 등록/수정</button>` : ""}
+      <div style="display:flex;gap:8px;">
+        ${isSeo && canWriteSection(section) ? `<input type="file" id="seoExcelInput" accept=".xlsx,.xls" style="display:none;">
+        <button class="btn small secondary" id="seoExcelBtn" type="button">📥 등록현황 엑셀로 자동 채우기</button>` : ""}
+        ${canWriteSection(section) ? `<button class="btn small" id="addPerfBtn">+ 이번 달 기록 등록/수정</button>` : ""}
+      </div>
     </div>
     <div id="perfYearNav" style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
       <button class="icon-btn" id="perfPrevYear" style="font-size:18px;">‹</button>
@@ -3269,6 +3317,25 @@ async function renderPersonalPerf(section) {
   if (canWriteSection(section)) {
     document.getElementById("addPerfBtn").onclick = () => openPersonalPerfModal(section, null, () => renderPersonalPerf(section));
     document.getElementById("addReflectionBtn").onclick = () => openPersonalReflectionModal(section, null, () => renderPersonalPerf(section));
+  }
+  if (isSeo && canWriteSection(section)) {
+    document.getElementById("seoExcelBtn").onclick = () => document.getElementById("seoExcelInput").click();
+    document.getElementById("seoExcelInput").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const btn = document.getElementById("seoExcelBtn");
+      btn.disabled = true;
+      btn.textContent = "읽는 중...";
+      try {
+        const months = await importSeoExcelFile(section, file);
+        showToast(months.length ? `${months.length}개월치 데이터를 불러왔어요 (${months[0]} ~ ${months[months.length - 1]})` : "일치하는 월 탭(예: 26년6월)을 찾지 못했어요.");
+        renderPersonalPerf(section);
+      } catch (err) {
+        alert("엑셀을 읽는 중 오류가 발생했습니다: " + err.message);
+        btn.disabled = false;
+        btn.textContent = "📥 등록현황 엑셀로 자동 채우기";
+      }
+    });
   }
 
   const snap = await getDocs(collection(db, section.collectionName));
