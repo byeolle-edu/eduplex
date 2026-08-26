@@ -3358,18 +3358,69 @@ function renderPerfBody(section, docs, metrics, isSeo) {
   const byYm = Object.fromEntries(docs.map(d => [d.yearMonth, d]));
 
   const tableWrap = document.getElementById("perfTableWrap");
+  const perfEditable = canWriteSection(section);
   let html = `<table class="mono"><thead><tr><th style="font-family:var(--font-display);">지표</th>${months.map(ym => `<th style="font-family:var(--font-display);">${parseInt(ym.slice(5), 10)}월</th>`).join("")}</tr></thead><tbody>`;
   metrics.forEach(m => {
     html += `<tr><td style="font-family:var(--font-display);font-weight:700;white-space:nowrap;">${m.label}</td>`;
     months.forEach(ym => {
       const d = byYm[ym];
       const v = d ? d[m.key] : "";
-      html += `<td>${v !== undefined && v !== "" ? escapeHtml(String(v)) + (m.unit || "") : "-"}</td>`;
+      const displayVal = v !== undefined && v !== "" && v !== null ? String(v) : "";
+      if (perfEditable) {
+        html += `<td style="padding:0;">
+          <input type="number" step="any" class="perf-cell-input" data-ym="${ym}" data-metric="${m.key}" data-unit="${escapeHtml(m.unit || "")}"
+            value="${escapeHtml(displayVal)}" placeholder="-"
+            style="width:100%;box-sizing:border-box;border:none;background:transparent;text-align:center;padding:10px 6px;font-family:inherit;font-size:inherit;color:inherit;outline:none;">
+        </td>`;
+      } else {
+        html += `<td>${displayVal ? escapeHtml(displayVal) + (m.unit || "") : "-"}</td>`;
+      }
     });
     html += `</tr>`;
   });
   html += `</tbody></table>`;
+  if (perfEditable) html += `<p style="font-size:11px;color:var(--text-muted);margin:10px 0 0;">칸을 클릭해서 바로 수정하면, 다른 곳을 누르는 순간 자동으로 저장돼요.</p>`;
   tableWrap.innerHTML = html;
+
+  if (perfEditable) {
+    tableWrap.querySelectorAll(".perf-cell-input").forEach(input => {
+      let savingValue = null;
+      input.addEventListener("blur", async () => {
+        const ym = input.dataset.ym;
+        const key = input.dataset.metric;
+        const raw = input.value.trim();
+        const newVal = raw === "" ? "" : Number(raw);
+        const existingDoc = byYm[ym];
+        const prevVal = existingDoc ? existingDoc[key] : "";
+        if (String(prevVal ?? "") === String(newVal ?? "") ) return; // 변경 없음
+        savingValue = newVal;
+        input.style.opacity = "0.5";
+        try {
+          await setDoc(doc(db, section.collectionName, ym), {
+            yearMonth: ym, [key]: newVal,
+            updatedAt: new Date().toISOString(), updatedBy: state.profile.name
+          }, { merge: true });
+          if (existingDoc) {
+            existingDoc[key] = newVal;
+          } else {
+            const newDoc = { id: ym, yearMonth: ym, [key]: newVal };
+            byYm[ym] = newDoc;
+            docs.push(newDoc);
+          }
+          input.style.opacity = "1";
+          showToast("저장되었습니다.");
+          // 두 달 비교·반기 비교·매니저별 현황 등 다른 패널도 최신 값으로 다시 계산합니다.
+          renderPerfBody(section, docs, metrics, isSeo);
+        } catch (err) {
+          input.style.opacity = "1";
+          alert("저장 중 오류가 발생했습니다: " + err.message);
+        }
+      });
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); input.blur(); }
+      });
+    });
+  }
 
   // ---------- 비교하고 싶은 두 달을 직접 골라서 비교 ----------
   const compareWrap = document.getElementById("perfCompareWrap");
