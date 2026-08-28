@@ -466,6 +466,44 @@ function openScheduleBlockModal(section, existing) {
   });
 }
 
+function renderScheduleBlockList(section, blocks) {
+  const wrap = document.getElementById("scheduleBlockListWrap");
+  if (!wrap) return;
+  if (!blocks.length) {
+    wrap.innerHTML = `<p style="font-size:12.5px;color:var(--text-muted);margin:0;">이번 달에 등록된 일정이 없어요. "+ 일정 등록"으로 추가하거나, 아래 표의 칸을 직접 클릭해서 입력할 수도 있어요.</p>`;
+    return;
+  }
+  wrap.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px;">
+    ${blocks.map(b => `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#F4FAEF;border:1px solid var(--border);border-radius:8px;">
+      <span style="width:14px;height:14px;border-radius:4px;background:${escapeHtml(b.color || "#EAF3E3")};flex-shrink:0;border:1px solid rgba(0,0,0,0.1);"></span>
+      <span class="mono" style="font-size:12.5px;color:var(--text-muted);white-space:nowrap;">${escapeHtml(b.date)} ${escapeHtml(b.startTime)}~${escapeHtml(b.endTime)}</span>
+      <span style="font-weight:700;font-size:13px;flex:1;">${escapeHtml(b.label)}</span>
+      <button type="button" class="icon-btn" data-edit-block="${b.id}">수정</button>
+      <button type="button" class="icon-btn danger" data-del-block="${b.id}">삭제</button>
+    </div>`).join("")}
+  </div>`;
+
+  wrap.querySelectorAll("[data-edit-block]").forEach(btn => {
+    btn.onclick = () => openScheduleBlockModal(section, blocks.find(b => b.id === btn.dataset.editBlock));
+  });
+  wrap.querySelectorAll("[data-del-block]").forEach(btn => {
+    btn.onclick = () => deleteScheduleBlock(section, blocks.find(b => b.id === btn.dataset.delBlock));
+  });
+}
+
+async function deleteScheduleBlock(section, block) {
+  if (!block) return;
+  if (!confirm(`"${block.label}" 일정을 삭제할까요? (${block.date} ${block.startTime}~${block.endTime})`)) return;
+  try {
+    await clearScheduleRangeCells(block.date, timeStrToMinutes(block.startTime), timeStrToMinutes(block.endTime));
+    await deleteDoc(doc(db, "scheduleBlocks", block.id));
+    showToast("삭제되었습니다.");
+    renderMonthlySchedule(section);
+  } catch (err) {
+    alert("삭제 중 오류가 발생했습니다: " + err.message);
+  }
+}
+
 async function renderMonthlySchedule(section) {
   const main = document.getElementById("mainContent");
   const canEdit = canWriteSection(section);
@@ -480,8 +518,12 @@ async function renderMonthlySchedule(section) {
         <button class="icon-btn" id="nextMonthBtn" style="font-size:18px;">›</button>
       </div>
     </div>
-    ${canEdit ? `<div class="card" style="padding:12px 20px;display:flex;justify-content:flex-end;">
-      <button class="btn small" id="addScheduleBlockBtn" type="button">+ 일정 등록</button>
+    ${canEdit ? `<div class="card" style="padding:16px 20px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <h2 style="margin:0;font-size:14px;">이번 달 등록된 일정</h2>
+        <button class="btn small" id="addScheduleBlockBtn" type="button">+ 일정 등록</button>
+      </div>
+      <div id="scheduleBlockListWrap">불러오는 중...</div>
     </div>` : ""}
     <div id="scheduleTopScroll" style="overflow-x:auto;overflow-y:hidden;height:16px;margin-bottom:4px;"><div id="scheduleTopScrollInner" style="height:1px;"></div></div>
     <div class="card" id="scheduleScrollCard" style="overflow:auto;max-height:calc(100vh - 190px);"><div id="scheduleCalendar">불러오는 중...</div></div>`;
@@ -506,9 +548,16 @@ async function renderMonthlySchedule(section) {
   const start = ymd(year, month, 1);
   const end = ymd(year, month, daysInMonth(year, month));
   const q = query(collection(db, "scheduleEntries"), where("date", ">=", start), where("date", "<=", end));
-  const snap = await getDocs(q);
+  const blocksQ = query(collection(db, "scheduleBlocks"), where("date", ">=", start), where("date", "<=", end));
+  const [snap, blocksSnap] = await Promise.all([getDocs(q), canEdit ? getDocs(blocksQ) : Promise.resolve(null)]);
   const byDate = {};
   snap.docs.forEach(d => { byDate[d.id] = d.data(); });
+
+  if (canEdit && blocksSnap) {
+    const blocks = blocksSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (a.date + a.startTime).localeCompare(b.date + b.startTime));
+    renderScheduleBlockList(section, blocks);
+  }
 
   const nDays = daysInMonth(year, month);
   const dates = [];
