@@ -466,14 +466,40 @@ function openScheduleBlockModal(section, existing) {
   });
 }
 
+async function openScheduleBlockListModal(section) {
+  const root = document.getElementById("modalRoot");
+  const { year, month } = scheduleViewState;
+  const start = ymd(year, month, 1);
+  const end = ymd(year, month, daysInMonth(year, month));
+
+  root.innerHTML = `<div class="modal-bg" id="modalBg">
+    <div class="modal" style="max-width:640px;">
+      <h3>${year}년 ${month}월 일정 수정</h3>
+      <p style="font-size:12px;color:var(--text-muted);margin:-6px 0 14px;">"+ 일정 등록"으로 만든 일정만 여기서 관리돼요. 달력 칸에 직접 입력한 내용은 달력에서 바로 지워주세요.</p>
+      <div id="scheduleBlockListWrap">불러오는 중...</div>
+      <div class="grid-2" style="margin-top:14px;">
+        <button type="button" class="btn secondary" id="closeBlockListBtn">닫기</button>
+        <span></span>
+      </div>
+    </div></div>`;
+  document.getElementById("closeBlockListBtn").onclick = () => root.innerHTML = "";
+  document.getElementById("modalBg").addEventListener("click", (e) => { if (e.target.id === "modalBg") root.innerHTML = ""; });
+
+  const blocksQ = query(collection(db, "scheduleBlocks"), where("date", ">=", start), where("date", "<=", end));
+  const blocksSnap = await getDocs(blocksQ);
+  const blocks = blocksSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (a.date + a.startTime).localeCompare(b.date + b.startTime));
+  renderScheduleBlockList(section, blocks);
+}
+
 function renderScheduleBlockList(section, blocks) {
   const wrap = document.getElementById("scheduleBlockListWrap");
   if (!wrap) return;
   if (!blocks.length) {
-    wrap.innerHTML = `<p style="font-size:12.5px;color:var(--text-muted);margin:0;">이번 달에 등록된 일정이 없어요. "+ 일정 등록"으로 추가하거나, 아래 표의 칸을 직접 클릭해서 입력할 수도 있어요.</p>`;
+    wrap.innerHTML = `<p style="font-size:12.5px;color:var(--text-muted);margin:0;">이번 달에 "+ 일정 등록"으로 만든 일정이 없어요.</p>`;
     return;
   }
-  wrap.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px;">
+  wrap.innerHTML = `<div style="display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow-y:auto;">
     ${blocks.map(b => `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#F4FAEF;border:1px solid var(--border);border-radius:8px;">
       <span style="width:14px;height:14px;border-radius:4px;background:${escapeHtml(b.color || "#EAF3E3")};flex-shrink:0;border:1px solid rgba(0,0,0,0.1);"></span>
       <span class="mono" style="font-size:12.5px;color:var(--text-muted);white-space:nowrap;">${escapeHtml(b.date)} ${escapeHtml(b.startTime)}~${escapeHtml(b.endTime)}</span>
@@ -497,6 +523,7 @@ async function deleteScheduleBlock(section, block) {
   try {
     await clearScheduleRangeCells(block.date, timeStrToMinutes(block.startTime), timeStrToMinutes(block.endTime));
     await deleteDoc(doc(db, "scheduleBlocks", block.id));
+    document.getElementById("modalRoot").innerHTML = "";
     showToast("삭제되었습니다.");
     renderMonthlySchedule(section);
   } catch (err) {
@@ -518,18 +545,16 @@ async function renderMonthlySchedule(section) {
         <button class="icon-btn" id="nextMonthBtn" style="font-size:18px;">›</button>
       </div>
     </div>
-    ${canEdit ? `<div class="card" style="padding:16px 20px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-        <h2 style="margin:0;font-size:14px;">이번 달 등록된 일정</h2>
-        <button class="btn small" id="addScheduleBlockBtn" type="button">+ 일정 등록</button>
-      </div>
-      <div id="scheduleBlockListWrap">불러오는 중...</div>
+    ${canEdit ? `<div class="card" style="padding:12px 20px;display:flex;justify-content:flex-end;gap:8px;">
+      <button class="btn small secondary" id="editScheduleBtn" type="button">일정 수정</button>
+      <button class="btn small" id="addScheduleBlockBtn" type="button">+ 일정 등록</button>
     </div>` : ""}
     <div id="scheduleTopScroll" style="overflow-x:auto;overflow-y:hidden;height:16px;margin-bottom:4px;"><div id="scheduleTopScrollInner" style="height:1px;"></div></div>
     <div class="card" id="scheduleScrollCard" style="overflow:auto;max-height:calc(100vh - 190px);"><div id="scheduleCalendar">불러오는 중...</div></div>`;
 
   if (canEdit) {
     document.getElementById("addScheduleBlockBtn").onclick = () => openScheduleBlockModal(section, null);
+    document.getElementById("editScheduleBtn").onclick = () => openScheduleBlockListModal(section);
   }
 
   document.getElementById("prevMonthBtn").onclick = () => {
@@ -548,16 +573,9 @@ async function renderMonthlySchedule(section) {
   const start = ymd(year, month, 1);
   const end = ymd(year, month, daysInMonth(year, month));
   const q = query(collection(db, "scheduleEntries"), where("date", ">=", start), where("date", "<=", end));
-  const blocksQ = query(collection(db, "scheduleBlocks"), where("date", ">=", start), where("date", "<=", end));
-  const [snap, blocksSnap] = await Promise.all([getDocs(q), canEdit ? getDocs(blocksQ) : Promise.resolve(null)]);
+  const snap = await getDocs(q);
   const byDate = {};
   snap.docs.forEach(d => { byDate[d.id] = d.data(); });
-
-  if (canEdit && blocksSnap) {
-    const blocks = blocksSnap.docs.map(d => ({ id: d.id, ...d.data() }))
-      .sort((a, b) => (a.date + a.startTime).localeCompare(b.date + b.startTime));
-    renderScheduleBlockList(section, blocks);
-  }
 
   const nDays = daysInMonth(year, month);
   const dates = [];
